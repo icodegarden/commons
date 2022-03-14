@@ -1,0 +1,87 @@
+package io.github.icodegarden.commons.lang.spec.sign;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+
+import io.github.icodegarden.commons.lang.util.JsonUtils;
+
+/**
+ * 
+ * @author Fangfang.Xu
+ *
+ */
+class RSASignUtilsTests {
+
+	OpenApiRequestBody openApiBody = new OpenApiRequestBody();
+	{
+		openApiBody.setApp_id("2014072300007148");
+		openApiBody.setMethod("type.software.part");
+		openApiBody.setFormat("JSON");
+		openApiBody.setCharset("utf-8");
+		openApiBody.setSign_type("RSA2");
+		openApiBody.setTimestamp("2014-07-24 03:07:50");
+		openApiBody.setVersion("1.0");
+		openApiBody.setRequest_id("1624613288981");
+		openApiBody.setBiz_content("{\"partNumber\":\"8888111156\"}");
+	}
+
+	@Test
+	void requestSign() {
+		String sign = RSASignUtils.requestSign(openApiBody,
+				"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCVM/loK+u/9bT/Q35HntBOtW5YPKBUbx7U+clKscWddw2Bte4dAox3c2FYLBlRhwAWvHZMrxkkpKO1MmVRbKVfOO7zeQr4Fs0DuDtxp04cyi44DlYLp/RP2VSv5DF2WJUWovHaCk72cNeDYERVRwSGI9fVF3bXAslNk7M7pmEvnklfM+BeOBytYQINFrdY9O2SanqikfvITOSCb9SnkUE1q8WIGudQd+SGREpm7UOrFhYotVIONBmO5oaQjXplqbFVfBop54fE29TThpta6CkkgHjmywYd1qMDzafjv4qps63xctk2yNSUS6eJlKMMUExPbVfBByla0WlxNJG1DV5vAgMBAAECggEARRWIsPRNN1fEk8EjknP1jcwyKIcB0baV9xUlYAGKN8vtJBciBqqscY6qDxJ0MqyonN5shDs7EB1vc7G++gGtXLbW5UMxkge0q7k9RPWrlGcFGY2Bx+nflK1TqhGl2V9QwOd3xnapczByiXEkkrvMW3PzNsajjxDKNrJh9gemzk3ooig/nigvCCD1GMt9zuQPfQ2SSzigiD03Emqbd8elRBLtpfUEqZ4mLr0CmCdFJyZL7RJCfqAoZk125qA1YOmLQnoEfmqeZuivgSuRjNVBVPWE3cfrc/U97+g8P22yoWnXOHUG9sr8g7peZAYg821nub8H/NtnHAAr+gpxX2GFKQKBgQD6f4Fyhh8BQK+YZdu+uph1zwcmBxUGpzwS5FVTWp3FxiwPoXmorcM62KZrDnNlSsryxkM48iHnNZT7D2k2KV00/piZB1jXCEzs4OX0MuvXLdorexqSrk5L5a4Qw/3//Vl/mR2rvzOTsP9iQzjPGrHOkE155gLwTB8lXqgfij77lQKBgQCYeujJQbJ1/F0SrUqFzA/UQg8MfLATQ8qtOfeYuZfQEi7ichOX/NdFL40bTz9z+Uptzn8X+utWuxi5gcYB7vsIGGG2Q2P8vkl0bjXkzAXitBrvmzZ8MY/dyzOOyrOYkSH7PD8DCLJOODxZq6hYcsauNkF4gKkGzqu4MlD1QI5Q8wKBgC+fC9Hk04IedQNo4dSpjpBe8kH1eLbSFiaVR+9Xu8S8fuXd0c4Scpn+U+zoS2HHTTvIG0F5Lp7Q3ei4rkzAolqPyBzXe7ktd8pUmwLIp3M54U8A0TVvc60UFfpT+DaxSFFsn2pmJ/z82iApHWSp84GMh14ULxzVq9oj25xbYMvdAoGAS2iFlXqbIoSDFwiCkXbg4S0mOhu0DGL7af3/+BTZAnrrmuulywWtBLdGhpoDnHxOFc4Ixrg+CO+Qg7WtUil5FoDQWg4r9cO5mg4jMxq/UmWV6KePI45zQtIKlnSiqzIjZxddZke3vr1LA2HEaLGilmeYq1qdvRMak4a2yQN7HocCgYEAgBrgwAzIAZSNQmltqi8gbzkN9maLyiOVJMu1+2UxXbUwIZJBM2S0j3YocsAVSvEYiDkzjNUfRrMHLXB0ke3Yr2QqoVL9AMjLcMb7F3PT/IgOlxXY0PceGqHgYKR3uwWfRVDDFAhqKcz/ndEJ+iGywY51+na/gxf/FL/IpsURdPI=");
+		System.out.println(sign);
+
+		openApiBody.setSign(sign);
+
+		System.out.println(JsonUtils.serialize(openApiBody));
+
+		boolean validateSign = RSASignUtils.validateRequestSign(openApiBody,
+				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlTP5aCvrv/W0/0N+R57QTrVuWDygVG8e1PnJSrHFnXcNgbXuHQKMd3NhWCwZUYcAFrx2TK8ZJKSjtTJlUWylXzju83kK+BbNA7g7cadOHMouOA5WC6f0T9lUr+QxdliVFqLx2gpO9nDXg2BEVUcEhiPX1Rd21wLJTZOzO6ZhL55JXzPgXjgcrWECDRa3WPTtkmp6opH7yEzkgm/Up5FBNavFiBrnUHfkhkRKZu1DqxYWKLVSDjQZjuaGkI16ZamxVXwaKeeHxNvU04abWugpJIB45ssGHdajA82n47+KqbOt8XLZNsjUlEuniZSjDFBMT21XwQcpWtFpcTSRtQ1ebwIDAQAB");
+		assertThat(validateSign).isTrue();
+	}
+
+	@Test
+	void responseSign() {
+		OpenApiResponseBody openApiResponseBody = new OpenApiResponseBody();
+		openApiResponseBody.setCode("1000");
+		openApiResponseBody.setMsg("Success");
+		openApiResponseBody.setBiz_code(openApiBody.getMethod());
+		openApiResponseBody.setBiz_content("{\"partType\":\"A\"}");
+		String sign = RSASignUtils.responseSign(openApiResponseBody, openApiBody.getSign_type(),
+				openApiBody.getCharset(),
+				"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj/KYt2WWsMGtAIej85s9b334OXu19kvygaFa3fnESKJovHvC8pXApJUJ20/1/GQZ14YyteNByqSmPHNPqoqTqDpwbsevjrp7J8HOB65tokMERtPG+h1kije6XCR+tNsrXRjuAW2tIIwLbGPnIXPO3BWX93QaDO0u7R2yZyMVZ/zjQo2HqGHYhAC+7FeN3izuiK6TZt+aPS0h+kkW3UzWMreLPJspe8AyIGJjq87wZtrRGgph0nVfB2JjH/jOTvHfWSAWXijBFKaapInoEpE73n7xt2WVqI9q9d/hCdGQZX5njwF7Hokwibl8stopc/GWXbkl750MQE+DmaURdC6cdAgMBAAECggEAFpZfQWN3aK9Gpo/FKsiT+UCgeVRD/A758xJMF3w4ENs82Y62dBWJjHFQZVOv0AjfZe9KVD6W36RDUC4VVnVOp9qZUAtCxZqwznnrPxL31gBSR6EXxzmXYnYQTgd4sIAikmJfIb/11/rSkuEuzpVXEHeS49PE6OCK/uHIqKoJ3OpcmK7sUq8PfcbHVl2TV6VKXlFWyqEFUmo3+a8ZfmlEX0NQlChqjv5xTjYXXMSAr5kvNPoe8nNtSL8eV2iQEJ8LL5Awj3UyreUNqju18o8j8KJIEp9QBNpml8oBjzPnfqZC3LxGKFZF7PuoucjbFzX2v7nhazQVPbciFs3DCtig4QKBgQDtQZMp+2xlGaIyQNTbZPjAPRQpPeU9zI3YKiUXB/i+8m8UhjfuRjbd/WyKFXuiQRLfYQbQpZRZUPKNcOyg4kIG5qilJ6R48RijPQJfQD0WBx+p4gDH4gHiP0EZc00FXfJIqiEnXVf5BdOCVhRDdYW6mV7TWDB8c/cVU+s7Atr1iQKBgQCw8TqPED0epVl6T7eqw5LLJwy7RsAHTGjNqck7WN00w/FGmawcHtISpVjV1eX7C4x4Ela3iufDpan6BqTqNH7Xou2d35yaDxNhMttxABjhM7SotjuDv5d6r3xlyzofyXjJzygx+zHJTmpu4GbBEwzjfjoU3U/RlzIZQBWQozmT9QKBgQDjsQ35uVfigsI9NijRUMrFOxjRJ5yMPXZXYMLtonHfVqyx5slge7QGQULcFhfrtEXXaLdwn6eKO/w7L4d4Mwuosc5hiXT3uHGrn05aeTzmmfmSQNn8+fJS3d+s/BGLuAhgIh3lOFjIHQZKTC/wOaYYWT4+16DYnzYeGsZigK//+QKBgA2azqTXW8uybPnRjU6s8Ol73Ce+Hd+xyVEe3+EXSRLYigGiqTAUUpSqb/UpGCDAV5GX32EHZiCN6U7XGfEEDkioN1rvKYxS4muTzHmYx1Dxd8+NC3Bq18vQGGF/Sb3N8OKbcfy90qsmw1o5GM15mIEZYH/gMFXuKST133Kaij/NAoGAUbjW4wzwNRzP/r1GO3WTvefE7R7WpUOfyQ6b1rBB24/nZszfNwsDyV3usMXOS2w/tcvhEVJsXsSDIQ18MgtT7Q/yHNLll4f2sp2hd0OL14BXIarmAD7Hksj3AuV3E8nml5lOLE7iCGGv2n0qe+RNQ8R+so8K1BO+u/gbsSmRQ7w=");
+		System.out.println(sign);
+
+		openApiResponseBody.setSign(sign);
+
+		System.out.println(JsonUtils.serialize(openApiResponseBody));
+
+		boolean validateResponseSign = RSASignUtils.validateResponseSign(openApiResponseBody,
+				openApiBody.getSign_type(), openApiBody.getCharset(),
+				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAo/ymLdllrDBrQCHo/ObPW99+Dl7tfZL8oGhWt35xEiiaLx7wvKVwKSVCdtP9fxkGdeGMrXjQcqkpjxzT6qKk6g6cG7Hr466eyfBzgeubaJDBEbTxvodZIo3ulwkfrTbK10Y7gFtrSCMC2xj5yFzztwVl/d0GgztLu0dsmcjFWf840KNh6hh2IQAvuxXjd4s7oiuk2bfmj0tIfpJFt1M1jK3izybKXvAMiBiY6vO8Gba0RoKYdJ1XwdiYx/4zk7x31kgFl4owRSmmqSJ6BKRO95+8bdllaiPavXf4QnRkGV+Z48Bex6JMIm5fLLaKXPxll25Je+dDEBPg5mlEXQunHQIDAQAB");
+		assertThat(validateResponseSign).isTrue();
+	}
+
+	@Test
+	void responseSign4bizError() {
+		/**
+		 * 异常示例
+		 */
+		OpenApiResponseBody openApiResponseBody = new OpenApiResponseBody();
+		openApiResponseBody.setCode("40004");
+		openApiResponseBody.setMsg("业务处理失败");
+		openApiResponseBody.setSub_code("software.part.number.notexists");
+		openApiResponseBody.setSub_msg("软件号不存在");
+		openApiResponseBody.setBiz_code(openApiBody.getMethod());
+		openApiResponseBody.setBiz_content(null);
+		String sign = RSASignUtils.responseSign(openApiResponseBody, openApiBody.getSign_type(),
+				openApiBody.getCharset(),
+				"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj/KYt2WWsMGtAIej85s9b334OXu19kvygaFa3fnESKJovHvC8pXApJUJ20/1/GQZ14YyteNByqSmPHNPqoqTqDpwbsevjrp7J8HOB65tokMERtPG+h1kije6XCR+tNsrXRjuAW2tIIwLbGPnIXPO3BWX93QaDO0u7R2yZyMVZ/zjQo2HqGHYhAC+7FeN3izuiK6TZt+aPS0h+kkW3UzWMreLPJspe8AyIGJjq87wZtrRGgph0nVfB2JjH/jOTvHfWSAWXijBFKaapInoEpE73n7xt2WVqI9q9d/hCdGQZX5njwF7Hokwibl8stopc/GWXbkl750MQE+DmaURdC6cdAgMBAAECggEAFpZfQWN3aK9Gpo/FKsiT+UCgeVRD/A758xJMF3w4ENs82Y62dBWJjHFQZVOv0AjfZe9KVD6W36RDUC4VVnVOp9qZUAtCxZqwznnrPxL31gBSR6EXxzmXYnYQTgd4sIAikmJfIb/11/rSkuEuzpVXEHeS49PE6OCK/uHIqKoJ3OpcmK7sUq8PfcbHVl2TV6VKXlFWyqEFUmo3+a8ZfmlEX0NQlChqjv5xTjYXXMSAr5kvNPoe8nNtSL8eV2iQEJ8LL5Awj3UyreUNqju18o8j8KJIEp9QBNpml8oBjzPnfqZC3LxGKFZF7PuoucjbFzX2v7nhazQVPbciFs3DCtig4QKBgQDtQZMp+2xlGaIyQNTbZPjAPRQpPeU9zI3YKiUXB/i+8m8UhjfuRjbd/WyKFXuiQRLfYQbQpZRZUPKNcOyg4kIG5qilJ6R48RijPQJfQD0WBx+p4gDH4gHiP0EZc00FXfJIqiEnXVf5BdOCVhRDdYW6mV7TWDB8c/cVU+s7Atr1iQKBgQCw8TqPED0epVl6T7eqw5LLJwy7RsAHTGjNqck7WN00w/FGmawcHtISpVjV1eX7C4x4Ela3iufDpan6BqTqNH7Xou2d35yaDxNhMttxABjhM7SotjuDv5d6r3xlyzofyXjJzygx+zHJTmpu4GbBEwzjfjoU3U/RlzIZQBWQozmT9QKBgQDjsQ35uVfigsI9NijRUMrFOxjRJ5yMPXZXYMLtonHfVqyx5slge7QGQULcFhfrtEXXaLdwn6eKO/w7L4d4Mwuosc5hiXT3uHGrn05aeTzmmfmSQNn8+fJS3d+s/BGLuAhgIh3lOFjIHQZKTC/wOaYYWT4+16DYnzYeGsZigK//+QKBgA2azqTXW8uybPnRjU6s8Ol73Ce+Hd+xyVEe3+EXSRLYigGiqTAUUpSqb/UpGCDAV5GX32EHZiCN6U7XGfEEDkioN1rvKYxS4muTzHmYx1Dxd8+NC3Bq18vQGGF/Sb3N8OKbcfy90qsmw1o5GM15mIEZYH/gMFXuKST133Kaij/NAoGAUbjW4wzwNRzP/r1GO3WTvefE7R7WpUOfyQ6b1rBB24/nZszfNwsDyV3usMXOS2w/tcvhEVJsXsSDIQ18MgtT7Q/yHNLll4f2sp2hd0OL14BXIarmAD7Hksj3AuV3E8nml5lOLE7iCGGv2n0qe+RNQ8R+so8K1BO+u/gbsSmRQ7w=");
+		System.out.println(sign);
+
+		openApiResponseBody.setSign(sign);
+
+		System.out.println(JsonUtils.serialize(openApiResponseBody));
+	}
+}
