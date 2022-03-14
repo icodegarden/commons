@@ -47,6 +47,7 @@
 		<module>commons-mybatis</module>
 		<module>commons-exchange</module>
 		<module>commons-zookeeper</module>
+		<module>commons-kafka</module>
 		<module>commons-nio</module>
 		<module>commons-springboot</module>
 	</modules>
