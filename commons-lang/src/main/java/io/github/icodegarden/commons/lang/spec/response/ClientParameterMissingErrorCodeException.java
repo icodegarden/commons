@@ -32,7 +32,11 @@ public class ClientParameterMissingErrorCodeException extends ErrorCodeException
 		MISSING_APP_ID("client.missing-app-id", "Missing:app_id"),
 		MISSING_TIMESTAMP("client.missing-timestamp", "Missing:timestamp"),
 		MISSING_VERSION("client.missing-version", "Missing:version"),
-		MISSING_REQUEST_ID("client.missing-request-id", "Missing:request_id"),;
+		MISSING_REQUEST_ID("client.missing-request-id", "Missing:request_id"),
+		/**
+		 * 其他参数
+		 */
+		MISSING_PARAMETER("client.missing-parameter", "Missing:parameter"),;
 
 		private final String sub_code;
 		private final String sub_msg;
