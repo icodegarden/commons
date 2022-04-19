@@ -120,10 +120,14 @@ public class ParallelExchanger implements Exchanger<ParallelExchangeResult> {
 		}
 
 		final int shardTotal = parallelInstances.size();
+//		/**
+//		 * 并行任务的超时时间=timeout/分片数，但最小不低于
+//		 */
+//		final int shardTimeout = Math.max(timeout / shardTotal, 1000);
 		/**
-		 * 并行任务的超时时间=timeout/分片数，但最小不低于
+		 * 不做修改
 		 */
-		final int shardTimeout = Math.max(timeout / shardTotal, 1000);
+		final int shardTimeout = timeout;
 
 		List<ShardExchangeResult> results = new LinkedList<ShardExchangeResult>();
 		List<ExchangeException> exchangeExceptions = new LinkedList<ExchangeException>();

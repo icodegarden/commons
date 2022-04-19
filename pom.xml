@@ -5,7 +5,7 @@
 
 	<groupId>io.github.icodegarden</groupId>
 	<artifactId>commons</artifactId>
-	<version>0.1.5</version>
+	<version>0.1.6</version>
 
 	<packaging>pom</packaging>
 

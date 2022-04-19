@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>0.1.5</version>
+		<version>0.1.6</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-shardingsphere</artifactId>
@@ -23,12 +23,12 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>0.1.5</version>
+			<version>0.1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-springboot_2.5.5</artifactId>
-			<version>0.1.5</version>
+			<version>0.1.6</version>
 			<optional>true</optional><!-- 可选，当使用shardingsphere-jdbc-core-spring-boot-starter同时应选择这个 -->
 		</dependency>
 		<dependency>
