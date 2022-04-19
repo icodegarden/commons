@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.lang.spec.response;
 
+import io.github.icodegarden.commons.lang.util.JsonUtils;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -21,8 +23,7 @@ public abstract class ErrorCodeException extends RuntimeException {
 		this.sub_msg = sub_msg;
 	}
 
-	public ErrorCodeException(String code, String msg, String sub_code, String sub_msg,
-			Throwable cause) {
+	public ErrorCodeException(String code, String msg, String sub_code, String sub_msg, Throwable cause) {
 		super(cause);
 		this.code = code;
 		this.msg = msg;
@@ -39,22 +40,55 @@ public abstract class ErrorCodeException extends RuntimeException {
 		this.sub_msg = sub_msg;
 		this.reference = reference;
 	}
-	
+
 	public abstract int httpStatus();
 
 	@Override
 	public String getMessage() {
-		int length = 5;// code:
-		length += code != null ? code.length() : 0;
-		length += 6;// , msg:
-		length += msg != null ? msg.length() : 0;
-		length += 11;// , sub_code:
-		length += sub_code != null ? sub_code.length() : 0;
-		length += 10;// , sub_msg:
-		length += sub_msg != null ? sub_msg.length() : 0;
-		StringBuilder sb = new StringBuilder(length).append("code:").append(code).append(", msg:").append(msg)
-				.append(", sub_code:").append(sub_code).append(", sub_msg:").append(sub_msg);
-		return sb.toString();
+//		int length = 5;// code:
+//		length += code != null ? code.length() : 0;
+//		length += 6;// , msg:
+//		length += msg != null ? msg.length() : 0;
+//		length += 11;// , sub_code:
+//		length += sub_code != null ? sub_code.length() : 0;
+//		length += 10;// , sub_msg:
+//		length += sub_msg != null ? sub_msg.length() : 0;
+//		StringBuilder sb = new StringBuilder(length).append("code:").append(code).append(", msg:").append(msg)
+//				.append(", sub_code:").append(sub_code).append(", sub_msg:").append(sub_msg);
+//		return sb.toString();
+
+		Json json = new Json(this);
+		return JsonUtils.serialize(json);
+	}
+
+	private class Json {
+		private final String code;
+		private final String msg;
+		private final String sub_code;
+		private final String sub_msg;
+
+		public Json(ErrorCodeException ece) {
+			this.code = ece.code;
+			this.msg = ece.msg;
+			this.sub_code = ece.sub_code;
+			this.sub_msg = ece.sub_msg;
+		}
+
+		public String getCode() {
+			return code;
+		}
+
+		public String getMsg() {
+			return msg;
+		}
+
+		public String getSub_code() {
+			return sub_code;
+		}
+
+		public String getSub_msg() {
+			return sub_msg;
+		}
 	}
 
 	public Object getReference() {

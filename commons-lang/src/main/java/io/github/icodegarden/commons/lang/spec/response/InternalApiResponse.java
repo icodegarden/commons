@@ -56,4 +56,9 @@ public class InternalApiResponse<R> extends ApiResponse {
 		return Objects.equals(biz_content, other.biz_content);
 	}
 
+	@Override
+	public String toString() {
+		return "InternalApiResponse [biz_content=" + biz_content + ", toString()=" + super.toString() + "]";
+	}
+
 }

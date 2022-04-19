@@ -22,14 +22,23 @@ public abstract class AbstractNioClient implements NioClient {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractNioClient.class);
 
+	private static final int DEFAULT_CONNECT_TIMEOUT = 3000;
 	private static final int DEFAULT_REQUEST_TIMEOUT = 3000;
-	
-	private int requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
+	protected int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+	protected int requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+
+	public void setConnectTimeout(int connectTimeout) {
+		this.connectTimeout = connectTimeout;
+	}
+	
+	/**
+	 * @param requestTimeout 默认的请求超时时间
+	 */
 	public void setRequestTimeout(int requestTimeout) {
 		this.requestTimeout = requestTimeout;
 	}
-	
+
 	@Override
 	public void send(Object body) throws RemoteException {
 		ExchangeMessage message = new ExchangeMessage(true, false, false, body);
@@ -42,7 +51,7 @@ public abstract class AbstractNioClient implements NioClient {
 	}
 
 	@Override
-	public <R> R request(Object body, int timeout) throws RemoteException  {
+	public <R> R request(Object body, int timeout) throws RemoteException {
 		ExchangeMessage message = new ExchangeMessage(true, true, false, body);
 		long requestId = message.getRequestId();
 		Future future = new Future(requestId);
@@ -128,7 +137,16 @@ public abstract class AbstractNioClient implements NioClient {
 		void remove() {
 			Future future = FUTURES.remove(requestId);
 			if (future != null && log.isInfoEnabled()) {
-				log.info("Future of requestId:{} is removed", requestId);
+				boolean done = future.isDone();
+				if (done) {
+					if (log.isDebugEnabled()) {
+						log.debug("Future of requestId:{} is removed", requestId);
+					}
+				} else {
+					if (log.isWarnEnabled()) {
+						log.warn("Future of requestId:{} is removed and not done", requestId);
+					}
+				}
 			}
 		}
 	}

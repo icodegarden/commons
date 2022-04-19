@@ -1,6 +1,8 @@
 package io.github.icodegarden.commons.lang.concurrent.lock;
 
+
 /**
+ * <h1>不支持Reentrant的互斥锁</h1> 全程互斥<br>
  * 
  * @author Fangfang.Xu
  *

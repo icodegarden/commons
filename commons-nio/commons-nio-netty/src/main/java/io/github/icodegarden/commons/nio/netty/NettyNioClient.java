@@ -50,7 +50,6 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 	private volatile Channel channel; // volatile, please copy reference to use
 
 	private final InetSocketAddress address;
-	private int connectTimeout = 3000;
 	private final long heartbeatIntervalMillis;
 
 	private NioClientHeartbeat heartbeat;

@@ -13,8 +13,14 @@ public class ParallelShardObject implements Serializable {
 	private Object obj;
 
 	private int shard;
-	
+
 	private int shardTotal;
+
+	/**
+	 * kryo
+	 */
+	ParallelShardObject() {
+	}
 
 	public ParallelShardObject(Object obj, int shard, int shardTotal) {
 		this.obj = obj;
@@ -50,7 +56,5 @@ public class ParallelShardObject implements Serializable {
 	public String toString() {
 		return "ParallelShardObject [obj=" + obj + ", shard=" + shard + ", shardTotal=" + shardTotal + "]";
 	}
-
-	
 
 }

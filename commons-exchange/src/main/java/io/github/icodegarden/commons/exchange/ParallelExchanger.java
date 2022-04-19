@@ -68,7 +68,7 @@ public class ParallelExchanger implements Exchanger<ParallelExchangeResult> {
 				NANOSECONDS, new SynchronousQueue<Runnable>(),
 				new NamedThreadFactory(ParallelExchanger.class.getSimpleName()), new ThreadPoolExecutor.AbortPolicy());
 	}
-	
+
 	public void setProtocol(Protocol protocol) {
 		this.protocol = protocol;
 	}
@@ -111,7 +111,9 @@ public class ParallelExchanger implements Exchanger<ParallelExchangeResult> {
 		if (parallelInstances.size() == 1) {
 			CandidatesSwitchableExchanger exchanger = new CandidatesSwitchableExchanger(protocol, parallelInstances,
 					true);
-
+			if (log.isDebugEnabled()) {
+				log.debug("parallel exchange shard is 0, shardTotal is 1, cause candidates size is 1");
+			}
 			ParallelShardObject parallelShardObject = new ParallelShardObject(body, 0, 1);
 			ShardExchangeResult result = exchanger.exchange(parallelShardObject, timeout);
 			return new ParallelExchangeResult(Arrays.asList(result));
@@ -138,6 +140,9 @@ public class ParallelExchanger implements Exchanger<ParallelExchangeResult> {
 					try {
 						CandidatesSwitchableExchanger exchanger = new CandidatesSwitchableExchanger(protocol,
 								candidatesOfShard, false);
+						if (log.isDebugEnabled()) {
+							log.debug("parallel exchange shard:{}, shardTotal:{}", shardFinal, shardTotal);
+						}
 						ParallelShardObject parallelShardObject = new ParallelShardObject(body, shardFinal, shardTotal);
 						ShardExchangeResult result = (ShardExchangeResult) exchanger.exchange(parallelShardObject,
 								shardTimeout);

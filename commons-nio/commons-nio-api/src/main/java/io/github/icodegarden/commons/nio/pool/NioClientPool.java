@@ -12,6 +12,7 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
 import io.github.icodegarden.commons.nio.NioClient;
 
 /**
+ * 因为最终都会通过getElseSupplier获取连接，而getElseSupplier会识别连接是否已断开（若已断开则从连接池移除），因此不需要NioClient主动维护自己从连接池移除
  * 
  * @author Fangfang.Xu
  *
@@ -67,6 +68,7 @@ public class NioClientPool {
 
 		if (nioClient != null) {
 			if (nioClient.isClosed()) {
+				log.warn("client was closed, remove from pool. client:{}", nioClient);
 				NioClient remove = nioClients.remove(ipport);
 				if (remove != null) {
 					try {

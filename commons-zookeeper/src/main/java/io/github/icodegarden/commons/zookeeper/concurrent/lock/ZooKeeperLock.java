@@ -9,7 +9,6 @@ import io.github.icodegarden.commons.lang.concurrent.lock.DistributedLock;
 import io.github.icodegarden.commons.lang.concurrent.lock.LockExceedExpectedException;
 
 /**
- * <h1>不支持Reentrant的互斥锁</h1> 全程互斥<br>
  * 
  * @author Fangfang.Xu
  *
@@ -22,7 +21,7 @@ public class ZooKeeperLock extends CuratorSupportLock implements DistributedLock
 	 * 
 	 * @param client
 	 * @param root
-	 * @param name 锁业务name，竞争锁的业务使用相同name
+	 * @param name   锁业务name，竞争锁的业务使用相同name
 	 */
 	public ZooKeeperLock(CuratorFramework client, String root, String name) {
 		super(client);

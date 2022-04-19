@@ -2,14 +2,17 @@ package io.github.icodegarden.commons.mybatis.interceptor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
@@ -34,6 +37,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	private static String DruidPooledPreparedStatement = "com.alibaba.druid.pool.DruidPooledPreparedStatement";
 	private static String T4CPreparedStatement = "oracle.jdbc.driver.T4CPreparedStatement";
 	private static String OraclePreparedStatementWrapper = "oracle.jdbc.driver.OraclePreparedStatementWrapper";
+	private static String ShardingSpherePreparedStatement = "org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSpherePreparedStatement";
 	/**
 	 * 预估sql长度，跟生成完整sql的性能有关
 	 */
@@ -47,6 +51,10 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	 */
 	private boolean format = false;
 	/**
+	 * 当使用sharding时是否只关注第一条sql，如分页查询时
+	 */
+	private boolean firstSqlOnSharding = true;
+	/**
 	 * 非健康sql默认处理方式是打印err
 	 */
 	private Consumer<String> unhealthSqlConsumer = sql -> {
@@ -54,6 +62,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	};
 	private Method oracleGetOriginalSqlMethod;
 	private Method druidGetSQLMethod;
+	private Method shardingSphereGetSQLMethod;
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
@@ -70,15 +79,15 @@ public class SqlPerformanceInterceptor implements Interceptor {
 				Object target = PluginUtils.realTarget(invocation.getTarget());
 				MetaObject metaObject = SystemMetaObject.forObject(target);
 				MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
-				formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing)
-						.append(" ms - ID：").append(ms.getId());
+				formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
+						.append(ms.getId());
 				if (format) {
 					formatSql.append(StringPool.NEWLINE).append("Execute SQL：")
 							.append(SqlUtils.sqlFormat(originalSql, format)).append(StringPool.NEWLINE);
 				} else {
 					formatSql.append("Execute SQL：").append(SqlUtils.sqlFormat(originalSql, format));
 				}
-				
+
 				try {
 					unhealthSqlConsumer.accept(formatSql.toString());
 				} catch (Exception e) {
@@ -153,10 +162,40 @@ public class SqlPerformanceInterceptor implements Interceptor {
 			} catch (Exception e) {
 				// ignore
 			}
+		} else if (ShardingSpherePreparedStatement.equals(stmtClassName)) {
+			try {
+				if (shardingSphereGetSQLMethod == null) {
+					Class<?> clazz = Class.forName(ShardingSpherePreparedStatement);
+					shardingSphereGetSQLMethod = clazz.getMethod("getRoutedStatements");
+				}
+				/**
+				 * 当分页等查询时，sharding需要向多个库（表）发送sql，例如2个库时 statements 就会相应的有2个
+				 */
+				Collection<PreparedStatement> statements = (Collection<PreparedStatement>) shardingSphereGetSQLMethod
+						.invoke(statement);
+				if (firstSqlOnSharding) {
+					originalSql = statements.stream().findFirst().map(s -> {
+						String sql = s.toString();
+						return resolveRealSql(sql) + "\n!sharding-first";
+					}).get().toString();
+				} else {
+					originalSql = statements.stream().map(s -> {
+						String sql = s.toString();
+						return resolveRealSql(sql);
+					}).collect(Collectors.joining("\n!sharding-" + statements.size()));// 多条sql换行
+				}
+				return originalSql;
+			} catch (Exception e) {
+				log.error("", e);
+			}
 		}
 		if (originalSql == null) {
 			originalSql = statement.toString();
 		}
+		return resolveRealSql(originalSql);
+	}
+
+	private String resolveRealSql(String originalSql) {
 		originalSql = originalSql.replaceAll("[\\s]+", StringPool.SPACE);
 		int index = indexOfSqlStart(originalSql);
 		if (index > 0) {
@@ -245,6 +284,14 @@ public class SqlPerformanceInterceptor implements Interceptor {
 
 	public void setUnhealthSqlConsumer(Consumer<String> unhealthSqlConsumer) {
 		this.unhealthSqlConsumer = unhealthSqlConsumer;
+	}
+
+	public boolean isFirstSqlOnSharding() {
+		return firstSqlOnSharding;
+	}
+
+	public void setFirstSqlOnSharding(boolean firstSqlOnSharding) {
+		this.firstSqlOnSharding = firstSqlOnSharding;
 	}
 
 	// -------------------------------------

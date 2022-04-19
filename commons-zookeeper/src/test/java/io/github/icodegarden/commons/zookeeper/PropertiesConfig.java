@@ -7,5 +7,6 @@ package io.github.icodegarden.commons.zookeeper;
  */
 public abstract class PropertiesConfig {
 
-	protected static String zkConnectString = "192.168.80.128:2181";
+//	public static String zkConnectString = System.getProperty("zkConnectString", "192.168.80.128:2181");
+	public static String zkConnectString = System.getProperty("zkConnectString", "127.0.0.1:2181");
 }

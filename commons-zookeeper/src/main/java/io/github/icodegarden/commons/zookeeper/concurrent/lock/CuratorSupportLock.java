@@ -34,9 +34,11 @@ public abstract class CuratorSupportLock implements DistributedLock {
 	}
 
 	/**
-	 * 当不使用该对象时调用，因为锁对象是可重用的，一般情况不会destory
+	 * 当不使用该对象时调用<br>
+	 * 因为锁对象是可重用的，一般情况不需要destory
 	 */
 	public void destory() {
+		// 因为这个
 		client.getConnectionStateListenable().removeListener(autoReleaseIfLostListener);
 		if (isAcquired()) {
 			try {

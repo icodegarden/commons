@@ -31,11 +31,11 @@ public class ZooKeeperHolder implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ZooKeeperHolder.class);
 
 	private volatile boolean closeCalled;
-	
+
 	private final Config config;
 
 	private volatile ZooKeeper zk;
-	
+
 	private boolean authInfoAdded;
 
 	private List<NewZooKeeperListener> listeners = new CopyOnWriteArrayList<NewZooKeeperListener>();
@@ -43,10 +43,10 @@ public class ZooKeeperHolder implements Closeable {
 	public ZooKeeperHolder(String connectString, int sessionTimeout, int connectTimeout) {
 		this(new Config(connectString, sessionTimeout, connectTimeout));
 	}
-	
+
 	public ZooKeeperHolder(Config config) {
 		Objects.requireNonNull(config, "config must not null");
-		
+
 		this.config = config;
 		newZooKeeper();
 	}
@@ -57,11 +57,13 @@ public class ZooKeeperHolder implements Closeable {
 			StateWatcher stateWatcher = new StateWatcher();
 
 			ZKClientConfig zkClientConfig = new ZKClientConfig();
-			zkClientConfig.setProperty(ZKClientConfig.ZOOKEEPER_SERVER_PRINCIPAL, "zookeeper/" + config.getConnectString());
+			zkClientConfig.setProperty(ZKClientConfig.ZOOKEEPER_SERVER_PRINCIPAL,
+					"zookeeper/" + config.getConnectString());
 
 			zk = new ZooKeeper(config.getConnectString(), config.getSessionTimeout(), stateWatcher, zkClientConfig);
 			if (log.isInfoEnabled()) {
-				log.info("success new ZooKeeper, connectString:{}, sessionTimeout:{}", config.getConnectString(), config.getSessionTimeout());
+				log.info("success new ZooKeeper, connectString:{}, sessionTimeout:{}", config.getConnectString(),
+						config.getSessionTimeout());
 			}
 			stateWatcher.setZooKeeper(zk);
 
@@ -76,7 +78,7 @@ public class ZooKeeperHolder implements Closeable {
 	}
 
 	public ZooKeeper getZK() throws IllegalStateException {
-		if(closeCalled) {
+		if (closeCalled) {
 			throw new IllegalStateException(ZooKeeperHolder.class.getSimpleName() + " was closed");
 		}
 		return zk;
@@ -86,7 +88,7 @@ public class ZooKeeperHolder implements Closeable {
 	 * 确保得到的zk当前的状态是connected的，但不保证在使用时还是连接上的，受限于zk自身的状态变化及时性
 	 */
 	public ZooKeeper getConnectedZK() throws ZooKeeperException {
-		if(closeCalled) {
+		if (closeCalled) {
 			throw new IllegalStateException(ZooKeeperHolder.class.getSimpleName() + " was closed");
 		}
 		if (zk.getState() != States.CONNECTED) {
@@ -97,7 +99,9 @@ public class ZooKeeperHolder implements Closeable {
 					} catch (InterruptedException ignore) {
 					}
 					if (zk.getState() != States.CONNECTED) {
-						throw new ConnectTimeoutZooKeeperException("zookeeper connected timeout:" + config.getConnectTimeout());
+						throw new ConnectTimeoutZooKeeperException(
+								String.format("zookeeper connected timeout:%d, connectString:%s",
+										config.getConnectTimeout(), config.getConnectString()));
 					}
 				}
 			}
@@ -105,11 +109,15 @@ public class ZooKeeperHolder implements Closeable {
 		/**
 		 * 当有配置auth时，在获取zk前把authInfo加进去
 		 */
-		if(config.getAclAuth() != null && !authInfoAdded) {
-			zk.addAuthInfo("digest", config.getAclAuth().getBytes());
-			authInfoAdded = true;
+		if (!authInfoAdded && config.getAclAuth() != null) {
+			synchronized (this) {
+				if (!authInfoAdded) {
+					zk.addAuthInfo("digest", config.getAclAuth().getBytes());
+					authInfoAdded = true;
+				}
+			}
 		}
-		
+
 		return zk;
 	}
 
@@ -121,6 +129,7 @@ public class ZooKeeperHolder implements Closeable {
 	List<NewZooKeeperListener> listNewZooKeeperListeners() {
 		return listeners;
 	}
+
 	/**
 	 * 给外部使用
 	 */
@@ -129,8 +138,10 @@ public class ZooKeeperHolder implements Closeable {
 		internalClose();
 		closeCalled = true;
 	}
+
 	/**
 	 * 给内部使用
+	 * 
 	 * @throws IOException
 	 */
 	private void internalClose() throws IOException {
@@ -241,40 +252,47 @@ public class ZooKeeperHolder implements Closeable {
 			}
 		}
 	}
-	
+
 	public static class Config {
 		private final String connectString;
 		private final int sessionTimeout;
 		private final int connectTimeout;
 		private String aclAuth;
+
 		public Config(String connectString, int sessionTimeout, int connectTimeout) {
-			if(connectString == null || connectString.isEmpty()) {
+			if (connectString == null || connectString.isEmpty()) {
 				throw new IllegalArgumentException("connectString must not empty");
 			}
 			this.connectString = connectString;
 			this.sessionTimeout = sessionTimeout;
 			this.connectTimeout = connectTimeout;
 		}
+
 		public String getAclAuth() {
 			return aclAuth;
 		}
+
 		public void setAclAuth(String aclAuth) {
 			this.aclAuth = aclAuth;
 		}
+
 		public String getConnectString() {
 			return connectString;
 		}
+
 		public int getSessionTimeout() {
 			return sessionTimeout;
 		}
+
 		public int getConnectTimeout() {
 			return connectTimeout;
 		}
+
 		@Override
 		public String toString() {
 			return "Config [connectString=" + connectString + ", sessionTimeout=" + sessionTimeout + ", connectTimeout="
 					+ connectTimeout + ", aclAuth=" + aclAuth + "]";
 		}
-		
+
 	}
 }

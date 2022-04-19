@@ -100,4 +100,10 @@ public class OpenApiResponse extends ApiResponse {
 				&& Objects.equals(sign, other.sign);
 	}
 
+	@Override
+	public String toString() {
+		return "OpenApiResponse [biz_code=" + biz_code + ", biz_content=" + biz_content + ", sign=" + sign
+				+ ", toString()=" + super.toString() + "]";
+	}
+
 }

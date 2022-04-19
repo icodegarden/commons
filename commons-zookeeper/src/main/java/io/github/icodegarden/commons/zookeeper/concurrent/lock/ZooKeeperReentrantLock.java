@@ -9,7 +9,6 @@ import io.github.icodegarden.commons.lang.concurrent.lock.DistributedReentrantLo
 import io.github.icodegarden.commons.lang.concurrent.lock.LockExceedExpectedException;
 
 /**
- * <h1>支持Reentrant的互斥锁</h1> 只在相同对象、相同线程是可重入的，不同对象、不同线程一律互斥<br>
  * 
  * @author Fangfang.Xu
  *
@@ -22,7 +21,7 @@ public class ZooKeeperReentrantLock extends CuratorSupportLock implements Distri
 	 * 
 	 * @param client
 	 * @param root
-	 * @param name 锁业务name，竞争锁的业务使用相同name
+	 * @param name   锁业务name，竞争锁的业务使用相同name
 	 */
 	public ZooKeeperReentrantLock(CuratorFramework client, String root, String name) {
 		super(client);

@@ -36,7 +36,11 @@ public class HeartbeatTimerTask {
 				}
 			}
 		};
-		scheduleCancelableRunnable.scheduleWithFixedDelay(0, heartbeatIntervalMillis, TimeUnit.MILLISECONDS);
+//		scheduleCancelableRunnable.scheduleWithFixedDelay(0, heartbeatIntervalMillis, TimeUnit.MILLISECONDS);
+		/**
+		 * 初始delay heartbeatIntervalMillis而不是0
+		 */
+		scheduleCancelableRunnable.scheduleWithFixedDelay(heartbeatIntervalMillis, heartbeatIntervalMillis, TimeUnit.MILLISECONDS);
 		return scheduleCancelableRunnable;
 	}
 }

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>${revision}</version>
+		<version>0.1.5</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-lang</artifactId>
@@ -16,6 +16,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
+		
 	</properties>
 
 	<dependencies>

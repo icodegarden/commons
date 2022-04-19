@@ -23,11 +23,20 @@ public class MinimumLoadFirstInstanceLoadBalance implements InstanceLoadBalance 
 	private final InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery;
 	private final InstanceMetrics<? extends Metrics> instanceMetrics;
 	private final MinimumLoadFirst algorithm = new MinimumLoadFirst();
-
+	/**
+	 * true：没有metrics的实例可以选择<br>
+	 * 默认true，方便用户使用，此时实际上已不计MinimumLoadFirst
+	 */
+	private boolean allowNullMetrics = true;
+	
 	public MinimumLoadFirstInstanceLoadBalance(InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery,
 			InstanceMetrics<? extends Metrics> instanceMetrics) {
 		this.instanceDiscovery = instanceDiscovery;
 		this.instanceMetrics = instanceMetrics;
+	}
+	
+	public void setAllowNullMetrics(boolean allowNullMetrics) {
+		this.allowNullMetrics = allowNullMetrics;
 	}
 
 	@Override
@@ -42,8 +51,10 @@ public class MinimumLoadFirstInstanceLoadBalance implements InstanceLoadBalance 
 		}
 
 		List<? extends Metrics> metrics = instanceMetrics.listMetrics(serviceName);
-		if (metrics == null || metrics.isEmpty()) {
-			return Constants.EMPTY_METRICS_INSTANCE;
+		if(!allowNullMetrics) {
+			if (metrics == null || metrics.isEmpty()) {
+				return Constants.EMPTY_METRICS_INSTANCE;
+			}
 		}
 
 		Queue<MetricsInstance> selectCandidates = algorithm.selectCandidates(candidates, metrics, maxCandidate);

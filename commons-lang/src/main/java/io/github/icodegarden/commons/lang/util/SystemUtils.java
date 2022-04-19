@@ -9,6 +9,7 @@ import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +28,10 @@ import io.github.icodegarden.commons.lang.tuple.Tuples;
  *
  */
 public abstract class SystemUtils {
-//	private static final Logger log = LoggerFactory.getLogger(OSUtils.class);
+
+	public static final DateTimeFormatter STANDARD_DATETIME_FORMATTER = DateTimeFormatter
+			.ofPattern("yyyy-MM-dd HH:mm:ss");
+	public static final DateTimeFormatter STANDARD_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	public static final String OS_NAME = System.getProperty("os.name");
 
@@ -215,9 +219,9 @@ public abstract class SystemUtils {
 
 		return null;
 	}
-	
-	//------------------------------------------------------------
-	
+
+	// ------------------------------------------------------------
+
 	private static VMRuntime vmRuntime;
 
 	static {
@@ -300,7 +304,7 @@ public abstract class SystemUtils {
 		 * @return 0-1.0
 		 */
 		double getProcessCpuLoad();
-		
+
 //		WIN10
 //		JDK8
 //		Xss256
@@ -554,8 +558,7 @@ public abstract class SystemUtils {
 			return 0;
 		}
 	}
-	
-	
+
 //	public static void main(String[] args) throws Exception {
 //	for(;;) {
 //		long start = System.currentTimeMillis();
@@ -632,8 +635,8 @@ public abstract class SystemUtils {
 //	}
 //}
 
-	//------------------------------------------------------------
-	
+	// ------------------------------------------------------------
+
 	public static LocalDateTime now() {
 		return SystemClock.now();
 	}
@@ -678,6 +681,6 @@ public abstract class SystemUtils {
 			public static final SystemClock INSTANCE = new SystemClock(10);
 		}
 	}
-	
-	//------------------------------------------------------------
+
+	// ------------------------------------------------------------
 }

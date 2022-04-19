@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.nio.netty;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,5 +76,11 @@ class ClientHandler extends ChannelDuplexHandler {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		log.error("ex of client channel [{}]", ctx.channel(), cause);
+		if(cause instanceof IOException) {
+			if (log.isWarnEnabled()) {
+				log.warn("ex is IOException, that more means server was closed, close client.");
+			}
+			heartbeat.close();
+		}
 	}
 }

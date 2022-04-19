@@ -3,7 +3,6 @@ package io.github.icodegarden.commons.springboot.aop;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.UndeclaredThrowableException;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.http.ResponseEntity;
 
+import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
@@ -31,9 +31,16 @@ import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 @Aspect
 @EnableAspectJAutoProxy
 @SuppressWarnings("rawtypes")
-public class ApiResponseTransferAspect {
+public class ApiResponseTransferAspect extends AbstractTransferAspect {
 
 	private static final Logger log = LoggerFactory.getLogger(ApiResponseTransferAspect.class);
+
+	private boolean printErrorStackOnWarn;
+
+	public ApiResponseTransferAspect setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
+		this.printErrorStackOnWarn = printErrorStackOnWarn;
+		return this;
+	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
 	public void pointcut() {
@@ -63,9 +70,24 @@ public class ApiResponseTransferAspect {
 					} catch (ServerErrorCodeException e) {
 						log.error("ex of ServerErrorCodeException on handle request", e);
 						ece = e;
+					} catch (IllegalArgumentException e) {
+						if (log.isWarnEnabled()) {
+							if (printErrorStackOnWarn) {
+								log.warn("request has a Client Exception:{}", e.getMessage(), e);
+							} else {
+								log.warn("request has a Client Exception:{}", e.getMessage());
+							}
+						}
+						ece = new ClientParameterInvalidErrorCodeException(
+								ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(),
+								e.getMessage());
 					} catch (ErrorCodeException e) {
 						if (log.isWarnEnabled()) {
-							log.warn("request has a ErrorCodeException, ErrorCodeException:{}", e.toString());
+							if (printErrorStackOnWarn) {
+								log.warn("request has a Client Exception:{}", e.getMessage(), e);
+							} else {
+								log.warn("request has a Client Exception:{}", e.getMessage());
+							}
 						}
 						ece = e;
 					} catch (Throwable e) {
@@ -99,10 +121,24 @@ public class ApiResponseTransferAspect {
 					} catch (ServerErrorCodeException e) {
 						log.error("ex of ServerErrorCodeException on handle request, request body:{}", body, e);
 						ece = e;
+					} catch (IllegalArgumentException e) {
+						if (log.isWarnEnabled()) {
+							if (printErrorStackOnWarn) {
+								log.warn("request has a Client Exception:{}", e.getMessage(), e);
+							} else {
+								log.warn("request has a Client Exception:{}", e.getMessage());
+							}
+						}
+						ece = new ClientParameterInvalidErrorCodeException(
+								ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(),
+								e.getMessage());
 					} catch (ErrorCodeException e) {
 						if (log.isWarnEnabled()) {
-							log.warn("request has a Client ErrorCodeException, request body:{}, ErrorCodeException:{}",
-									body, e.toString());
+							if (printErrorStackOnWarn) {
+								log.warn("request has a Client Exception:{}, request body:{}", e.getMessage(), body, e);
+							} else {
+								log.warn("request has a Client Exception:{}, request body:{}", e.getMessage(), body);
+							}
 						}
 						ece = e;
 					} catch (Throwable e) {
@@ -144,19 +180,4 @@ public class ApiResponseTransferAspect {
 		return false;
 	}
 
-	private ErrorCodeException causeErrorCodeException(Throwable e) {
-		while (e != null && !(e instanceof ErrorCodeException)) {
-			if (e instanceof UndeclaredThrowableException) {
-				e = ((UndeclaredThrowableException) e).getUndeclaredThrowable();
-			} else if (e instanceof org.springframework.cglib.proxy.UndeclaredThrowableException) {
-				e = ((org.springframework.cglib.proxy.UndeclaredThrowableException) e).getUndeclaredThrowable();
-			} else {
-				e = e.getCause();
-			}
-		}
-		if (e != null && e instanceof ErrorCodeException) {
-			return (ErrorCodeException) e;
-		}
-		return null;
-	}
 }
