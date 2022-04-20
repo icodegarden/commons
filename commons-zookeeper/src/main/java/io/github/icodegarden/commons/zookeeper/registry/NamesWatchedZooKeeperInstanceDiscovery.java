@@ -72,7 +72,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 
 		addWatchers();
 	}
-	
+
 	@Override
 	public void onNewZooKeeper() {
 		/**
@@ -93,12 +93,13 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 			}
 		}
 	}
-	
+
 	private void removeWatchers() throws ZooKeeperException {
 		for (String serviceName : serviceNames) {
 			String path = ServiceNamePath.buildServiceNamePath(root, serviceName);
 			try {
-				zooKeeperHolder.getConnectedZK().removeWatches(path, this, WatcherType.Any, true/*true时，当connection不可用时可以只移除本地*/);
+				zooKeeperHolder.getConnectedZK().removeWatches(path, this, WatcherType.Any,
+						true/* true时，当connection不可用时可以只移除本地 */);
 			} catch (KeeperException.NoWatcherException e) {
 				/**
 				 * 没有该watcher，忽略
@@ -114,7 +115,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 	public List<ZooKeeperRegisteredInstance> listNamedObjects(String serviceName) throws ZooKeeperException {
 		return (List) namesCachedObjectReader.listNamedObjects(serviceName);
 	}
-	
+
 	@Override
 	public ZooKeeperRegisteredInstance parseInstance(Object data) {
 		return delegator.parseInstance(data);
@@ -132,7 +133,13 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 				log.info("watched znode was created, a instance was registered, znode:{}", znode);
 			}
 			ZooKeeperRegisteredInstance registeredInstance = parseInstance(znode);
-			namesCachedObjectReader.addObject(registeredInstance);
+			if (registeredInstance != null) {
+				namesCachedObjectReader.addObject(registeredInstance);
+			} else {
+				if (log.isWarnEnabled()) {
+					log.warn("znode parseInstance is null on znode created");
+				}
+			}
 		}
 			break;
 		case NodeDeleted: {
@@ -141,7 +148,13 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 				log.info("watched znode was deleted, a instance was deregistered, znode:{}", znode);
 			}
 			ZooKeeperRegisteredInstance registeredInstance = parseInstance(znode);
-			namesCachedObjectReader.removeObject(registeredInstance);
+			if (registeredInstance != null) {
+				namesCachedObjectReader.removeObject(registeredInstance);
+			} else {
+				if (log.isWarnEnabled()) {
+					log.warn("znode parseInstance is null on znode deleted");
+				}
+			}
 		}
 
 			break;
@@ -149,16 +162,16 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 			break;
 		}
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		try {
 			removeWatchers();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			log.error("WARN ex on removeWatchers when close", e);
 		}
-		
+
 		namesCachedObjectReader.close();
 	}
-	
+
 }
