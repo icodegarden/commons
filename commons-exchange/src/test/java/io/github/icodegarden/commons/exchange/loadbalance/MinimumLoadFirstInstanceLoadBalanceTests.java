@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import io.github.icodegarden.commons.lang.metrics.InstanceMetrics;
 import io.github.icodegarden.commons.lang.metrics.Metrics;
 import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
+import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
 import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
 import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
 
@@ -36,10 +37,10 @@ class MinimumLoadFirstInstanceLoadBalanceTests {
 		/**
 		 * 
 		 */
-		RegisteredInstance r1 = new RegisteredInstance.Default("worker", "r1", "1.1.1.1", 9999);
-		RegisteredInstance r2 = new RegisteredInstance.Default("worker", "r2", "1.1.1.1", 9999);
-		RegisteredInstance r3 = new RegisteredInstance.Default("worker", "r3", "1.1.1.1", 9999);
-		RegisteredInstance r4 = new RegisteredInstance.Default("worker", "r4", "1.1.1.1", 9999);
+		RegisteredInstance r1 = new DefaultRegisteredInstance("worker", "r1", "1.1.1.1", 9999);
+		RegisteredInstance r2 = new DefaultRegisteredInstance("worker", "r2", "1.1.1.1", 9999);
+		RegisteredInstance r3 = new DefaultRegisteredInstance("worker", "r3", "1.1.1.1", 9999);
+		RegisteredInstance r4 = new DefaultRegisteredInstance("worker", "r4", "1.1.1.1", 9999);
 		List<RegisteredInstance> instances = Arrays.asList(r1, r2, r3, r4);
 		doReturn(instances).when(instanceDiscovery).listInstances(any());
 		/**
@@ -94,10 +95,10 @@ class MinimumLoadFirstInstanceLoadBalanceTests {
 		/**
 		 * 
 		 */
-		RegisteredInstance r1 = new RegisteredInstance.Default("worker", "r1", "1.1.1.1", 9999);
-		RegisteredInstance r2 = new RegisteredInstance.Default("worker", "r2", "1.1.1.1", 9999);
-		RegisteredInstance r3 = new RegisteredInstance.Default("worker", "r3", "1.1.1.1", 9999);
-		RegisteredInstance r4 = new RegisteredInstance.Default("worker", "r4", "1.1.1.1", 9999);
+		RegisteredInstance r1 = new DefaultRegisteredInstance("worker", "r1", "1.1.1.1", 9999);
+		RegisteredInstance r2 = new DefaultRegisteredInstance("worker", "r2", "1.1.1.1", 9999);
+		RegisteredInstance r3 = new DefaultRegisteredInstance("worker", "r3", "1.1.1.1", 9999);
+		RegisteredInstance r4 = new DefaultRegisteredInstance("worker", "r4", "1.1.1.1", 9999);
 		List<RegisteredInstance> instances = Arrays.asList(r1, r2, r3, r4);
 		doReturn(instances).when(instanceDiscovery).listInstances(any());
 
@@ -119,10 +120,10 @@ class MinimumLoadFirstInstanceLoadBalanceTests {
 		/**
 		 * 
 		 */
-		RegisteredInstance r1 = new RegisteredInstance.Default("worker", "r1", "1.1.1.1", 9999);
-		RegisteredInstance r2 = new RegisteredInstance.Default("worker", "r2", "1.1.1.1", 9999);
-		RegisteredInstance r3 = new RegisteredInstance.Default("worker", "r3", "1.1.1.1", 9999);
-		RegisteredInstance r4 = new RegisteredInstance.Default("worker", "r4", "1.1.1.1", 9999);
+		RegisteredInstance r1 = new DefaultRegisteredInstance("worker", "r1", "1.1.1.1", 9999);
+		RegisteredInstance r2 = new DefaultRegisteredInstance("worker", "r2", "1.1.1.1", 9999);
+		RegisteredInstance r3 = new DefaultRegisteredInstance("worker", "r3", "1.1.1.1", 9999);
+		RegisteredInstance r4 = new DefaultRegisteredInstance("worker", "r4", "1.1.1.1", 9999);
 		List<RegisteredInstance> instances = Arrays.asList(r1, r2, r3, r4);
 		doReturn(instances).when(instanceDiscovery).listInstances(any());
 

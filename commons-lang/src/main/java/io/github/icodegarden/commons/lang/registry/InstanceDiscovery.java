@@ -15,5 +15,12 @@ public interface InstanceDiscovery<T extends RegisteredInstance> extends NamedOb
 	default List<T> listInstances(String serviceName) {
 		return listNamedObjects(serviceName);
 	}
+	
+	/**
+	 * 
+	 * @param data
+	 * @return Nullable 若参数不符合
+	 */
+	T parseInstance(Object data);
 
 }

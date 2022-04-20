@@ -21,7 +21,7 @@ import io.github.icodegarden.commons.zookeeper.PropertiesConfig;
  */
 public class ZooKeeperLockTests extends DistributedLockTests {
 
-	String root = "/beecomb";
+	String root = "/zklock-test";
 	CuratorFramework client;
 
 	@BeforeEach

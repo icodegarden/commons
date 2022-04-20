@@ -8,11 +8,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import io.github.icodegarden.commons.zookeeper.CommonZookeeperBuilder;
-import io.github.icodegarden.commons.zookeeper.registry.NamesWatchedZooKeeperInstanceDiscovery;
-import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperInstanceDiscovery;
-import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperInstanceRegistry;
-import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperRegisteredInstance;
-import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperInstanceDiscovery.Default;
 
 /**
  * 
@@ -21,18 +16,20 @@ import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperInstanceDiscove
  */
 class NamesWatchedZooKeeperInstanceDiscoveryTests extends CommonZookeeperBuilder {
 
+	String root = "/xff";
+	
 	@Test
 	void listInstances() throws Exception {
-		ZooKeeperInstanceDiscovery instanceDiscovery = new ZooKeeperInstanceDiscovery.Default(zkh, "/beecomb");
+		ZooKeeperInstanceDiscovery instanceDiscovery = new ZnodePatternZooKeeperInstanceDiscovery(zkh, root);
 		NamesWatchedZooKeeperInstanceDiscovery namesWatchedZooKeeperInstanceDiscovery = new NamesWatchedZooKeeperInstanceDiscovery(
-				instanceDiscovery, zkh, "/beecomb", Arrays.asList("worker"), Long.MAX_VALUE/* 时间为永不刷新，便于测试watch事件 */);
+				instanceDiscovery, zkh, root, Arrays.asList("worker"), Long.MAX_VALUE/* 时间为永不刷新，便于测试watch事件 */);
 
 		// --------------------------------初始没实例
 		List<ZooKeeperRegisteredInstance> workers = namesWatchedZooKeeperInstanceDiscovery.listInstances("worker");
 		assertThat(workers).hasSize(0);
 
 		// --------------------------------新增1个实例，断言1个，因为触发了created事件
-		ZooKeeperInstanceRegistry instanceRegistry1 = new ZooKeeperInstanceRegistry(zkh, "/beecomb", "worker", 10000);
+		ZooKeeperInstanceRegistry instanceRegistry1 = new ZooKeeperInstanceRegistry(zkh, root, "worker", 10000);
 		ZooKeeperRegisteredInstance instance1 = instanceRegistry1.registerIfNot();
 
 		Thread.sleep(200);// 事件触发需要一点点时间
@@ -42,7 +39,7 @@ class NamesWatchedZooKeeperInstanceDiscoveryTests extends CommonZookeeperBuilder
 		assertThat(workers.get(0)).isEqualTo(instance1);
 
 		// --------------------------------再新增1个实例，断言2个，因为触发了created事件
-		ZooKeeperInstanceRegistry instanceRegistry2 = new ZooKeeperInstanceRegistry(zkh, "/beecomb", "worker", 10000);
+		ZooKeeperInstanceRegistry instanceRegistry2 = new ZooKeeperInstanceRegistry(zkh, root, "worker", 10000);
 		ZooKeeperRegisteredInstance instance2 = instanceRegistry2.registerIfNot();
 
 		Thread.sleep(200);// 事件触发需要一点点时间

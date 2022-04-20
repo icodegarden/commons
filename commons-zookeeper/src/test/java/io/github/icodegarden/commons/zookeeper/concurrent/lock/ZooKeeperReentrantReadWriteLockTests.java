@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedLock;
 import io.github.icodegarden.commons.zookeeper.PropertiesConfig;
-import io.github.icodegarden.commons.zookeeper.concurrent.lock.ZooKeeperReentrantReadWriteLock;
 
 /**
  * 
@@ -20,7 +19,7 @@ import io.github.icodegarden.commons.zookeeper.concurrent.lock.ZooKeeperReentran
  *
  */
 public class ZooKeeperReentrantReadWriteLockTests extends PropertiesConfig {
-	String root = "/beecomb";
+	String root = "/zklock-test";
 	CuratorFramework client;
 
 	@BeforeEach

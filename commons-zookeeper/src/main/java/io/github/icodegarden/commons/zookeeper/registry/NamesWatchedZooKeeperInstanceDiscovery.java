@@ -30,6 +30,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 	private ZooKeeperHolder zooKeeperHolder;
 	private String root;
 	private final List<String> serviceNames;
+	private final ZooKeeperInstanceDiscovery<? extends ZooKeeperRegisteredInstance> delegator;
 	private final NamesCachedObjectReader namesCachedObjectReader;
 
 	/**
@@ -44,6 +45,9 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 			ZooKeeperInstanceDiscovery<? extends ZooKeeperRegisteredInstance> delegator,
 			ZooKeeperHolder zooKeeperHolder, String root, List<String> serviceNames, long cacheRefreshIntervalMillis)
 			throws IllegalArgumentException {
+		if (delegator == null) {
+			throw new IllegalArgumentException("param delegator must not null");
+		}
 		if (zooKeeperHolder == null) {
 			throw new IllegalArgumentException("param zooKeeperHolder must not null");
 		}
@@ -59,6 +63,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 		if (serviceNames == null || serviceNames.isEmpty()) {
 			throw new IllegalArgumentException("serviceNames must not empty");
 		}
+		this.delegator = delegator;
 		this.zooKeeperHolder = zooKeeperHolder;
 		this.root = root;
 		this.serviceNames = serviceNames;
@@ -67,7 +72,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 
 		addWatchers();
 	}
-
+	
 	@Override
 	public void onNewZooKeeper() {
 		/**
@@ -109,6 +114,11 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 	public List<ZooKeeperRegisteredInstance> listNamedObjects(String serviceName) throws ZooKeeperException {
 		return (List) namesCachedObjectReader.listNamedObjects(serviceName);
 	}
+	
+	@Override
+	public ZooKeeperRegisteredInstance parseInstance(Object data) {
+		return delegator.parseInstance(data);
+	}
 
 	/**
 	 * path: /beecomb/worker/instances/10.33.211.12:10000-0000000115
@@ -121,7 +131,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 			if (log.isInfoEnabled()) {
 				log.info("watched znode was created, a instance was registered, znode:{}", znode);
 			}
-			ZooKeeperRegisteredInstance registeredInstance = ZooKeeperInstanceRegistry.resovleRegisteredInstance(znode);
+			ZooKeeperRegisteredInstance registeredInstance = parseInstance(znode);
 			namesCachedObjectReader.addObject(registeredInstance);
 		}
 			break;
@@ -130,7 +140,7 @@ public class NamesWatchedZooKeeperInstanceDiscovery
 			if (log.isInfoEnabled()) {
 				log.info("watched znode was deleted, a instance was deregistered, znode:{}", znode);
 			}
-			ZooKeeperRegisteredInstance registeredInstance = ZooKeeperInstanceRegistry.resovleRegisteredInstance(znode);
+			ZooKeeperRegisteredInstance registeredInstance = parseInstance(znode);
 			namesCachedObjectReader.removeObject(registeredInstance);
 		}
 

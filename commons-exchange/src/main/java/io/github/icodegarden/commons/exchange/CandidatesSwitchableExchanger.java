@@ -117,16 +117,16 @@ public class CandidatesSwitchableExchanger implements Exchanger<ShardExchangeRes
 		try {
 			ProtocolParams params = new ProtocolParams(registeredInstance.getScheme(), registeredInstance.getIp(),
 					registeredInstance.getPort(), body, timeout);
-			
+
 			Object object = protocol.exchange(params);
 			if (object instanceof InstanceExchangeResult) {
-				InstanceExchangeResult result = (InstanceExchangeResult)object;
+				InstanceExchangeResult result = (InstanceExchangeResult) object;
 				if (result.isSuccess()) {
 					return InstanceExchangeResult.setInstance(instance, result);
 				}
 				exchangeFailedReason = result.failedReason();
 			} else {
-				return new InstanceExchangeResult.Default(true, instance, 1, object, exchangeFailedReason);
+				return new DefaultInstanceExchangeResult(true, instance, 1, object, exchangeFailedReason);
 			}
 		} catch (ConnectFailedRemoteException e) {
 			log.error("ex on create Nio Client", e);
@@ -146,6 +146,6 @@ public class CandidatesSwitchableExchanger implements Exchanger<ShardExchangeRes
 			exchangeFailedReason = ExchangeFailedReason.clientException(e.getMessage(), e);
 		}
 
-		return new InstanceExchangeResult.Default(false, instance, 1, null, exchangeFailedReason);
+		return new DefaultInstanceExchangeResult(false, instance, 1, null, exchangeFailedReason);
 	}
 }

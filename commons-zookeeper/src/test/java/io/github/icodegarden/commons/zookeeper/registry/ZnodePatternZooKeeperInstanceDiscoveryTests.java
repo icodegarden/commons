@@ -16,15 +16,17 @@ import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperRegisteredInsta
  * @author Fangfang.Xu
  *
  */
-class DefaultZooKeeperInstanceDiscoveryTests extends CommonZookeeperBuilder {
+class ZnodePatternZooKeeperInstanceDiscoveryTests extends CommonZookeeperBuilder {
 
+	String root = "/xff";
+	
 	@Test
 	void listInstancesMasters() throws Exception {
-		ZooKeeperInstanceDiscovery instanceDiscovery = new ZooKeeperInstanceDiscovery.Default(zkh, "/beecomb");
+		ZooKeeperInstanceDiscovery instanceDiscovery = new ZnodePatternZooKeeperInstanceDiscovery(zkh, root);
 		List<ZooKeeperRegisteredInstance> masters = instanceDiscovery.listInstances("master");
 		assertThat(masters).isEmpty();
 
-		ZooKeeperInstanceRegistry instanceRegistry = new ZooKeeperInstanceRegistry(zkh, "/beecomb", "master", 9999);
+		ZooKeeperInstanceRegistry instanceRegistry = new ZooKeeperInstanceRegistry(zkh, root, "master", 9999);
 		instanceRegistry.registerIfNot();
 
 		masters = instanceDiscovery.listInstances("master");
@@ -33,11 +35,11 @@ class DefaultZooKeeperInstanceDiscoveryTests extends CommonZookeeperBuilder {
 
 	@Test
 	void listInstancesWorkers() throws Exception {
-		ZooKeeperInstanceDiscovery instanceDiscovery = new ZooKeeperInstanceDiscovery.Default(zkh, "/beecomb");
+		ZooKeeperInstanceDiscovery instanceDiscovery = new ZnodePatternZooKeeperInstanceDiscovery(zkh, root);
 		List<ZooKeeperRegisteredInstance> workers = instanceDiscovery.listInstances("worker");
 		assertThat(workers).isEmpty();
 
-		ZooKeeperInstanceRegistry instanceRegistry = new ZooKeeperInstanceRegistry(zkh, "/beecomb", "worker", 9999);
+		ZooKeeperInstanceRegistry instanceRegistry = new ZooKeeperInstanceRegistry(zkh, root, "worker", 9999);
 		instanceRegistry.registerIfNot();
 
 		workers = instanceDiscovery.listInstances("worker");

@@ -33,6 +33,11 @@ public class FilterableInstanceDiscovery<T extends RegisteredInstance> implement
 	}
 	
 	@Override
+	public T parseInstance(Object data) {
+		return delegator.parseInstance(data);
+	}
+	
+	@Override
 	public void close() throws IOException {
 		delegator.close();		
 	}

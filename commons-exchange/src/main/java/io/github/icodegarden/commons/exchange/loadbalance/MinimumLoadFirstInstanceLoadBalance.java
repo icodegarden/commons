@@ -28,13 +28,13 @@ public class MinimumLoadFirstInstanceLoadBalance implements InstanceLoadBalance 
 	 * 默认true，方便用户使用，此时实际上已不计MinimumLoadFirst
 	 */
 	private boolean allowNullMetrics = true;
-	
+
 	public MinimumLoadFirstInstanceLoadBalance(InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery,
 			InstanceMetrics<? extends Metrics> instanceMetrics) {
 		this.instanceDiscovery = instanceDiscovery;
 		this.instanceMetrics = instanceMetrics;
 	}
-	
+
 	public void setAllowNullMetrics(boolean allowNullMetrics) {
 		this.allowNullMetrics = allowNullMetrics;
 	}
@@ -51,7 +51,7 @@ public class MinimumLoadFirstInstanceLoadBalance implements InstanceLoadBalance 
 		}
 
 		List<? extends Metrics> metrics = instanceMetrics.listMetrics(serviceName);
-		if(!allowNullMetrics) {
+		if (!allowNullMetrics) {
 			if (metrics == null || metrics.isEmpty()) {
 				return Constants.EMPTY_METRICS_INSTANCE;
 			}
@@ -84,7 +84,7 @@ public class MinimumLoadFirstInstanceLoadBalance implements InstanceLoadBalance 
 				return m1.compareTo(m2);
 			}).limit(maxCandidate).map(candidate -> {
 				Metrics m = map.get(candidate.getInstanceName());
-				return new MetricsInstance.Default(candidate, m);
+				return new DefaultMetricsInstance(candidate, m);
 			}).collect(Collectors.toList());
 
 			return new LoadBalancedInstanceQueue(sorted);

@@ -20,8 +20,8 @@ import io.github.icodegarden.commons.lang.util.CollectionUtils;
 public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 
 	private final InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery;
-	
-	private Map<String,Integer> serviceName_fromIndex = new HashMap<String, Integer>();
+
+	private Map<String, Integer> serviceName_fromIndex = new HashMap<String, Integer>();
 
 	public RoundRobinInstanceLoadBalance(InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery) {
 		this.instanceDiscovery = instanceDiscovery;
@@ -37,11 +37,11 @@ public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 		if (candidates == null || candidates.isEmpty()) {
 			return Constants.EMPTY_METRICS_INSTANCE;
 		}
-		
+
 		/**
 		 * 目前在并发时可能出现不严格的轮询
 		 */
-		
+
 		/**
 		 * 有则直接取，没有则从0开始
 		 */
@@ -51,7 +51,7 @@ public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 
 		candidates = CollectionUtils.nextElements(candidates, fromIndex, maxCandidate);
 		List<MetricsInstance> list = candidates.stream().map(candidate -> {
-			return new MetricsInstance.Default(candidate, Constants.IGNORE_METRICS);
+			return new DefaultMetricsInstance(candidate, Constants.IGNORE_METRICS);
 		}).collect(Collectors.toList());
 
 		/**
@@ -64,7 +64,7 @@ public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 		if (fromIndex > candidates.size()) {
 			fromIndex = 0;
 		}
-		
+
 		serviceName_fromIndex.put(serviceName, fromIndex);
 
 		return new LinkedList<MetricsInstance>(list);

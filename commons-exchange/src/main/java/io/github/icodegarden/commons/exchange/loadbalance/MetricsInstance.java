@@ -19,40 +19,4 @@ public interface MetricsInstance {
 
 	boolean isOverload();
 
-	public static class Default implements MetricsInstance {
-
-		private RegisteredInstance registered;
-		private Metrics metrics;
-
-		/**
-		 * @param registered
-		 * @param metrics
-		 */
-		public Default(RegisteredInstance registered, @Nullable Metrics metrics) {
-			this.registered = registered;
-			this.metrics = metrics;
-		}
-
-		public RegisteredInstance getAvailable() {
-			return isOverload() ? null : registered;
-		}
-
-		public Metrics getMetrics() {
-			return metrics;
-		}
-
-		public boolean isOverload() {
-			if (metrics != null) {
-				return metrics.isOverload();
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "[registered=" + registered + ", metrics=" + metrics + ", overload=" + isOverload() + "]";
-		}
-
-	}
-
 }

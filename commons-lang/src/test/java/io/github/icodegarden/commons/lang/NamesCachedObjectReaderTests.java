@@ -12,9 +12,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.NamedObject;
-import io.github.icodegarden.commons.lang.NamedObjectReader;
-import io.github.icodegarden.commons.lang.NamesCachedObjectReader;
+import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
 import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
 
 /**
@@ -39,8 +37,8 @@ class NamesCachedObjectReaderTests {
 		assertThat(workers).isEmpty();
 
 		// 注册后，实例0，因为缓存还未刷新-------------------------
-		RegisteredInstance registeredInstance1 = new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000);
-		RegisteredInstance registeredInstance2 = new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000);
+		RegisteredInstance registeredInstance1 = new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000);
+		RegisteredInstance registeredInstance2 = new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000);
 		doReturn(Arrays.asList(registeredInstance1, registeredInstance2)).when(namedObjectReader)
 				.listNamedObjects(eq("worker"));
 
@@ -61,14 +59,14 @@ class NamesCachedObjectReaderTests {
 				namedObjectReader, Long.MAX_VALUE);
 
 		// 外部增加一个实例 断言1个 -------------------------------
-		RegisteredInstance outer = new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000);
+		RegisteredInstance outer = new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000);
 		namesCachedObjectReader.addObject(outer);
 
 		List<NamedObject> workers = namesCachedObjectReader.listNamedObjects("worker");
 		assertThat(workers).hasSize(1);
 
 		// 再注册一个实例，断言1个 ，因为此时缓存未刷新-------------------------------
-		RegisteredInstance registeredInstance1 = new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000);
+		RegisteredInstance registeredInstance1 = new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000);
 		LinkedList<RegisteredInstance> linkedList = new LinkedList<RegisteredInstance>();
 		linkedList.add(registeredInstance1);
 		doReturn(linkedList).when(namedObjectReader).listNamedObjects(eq("worker"));
@@ -98,10 +96,10 @@ class NamesCachedObjectReaderTests {
 				namedObjectReader, 100);
 
 		// 外部增加一个实例，再删除 断言0个 -------------------------------
-		RegisteredInstance outer = new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000);
+		RegisteredInstance outer = new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000);
 		namesCachedObjectReader.addObject(outer);
 		// 以new方式构造来检查hashcode equals
-		namesCachedObjectReader.removeObject(new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000));
+		namesCachedObjectReader.removeObject(new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000));
 
 		List<NamedObject> workers = namesCachedObjectReader.listNamedObjects("worker");
 		assertThat(workers).hasSize(0);

@@ -14,20 +14,17 @@ import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.exchange.InstanceExchangeResult;
-import io.github.icodegarden.commons.exchange.LoadBalanceExchanger;
-import io.github.icodegarden.commons.exchange.ParallelExchangeResult;
-import io.github.icodegarden.commons.exchange.ParallelLoadBalanceExchanger;
 import io.github.icodegarden.commons.exchange.exception.AllInstanceFailedExchangeException;
 import io.github.icodegarden.commons.exchange.exception.ExchangeFailedReason;
 import io.github.icodegarden.commons.exchange.exception.NoQualifiedInstanceExchangeException;
+import io.github.icodegarden.commons.exchange.loadbalance.DefaultMetricsInstance;
 import io.github.icodegarden.commons.exchange.loadbalance.InstanceLoadBalance;
 import io.github.icodegarden.commons.exchange.loadbalance.MetricsInstance;
 import io.github.icodegarden.commons.exchange.nio.NioProtocol;
 import io.github.icodegarden.commons.lang.metrics.Metrics;
 import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
 import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
 import io.github.icodegarden.commons.nio.NioClient;
 import io.github.icodegarden.commons.nio.pool.NioClientPool;
 
@@ -64,8 +61,8 @@ class ParallelLoadBalanceExchangerTests {
 	 */
 	@Test
 	void exchange_NoQualifiedInstanceExchangeException_onLoadBalance1Overload() throws Exception {
-		MetricsInstance loadBalancedInstance = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000),
+		MetricsInstance loadBalancedInstance = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 6)));
 		Queue<MetricsInstance> queue = new LinkedList<MetricsInstance>();
 		queue.add(loadBalancedInstance);
@@ -86,12 +83,12 @@ class ParallelLoadBalanceExchangerTests {
 	 */
 	@Test
 	void exchange_AllInstanceFailedExchangeException_0() throws Exception {
-		MetricsInstance loadBalancedInstance1 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000),
+		MetricsInstance loadBalancedInstance1 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
-		MetricsInstance loadBalancedInstance2 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000),
+		MetricsInstance loadBalancedInstance2 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 6)));
 
 		Queue<MetricsInstance> queue = new LinkedList<MetricsInstance>();
@@ -114,12 +111,12 @@ class ParallelLoadBalanceExchangerTests {
 	 */
 	@Test
 	void exchange_AllInstanceFailedExchangeException_1() throws Exception {
-		MetricsInstance loadBalancedInstance1 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000),
+		MetricsInstance loadBalancedInstance1 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
-		MetricsInstance loadBalancedInstance2 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000),
+		MetricsInstance loadBalancedInstance2 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
 		Queue<MetricsInstance> queue = new LinkedList<MetricsInstance>();
@@ -141,12 +138,12 @@ class ParallelLoadBalanceExchangerTests {
 	 */
 	@Test
 	void exchange_OK_0() throws Exception {
-		MetricsInstance loadBalancedInstance1 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000),
+		MetricsInstance loadBalancedInstance1 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
-		MetricsInstance loadBalancedInstance2 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000),
+		MetricsInstance loadBalancedInstance2 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
 		Queue<MetricsInstance> queue = new LinkedList<MetricsInstance>();
@@ -186,12 +183,12 @@ class ParallelLoadBalanceExchangerTests {
 	 */
 	@Test
 	void exchange_OK_1() throws Exception {
-		MetricsInstance loadBalancedInstance1 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker1", "1.1.1.1", 10000),
+		MetricsInstance loadBalancedInstance1 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker1", "1.1.1.1", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
-		MetricsInstance loadBalancedInstance2 = new MetricsInstance.Default(
-				new RegisteredInstance.Default("worker", "worker2", "1.1.1.2", 10000),
+		MetricsInstance loadBalancedInstance2 = new DefaultMetricsInstance(
+				new DefaultRegisteredInstance("worker", "worker2", "1.1.1.2", 10000),
 				new Metrics(new Dimension(DimensionName.Jobs, 3, 0)));
 
 		Queue<MetricsInstance> queue = new LinkedList<MetricsInstance>();

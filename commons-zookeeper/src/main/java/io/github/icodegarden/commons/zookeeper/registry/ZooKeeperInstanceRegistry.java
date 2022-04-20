@@ -106,7 +106,7 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 			String ip = matcher.group(3);
 			String port = matcher.group(4);
 			String seq = matcher.group(5);
-			return new ZooKeeperRegisteredInstance.Default(znode, serviceName, ip + ":" + port + "-" + seq, ip,
+			return new DefaultZooKeeperRegisteredInstance(znode, serviceName, ip + ":" + port + "-" + seq, ip,
 					Integer.parseInt(port));
 		}
 		throw new IllegalArgumentException(
@@ -139,7 +139,7 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 			throw new ExceedExpectedZooKeeperException(String.format("ex on register znode [%s]", nodeName), e);
 		}
 
-		ZooKeeperRegisteredInstance registerResult = new ZooKeeperRegisteredInstance.Default(nodeName, serviceName,
+		ZooKeeperRegisteredInstance registerResult = new DefaultZooKeeperRegisteredInstance(nodeName, serviceName,
 				nodeName.substring(nodeName.lastIndexOf("/") + 1, nodeName.length()), bindIp, port);
 		registered = registerResult;
 		return registerResult;
@@ -208,13 +208,13 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 	public ZooKeeperRegisteredInstance getRegistered() {
 		return registered;
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		/**
 		 * 只需要deregister
 		 */
-		try{
+		try {
 			deregister();
 		} catch (Exception e) {
 			throw new IOException(e);

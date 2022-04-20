@@ -24,7 +24,7 @@ import io.github.icodegarden.commons.zookeeper.concurrent.lock.ZooKeeperReentran
  *
  */
 public class ZooKeeperReentrantLockTests extends PropertiesConfig {
-	String root = "/beecomb";
+	String root = "/zklock-test";
 	CuratorFramework client;
 
 	@BeforeEach

@@ -16,7 +16,7 @@ import io.github.icodegarden.commons.zookeeper.CommonZookeeperBuilder;
  */
 class ZooKeeperInstanceRegistryTests extends CommonZookeeperBuilder {
 
-	String root = "/beecomb";
+	String root = "/xff";
 	int port = 9999;
 	ZooKeeperInstanceRegistry instanceRegistry;
 

@@ -18,7 +18,7 @@ import io.github.icodegarden.commons.nio.task.IdleStateTimerTask;
  *
  */
 public class JavaNioServer implements NioServer, ServerNioEventListener {
-	private static Logger log = LoggerFactory.getLogger(JavaNioServer.class);
+	private static final Logger log = LoggerFactory.getLogger(JavaNioServer.class);
 
 	private final String name;
 	private final InetSocketAddress bind;
@@ -74,8 +74,8 @@ public class JavaNioServer implements NioServer, ServerNioEventListener {
 	@Override
 	public void onAccept() throws IOException {
 		SocketChannel socketChannel = serverSocketChannel.accept();
-		if (log.isDebugEnabled()) {
-			log.debug("accept a new socket, address:{}", socketChannel);
+		if (log.isInfoEnabled()) {
+			log.info("accept a new socket, address:{}", socketChannel);
 		}
 		socketChannel.configureBlocking(false);
 

@@ -12,7 +12,6 @@ import io.github.icodegarden.commons.lang.metrics.Metrics;
 import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
 import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
 import io.github.icodegarden.commons.zookeeper.CommonZookeeperBuilder;
-import io.github.icodegarden.commons.zookeeper.metrics.ZooKeeperInstanceMetrics;
 import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperInstanceRegistry;
 import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperRegisteredInstance;
 
@@ -21,9 +20,9 @@ import io.github.icodegarden.commons.zookeeper.registry.ZooKeeperRegisteredInsta
  * @author Fangfang.Xu
  *
  */
-class ZooKeeperInstanceMetrics_DefaultTests extends CommonZookeeperBuilder {
+class ZnodeDataZooKeeperInstanceMetricsTests extends CommonZookeeperBuilder {
 
-	String root = "/beecomb";
+	String root = "/xff";
 	int port = 9999;
 	ZooKeeperInstanceRegistry zooKeeperInstanceRegister;
 	ZooKeeperInstanceMetrics zooKeeperInstanceMetrics;
@@ -31,7 +30,7 @@ class ZooKeeperInstanceMetrics_DefaultTests extends CommonZookeeperBuilder {
 	@BeforeEach
 	void init() {
 		zooKeeperInstanceRegister = new ZooKeeperInstanceRegistry(zkh, root, "worker", port);
-		zooKeeperInstanceMetrics = new ZooKeeperInstanceMetrics.Default(zkh, "/beecomb");
+		zooKeeperInstanceMetrics = new ZnodeDataZooKeeperInstanceMetrics(zkh, root);
 	}
 
 	@Test

@@ -37,6 +37,9 @@ class ServerHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		if (log.isInfoEnabled()) {
+			log.info("client channel [{}] active", ctx.channel());
+		}
 		Channel channel = new Channel() {
 			@Override
 			public void write(Object obj) throws RemoteException {
@@ -61,6 +64,9 @@ class ServerHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		if (log.isInfoEnabled()) {
+			log.info("client channel [{}] inactive", ctx.channel());
+		}
 	}
 
 	@Override
