@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.shardingsphere.springboot;
+package io.github.icodegarden.commons.shardingsphere.algorithm;
 
 import java.util.Properties;
 
@@ -11,7 +11,6 @@ import org.springframework.util.Assert;
 import io.github.icodegarden.commons.lang.sequence.MysqlSequenceManager;
 import io.github.icodegarden.commons.lang.sequence.SequenceManager;
 import io.github.icodegarden.commons.shardingsphere.util.DataSourceUtils;
-import io.github.icodegarden.commons.springboot.SpringContext;
 
 /**
  * 
@@ -39,13 +38,28 @@ public class MysqlKeyGenerateAlgorithm implements KeyGenerateAlgorithm {
 		Assert.hasLength(moduleName, MODULE_NAME_KEY + " must not empty");
 	}
 
+	private static DataSource staticDataSource;
+
+	public static void registerDataSource(DataSource dataSource) {
+		staticDataSource = dataSource;
+	}
+
 	@Override
 	public Comparable<?> generateKey() {
 		if (sequenceManager == null) {
-			ShardingSphereDataSource sdataSource = (ShardingSphereDataSource) SpringContext.getApplicationContext()
-					.getBean(DataSource.class);
-			DataSource dataSource = DataSourceUtils.firstDataSource(sdataSource);
-			sequenceManager = new MysqlSequenceManager(moduleName, dataSource);
+			Assert.notNull(staticDataSource, "Missing:staticDataSource");
+
+			synchronized (this) {
+				if (sequenceManager == null) {
+					if (staticDataSource instanceof ShardingSphereDataSource) {
+						DataSource dataSource = DataSourceUtils
+								.firstDataSource((ShardingSphereDataSource) staticDataSource);
+						sequenceManager = new MysqlSequenceManager(moduleName, dataSource);
+					} else {
+						sequenceManager = new MysqlSequenceManager(moduleName, staticDataSource);
+					}
+				}
+			}
 		}
 		return sequenceManager.nextId();
 	}

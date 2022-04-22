@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.shardingsphere.springboot;
+package io.github.icodegarden.commons.shardingsphere.algorithm;
 
 import java.util.Collection;
 import java.util.Properties;
@@ -9,9 +9,9 @@ import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingVal
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.shardingsphere.util.DataSourceUtils;
-import io.github.icodegarden.commons.springboot.SpringContext;
 
 /**
  * 
@@ -31,12 +31,17 @@ public class FirstDataSourceShardingAlgorithm implements StandardShardingAlgorit
 	public void init() {
 	}
 
+	private static ShardingSphereDataSource staticShardingSphereDataSource;
+
+	public static void registerDataSource(ShardingSphereDataSource shardingSphereDataSource) {
+		FirstDataSourceShardingAlgorithm.staticShardingSphereDataSource = shardingSphereDataSource;
+	}
+
 	@Override
 	public String doSharding(final Collection<String> availableTargetNames,
 			final PreciseShardingValue<Comparable<?>> shardingValue) {
-		ShardingSphereDataSource dataSource = SpringContext.getApplicationContext()
-				.getBean(ShardingSphereDataSource.class);
-		String name = DataSourceUtils.firstDataSourceName(dataSource);
+		Assert.notNull(staticShardingSphereDataSource, "Missing:staticShardingSphereDataSource");
+		String name = DataSourceUtils.firstDataSourceName(staticShardingSphereDataSource);
 		if (log.isDebugEnabled()) {
 			log.debug("first data source name:{}", name);
 		}
@@ -47,10 +52,6 @@ public class FirstDataSourceShardingAlgorithm implements StandardShardingAlgorit
 	public Collection<String> doSharding(final Collection<String> availableTargetNames,
 			final RangeShardingValue<Comparable<?>> shardingValue) {
 		throw new UnsupportedOperationException("Not Support for RangeShardingValue");
-	}
-
-	private long getLongValue(final Comparable<?> value) {
-		return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
 	}
 
 	@Override
