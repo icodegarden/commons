@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.icodegarden.commons.nio.Codec;
 import io.github.icodegarden.commons.nio.ExchangeMessage;
 import io.netty.buffer.ByteBuf;
@@ -15,9 +18,13 @@ import io.netty.handler.codec.ByteToMessageDecoder;
  *
  */
 class MessageDecoder extends ByteToMessageDecoder {
+	private static final Logger log = LoggerFactory.getLogger(MessageDecoder.class);
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> out) throws Exception {
+		if(log.isDebugEnabled()) {
+			log.debug("decode nio msg from:{}", ctx.channel());
+		}
 		do {
 			int saveReaderIndex = input.readerIndex();
 			ExchangeMessage msg = decode(input);

@@ -73,12 +73,7 @@ public class NamesCachedObjectReader implements NamedObjectReader<NamedObject>, 
 	void refreshCache() {
 		for (String name : this.names) {
 			try {
-				long start = System.currentTimeMillis();
 				List<? extends NamedObject> listNamedObjects = delegator.listNamedObjects(name);
-				if (log.isDebugEnabled()) {
-					long end = System.currentTimeMillis();
-					log.debug("cached objects of name:{} was refreshed, used millis:{}", name, (end - start));
-				}
 				if (!listNamedObjects.isEmpty()) {
 					name_objects.put(name, listNamedObjects);// 全新替换
 				}

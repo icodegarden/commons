@@ -38,7 +38,7 @@ class ServerHandler extends ChannelDuplexHandler {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		if (log.isInfoEnabled()) {
-			log.info("client channel [{}] active", ctx.channel());
+			log.info("client channel:{} active", ctx.channel());
 		}
 		Channel channel = new Channel() {
 			@Override
@@ -65,7 +65,7 @@ class ServerHandler extends ChannelDuplexHandler {
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		if (log.isInfoEnabled()) {
-			log.info("client channel [{}] inactive", ctx.channel());
+			log.info("client channel:{} inactive", ctx.channel());
 		}
 	}
 
@@ -82,7 +82,7 @@ class ServerHandler extends ChannelDuplexHandler {
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {
 			if (log.isInfoEnabled()) {
-				log.info("client channel [{}] was idle, close it", ctx.channel());
+				log.info("client channel:{} was idle, close it", ctx.channel());
 			}
 			ctx.close();
 		}
@@ -91,7 +91,7 @@ class ServerHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		log.error("ex of server side client channel [{}]", ctx.channel(), cause);
+		log.error("ex of server side client channel:{}", ctx.channel(), cause);
 	}
 
 }
