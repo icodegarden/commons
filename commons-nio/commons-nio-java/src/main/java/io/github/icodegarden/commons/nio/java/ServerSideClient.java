@@ -26,7 +26,7 @@ import io.github.icodegarden.commons.nio.task.IdleStateTimerTask;
  *
  */
 public class ServerSideClient implements ClientNioEventListener, Closeable {
-	private static Logger log = LoggerFactory.getLogger(ServerSideClient.class);
+	private static final Logger log = LoggerFactory.getLogger(ServerSideClient.class);
 
 	private final SocketChannelSpace socketChannels = new SocketChannelSpace("server-client");
 	private final SocketChannel socketChannel;

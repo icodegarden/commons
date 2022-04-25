@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 class ServerNioSelector implements Closeable {
-	private static Logger log = LoggerFactory.getLogger(ServerNioSelector.class);
+	private static final Logger log = LoggerFactory.getLogger(ServerNioSelector.class);
 
 	public static ServerNioSelector openNew(String name) throws IOException {
 		ServerNioSelector serverNioSelector = new ServerNioSelector(name);

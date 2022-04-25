@@ -82,6 +82,9 @@ public class JavaNioServer implements NioServer, ServerNioEventListener {
 		ServerSideClient serverSideClient = new ServerSideClient(socketChannel, idleStateTimerTask, messageHandler);
 		
 		nioServerSelector.registerRead(serverSideClient);
+		if (log.isInfoEnabled()) {
+			log.info("register socket, address:{}", socketChannel);
+		}
 	}
 
 	@Override

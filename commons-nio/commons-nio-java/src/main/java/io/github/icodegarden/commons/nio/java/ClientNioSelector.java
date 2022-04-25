@@ -8,6 +8,9 @@ import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.icodegarden.commons.lang.exception.remote.ExceedExpectedRemoteException;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 
@@ -17,6 +20,8 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
  *
  */
 public class ClientNioSelector implements Closeable {
+	private static final Logger log = LoggerFactory.getLogger(ClientNioSelector.class);
+
 	/**
 	 * 
 	 * @param name
@@ -25,14 +30,14 @@ public class ClientNioSelector implements Closeable {
 	 */
 	public static ClientNioSelector openNew(String name) throws ExceedExpectedRemoteException {
 		ClientNioSelector clientNioSelector = new ClientNioSelector(name);
-		try{
+		try {
 			clientNioSelector.start();
 		} catch (IOException e) {
 			throw new ExceedExpectedRemoteException(e);
 		}
 		return clientNioSelector;
 	}
-	
+
 	private volatile boolean closed = true;
 	private final String name;
 	private Selector selector;
@@ -48,7 +53,7 @@ public class ClientNioSelector implements Closeable {
 	private void start() throws IOException {
 		selector = Selector.open();
 		closed = false;
-		
+
 		new Thread("NioClient-Selector-Thread-" + name) {
 			public void run() {
 				while (!closed) {
@@ -56,9 +61,12 @@ public class ClientNioSelector implements Closeable {
 						int count;
 						if (SystemUtils.isWindowsPlatform()) {
 							count = selector.select(100);
+							/**
+							 * 在windows下不加这个会有问题
+							 */
 							System.out.print("");// slow
 						} else {
-							count = selector.select();
+							count = selector.select(100);
 						}
 
 						if (count > 0) {
@@ -75,20 +83,20 @@ public class ClientNioSelector implements Closeable {
 										//
 									}
 								} catch (Throwable e) {
-									e.printStackTrace();
+									log.error("ex on SelectionKey handle", e);
 								} finally {
 									iterator.remove();
 								}
 							}
 						}
 					} catch (Throwable e) {
-						e.printStackTrace();
+						log.error("ex on Client Nio Select loop handle", e);
 					}
 				}
 			};
 		}.start();
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		closed = true;

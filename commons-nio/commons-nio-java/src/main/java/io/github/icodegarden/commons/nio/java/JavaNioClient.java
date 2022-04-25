@@ -128,10 +128,6 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 	private boolean finishConnect() throws IOException, ClosedChannelException {
 		boolean connected = socketChannel.isConnected();
 		if (connected || (connected = socketChannel.finishConnect())) {
-			if (log.isInfoEnabled()) {
-				log.info("client finishConnect");
-			}
-
 			clientNioSelector.registerRead(this);
 
 			if (heartbeat == null) {// IMPT 这些不能（也不需要）重新创建，否则task pool没有清除
@@ -152,6 +148,9 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 				});
 				heartbeatTask = heartbeatTimerTask.register(heartbeat);
 				reconnectTask = reconnectTimerTask.register(heartbeat);
+			}
+			if (log.isInfoEnabled()) {
+				log.info("client finishConnect");
 			}
 		}
 		return connected;
