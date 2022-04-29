@@ -6,15 +6,16 @@ import io.github.icodegarden.commons.nio.Channel;
 import io.github.icodegarden.commons.nio.ExchangeMessage;
 import io.github.icodegarden.commons.nio.MessageHandler;
 import io.github.icodegarden.commons.nio.health.Heartbeat;
+
 /**
  * 
  * @author Fangfang.Xu
  *
  */
 public class SyncMessageHandlerStrategy extends MessageHandlerStrategy {
-	
-	public SyncMessageHandlerStrategy(Heartbeat heartbeat, MessageHandler messageHandler,Channel channel) {
-		super(heartbeat, messageHandler,channel);
+
+	public SyncMessageHandlerStrategy(Heartbeat heartbeat, MessageHandler messageHandler, Channel channel) {
+		super(heartbeat, messageHandler, channel);
 	}
 
 	@Override

@@ -3,7 +3,6 @@ package io.github.icodegarden.commons.zookeeper.metrics;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.zookeeper.CreateMode;
@@ -35,7 +34,6 @@ public class ZnodeDataZooKeeperInstanceMetrics implements ZooKeeperInstanceMetri
 	private ZooKeeperHolder zooKeeperHolder;
 	private final String root;
 
-	private AtomicInteger versionRef = new AtomicInteger();// 初始是0
 	private Serializer<Object> serializer = new KryoSerializer();
 	private Deserializer<Object> deserializer = new KryoDeserializer();
 
@@ -80,8 +78,7 @@ public class ZnodeDataZooKeeperInstanceMetrics implements ZooKeeperInstanceMetri
 			throw new InvalidDataSizeZooKeeperException(data.length);
 		}
 		try {
-			zooKeeperHolder.getConnectedZK().setData(nodeName, data, versionRef.get());
-			versionRef.incrementAndGet();
+			zooKeeperHolder.getConnectedZK().setData(nodeName, data, -1);
 		} catch (KeeperException.NoNodeException ignore) {
 			try {
 				zooKeeperHolder.getConnectedZK().create(nodeName, data, ACLs.AUTH_ALL_ACL, CreateMode.EPHEMERAL);
@@ -91,15 +88,6 @@ public class ZnodeDataZooKeeperInstanceMetrics implements ZooKeeperInstanceMetri
 			}
 			// log.warn("znode not found on updateMetrics, expect znode:{}", nodeName);
 			// continue code ...
-		} catch (KeeperException.BadVersionException ignore) {
-			try {
-				Stat stat = zooKeeperHolder.getConnectedZK().exists(nodeName, false);
-				versionRef.set(stat.getVersion());
-				zooKeeperHolder.getConnectedZK().setData(nodeName, data, stat.getVersion());
-			} catch (ZooKeeperException | KeeperException | InterruptedException e) {
-				throw new ExceedExpectedZooKeeperException(String.format("ex on updateMetrics znode [%s]", nodeName),
-						e);
-			}
 		} catch (KeeperException | InterruptedException e) {
 			throw new ExceedExpectedZooKeeperException(String.format("ex on updateMetrics znode [%s]", nodeName), e);
 		}

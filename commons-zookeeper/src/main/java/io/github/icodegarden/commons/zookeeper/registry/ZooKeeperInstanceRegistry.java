@@ -1,7 +1,6 @@
 package io.github.icodegarden.commons.zookeeper.registry;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +30,6 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 	private static final Pattern ZNODE_PATTERN = Pattern.compile("(.*)/(.*)/instances/(.*):(\\d+)-(.*)");
 	private static final String IP = SystemUtils.getIp();
 
-	private AtomicInteger versionRef = new AtomicInteger();// 初始是0
 	private ZooKeeperHolder zooKeeperHolder;
 //	private final String root;
 	private final String serviceName;
@@ -163,18 +161,19 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 			throw new InvalidDataSizeZooKeeperException(data.length);
 		}
 		try {
-			zooKeeperHolder.getConnectedZK().setData(instance.getZnode(), data, versionRef.get());
-			versionRef.incrementAndGet();
-		} catch (KeeperException.BadVersionException ignore) {
-			try {
-				Stat stat = zooKeeperHolder.getConnectedZK().exists(instance.getZnode(), false);
-				versionRef.set(stat.getVersion());
-				zooKeeperHolder.getConnectedZK().setData(instance.getZnode(), data, stat.getVersion());
-			} catch (ZooKeeperException | KeeperException | InterruptedException e) {
-				throw new ExceedExpectedZooKeeperException(
-						String.format("ex on setData znode [%s]", instance.getZnode()), e);
-			}
-		} catch (KeeperException | InterruptedException e) {
+			zooKeeperHolder.getConnectedZK().setData(instance.getZnode(), data, -1);
+		}
+//		不可能发生
+//		catch (KeeperException.BadVersionException ignore) {
+//			try {
+//				Stat stat = zooKeeperHolder.getConnectedZK().exists(instance.getZnode(), false);
+//				zooKeeperHolder.getConnectedZK().setData(instance.getZnode(), data, stat.getVersion());
+//			} catch (ZooKeeperException | KeeperException | InterruptedException e) {
+//				throw new ExceedExpectedZooKeeperException(
+//						String.format("ex on setData znode [%s]", instance.getZnode()), e);
+//			}
+//		} 
+		catch (KeeperException | InterruptedException e) {
 			throw new ExceedExpectedZooKeeperException(String.format("ex on setData znode [%s]", instance.getZnode()),
 					e);
 		}

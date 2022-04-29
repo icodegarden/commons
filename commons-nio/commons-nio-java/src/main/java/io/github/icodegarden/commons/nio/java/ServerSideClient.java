@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,29 +36,30 @@ public class ServerSideClient implements ClientNioEventListener, Closeable {
 	private final MessageHandlerStrategy messageHandlerStrategy;
 	private final Channel channel;
 
-	public ServerSideClient(SocketChannel socketChannel, IdleStateTimerTask idleStateTimerTask,
-			MessageHandler messageHandler) {
+	public ServerSideClient(ThreadPoolExecutor threadpool, SocketChannel socketChannel,
+			IdleStateTimerTask idleStateTimerTask, MessageHandler messageHandler) {
 		this.socketChannel = socketChannel;
-		
+
 		channel = new Channel() {
 			@Override
 			public void write(Object obj) throws RemoteException {
-				try{
-					socketChannels.write(socketChannel, (ExchangeMessage)obj);
+				try {
+					socketChannels.write(socketChannel, (ExchangeMessage) obj);
 				} catch (Exception e) {
 					throw new ExceedExpectedRemoteException(e);
 				}
 			}
+
 			@Override
 			public void close() throws IOException {
 				socketChannel.close();
 			}
 		};
-		
+
 		heartbeat = new ServerSideClientHeartbeat("server", channel);
 		idleStateTimerTask.register(heartbeat);
-		
-		messageHandlerStrategy = new ThreadPoolMessageHandlerStrategy(heartbeat, messageHandler,channel);
+
+		messageHandlerStrategy = new ThreadPoolMessageHandlerStrategy(threadpool, heartbeat, messageHandler, channel);
 	}
 
 	@Override

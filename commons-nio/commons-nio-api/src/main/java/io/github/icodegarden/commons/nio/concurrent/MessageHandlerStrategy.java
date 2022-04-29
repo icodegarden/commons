@@ -17,6 +17,7 @@ import io.github.icodegarden.commons.nio.health.Heartbeat;
  * 读完线程池处理与响应
  * <p>
  * 读写线程处理，响应报文池化
+ * 
  * @author Fangfang.Xu
  */
 public abstract class MessageHandlerStrategy {
@@ -26,7 +27,7 @@ public abstract class MessageHandlerStrategy {
 	private final MessageHandler messageHandler;
 	private final Channel channel;
 
-	public MessageHandlerStrategy(Heartbeat heartbeat, MessageHandler messageHandler,Channel channel) {
+	public MessageHandlerStrategy(Heartbeat heartbeat, MessageHandler messageHandler, Channel channel) {
 		this.messageHandler = messageHandler;
 		this.heartbeat = heartbeat;
 		this.channel = channel;
