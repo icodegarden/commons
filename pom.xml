@@ -5,7 +5,7 @@
 
 	<groupId>io.github.icodegarden</groupId>
 	<artifactId>commons</artifactId>
-	<version>0.1.6</version>
+	<version>0.2.0</version>
 
 	<packaging>pom</packaging>
 
@@ -52,6 +52,7 @@
 		<module>commons-redis</module>
 		<module>commons-shardingsphere</module>
 		<module>commons-test</module>
+		<module>commons-test-web</module>
 	</modules>
 
 	<distributionManagement>
@@ -133,20 +134,20 @@
                     </execution>
                 </executions>
             </plugin>
-<!--             <plugin> -->
-<!--                 <groupId>org.apache.maven.plugins</groupId> -->
-<!--                 <artifactId>maven-gpg-plugin</artifactId> -->
-<!--                 <version>1.6</version> -->
-<!--                 <executions> -->
-<!--                     <execution> -->
-<!--                         <id>sign-artifacts</id> -->
-<!--                         <phase>verify</phase> -->
-<!--                         <goals> -->
-<!--                             <goal>sign</goal> -->
-<!--                         </goals> -->
-<!--                     </execution> -->
-<!--                 </executions> -->
-<!--             </plugin> -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
 		</plugins>
 	</build>

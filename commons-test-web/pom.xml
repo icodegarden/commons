@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>0.1.6</version>
+		<version>0.2.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-test-web</artifactId>
@@ -15,7 +15,9 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		
+		<maven.package.skip>true</maven.package.skip> 
+		<maven.install.skip>true</maven.install.skip>
+		<maven.deploy.skip>true</maven.deploy.skip> 
 	</properties>
 	
 	<dependencies>				

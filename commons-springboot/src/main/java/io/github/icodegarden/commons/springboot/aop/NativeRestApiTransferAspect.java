@@ -29,13 +29,6 @@ public class NativeRestApiTransferAspect extends AbstractTransferAspect {
 
 	private static final Logger log = LoggerFactory.getLogger(NativeRestApiTransferAspect.class);
 
-	private boolean printErrorStackOnWarn;
-
-	public NativeRestApiTransferAspect setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
-		this.printErrorStackOnWarn = printErrorStackOnWarn;
-		return this;
-	}
-
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
 	public void pointcut() {
 	}

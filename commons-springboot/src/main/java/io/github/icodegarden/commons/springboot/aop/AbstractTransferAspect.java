@@ -11,7 +11,7 @@ import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
  */
 public abstract class AbstractTransferAspect {
 
-	protected boolean printErrorStackOnWarn;
+	protected boolean printErrorStackOnWarn = true;
 
 	public AbstractTransferAspect setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
 		this.printErrorStackOnWarn = printErrorStackOnWarn;

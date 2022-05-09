@@ -35,13 +35,6 @@ public class ApiResponseTransferAspect extends AbstractTransferAspect {
 
 	private static final Logger log = LoggerFactory.getLogger(ApiResponseTransferAspect.class);
 
-	private boolean printErrorStackOnWarn;
-
-	public ApiResponseTransferAspect setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
-		this.printErrorStackOnWarn = printErrorStackOnWarn;
-		return this;
-	}
-
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
 	public void pointcut() {
 	}
