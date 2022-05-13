@@ -44,6 +44,9 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 	private OrRequestMatcher shouldAuthOpenapiMatcher;
 	private OrRequestMatcher shouldAuthInternalApiMatcher;
 
+	/**
+	 * 默认认为POST /openapi/**、/api/** 应该已经pre认证了 
+	 */
 	public GatewayPreAuthenticatedAuthenticationFilter() {
 		setShouldAuthOpenapi(Arrays.asList(new AntPath("/openapi/**", "POST")));
 		setShouldAuthInternalApi(Arrays.asList(new AntPath("/api/**", null)));
@@ -53,13 +56,23 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 //		this.responseType = responseType;
 //	}
 
+	/**
+	 * path以 / 开头,method可以null表示无感<br>
+	 * path例如/**、/xxxx/**、/file/api/v1/softwareParts/{id}/files/{filename}/upload
+	 * @param antPaths 
+	 */
 	public void setShouldAuthOpenapi(Collection<AntPath> antPaths) {
 		List<AntPathRequestMatcher> ants = antPaths.stream()
 				.map(antPath -> new AntPathRequestMatcher(antPath.getPattern(), antPath.getHttpMethod()))
 				.collect(Collectors.toList());
 		shouldAuthOpenapiMatcher = new OrRequestMatcher(ants);
 	}
-
+	
+	/**
+	 * path以 / 开头,method可以null表示无感<br>
+	 * path例如/**、/xxxx/**、/file/api/v1/softwareParts/{id}/files/{filename}/upload
+	 * @param antPaths 
+	 */
 	public void setShouldAuthInternalApi(Collection<AntPath> antPaths) {
 		List<AntPathRequestMatcher> ants = antPaths.stream()
 				.map(antPath -> new AntPathRequestMatcher(antPath.getPattern(), antPath.getHttpMethod()))
@@ -114,7 +127,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 			/**
 			 * 不需要以ApiResponse返回，因为这是gateway犯的错
 			 */
-			WebUtils.responseWrite(401, "Unauthorized, App No Principal", response);
+			WebUtils.responseWrite(401, "Access Denied, Unauthorized, App No Principal", response);
 			return;
 		}
 
@@ -125,7 +138,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 				/**
 				 * 不需要以ApiResponse返回，因为这是gateway犯的错
 				 */
-				WebUtils.responseWrite(401, "Unauthorized, User No Principal", response);
+				WebUtils.responseWrite(401, "Access Denied, Unauthorized, User No Principal", response);
 				return;
 			}
 		}
@@ -162,8 +175,9 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 //		}
 //	}
 
-	// --------------------------------------------
-
+	
+	
+	//为了适应不依赖spring-security的项目，以下代码copy spring-security --------------------------------------------
 	/**
 	 * {@link RequestMatcher} that will return true if any of the passed in
 	 * {@link RequestMatcher} instances match.
