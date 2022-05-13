@@ -1,5 +1,8 @@
 package io.github.icodegarden.commons.lang.spec.response;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -7,6 +10,8 @@ package io.github.icodegarden.commons.lang.spec.response;
  */
 public class ClientParameterMissingErrorCodeException extends ErrorCodeException {
 	private static final long serialVersionUID = 1L;
+
+	public static final List<String> KEYWORDS = Arrays.asList("Missing");
 
 	public static final String CODE = "40001";
 	public static final String MSG = "Missing Required Parameter";

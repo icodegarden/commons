@@ -23,6 +23,7 @@ import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException
  * @author Fangfang.Xu
  *
  */
+@Deprecated
 @Aspect
 @EnableAspectJAutoProxy
 public class NativeRestApiTransferAspect extends AbstractTransferAspect {

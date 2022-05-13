@@ -1,5 +1,8 @@
 package io.github.icodegarden.commons.lang.spec.response;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -8,6 +11,8 @@ package io.github.icodegarden.commons.lang.spec.response;
 public class ClientParameterInvalidErrorCodeException extends ErrorCodeException {
 	private static final long serialVersionUID = 1L;
 
+	public static final List<String> KEYWORDS = Arrays.asList("Invalid");
+	
 	public static final String CODE = "40002";
 	public static final String MSG = "Invalid Parameter";
 

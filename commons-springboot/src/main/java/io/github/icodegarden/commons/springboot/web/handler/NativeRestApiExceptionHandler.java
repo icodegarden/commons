@@ -14,7 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
+import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 
 /**
  * 使用 @Bean
@@ -82,10 +82,8 @@ public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<Stri
 
 	@Override
 	public ResponseEntity<String> onException(HttpServletRequest request, Exception cause) {
-		if (log.isWarnEnabled()) {
-			log.warn("{}", EXCEPTION_LOG_MODULE, cause);
-		}
-		ServerErrorCodeException ece = new ServerErrorCodeException(cause);
-		return ResponseEntity.status(ece.httpStatus()).body(ece.getSub_msg());
+		ErrorCodeException ece = convertErrorCodeException(cause, null);
+
+		return ResponseEntity.status(ece.httpStatus()).body(ece.getMessage());
 	}
 }

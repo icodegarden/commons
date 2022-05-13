@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -28,11 +29,6 @@ public class WebUtils {
 	public static final int MAX_PAGE_SIZE = 100;
 
 	public final static String AUTHORIZATION_HEADER = "Authorization";
-
-	/**
-	 * 是否内部服务间调用的标记
-	 */
-	public static final String HTTPHEADER_INTERNAL_RPC = "X-Internal-Rpc";
 	/**
 	 * 总页数
 	 */
@@ -41,18 +37,14 @@ public class WebUtils {
 	 * 总条数
 	 */
 	public static final String HTTPHEADER_TOTALCOUNT = "X-Total-Count";
-//	public static final String HTTPHEADER_HTTPSTATUS = "X-Http-Status";
 	/**
 	 * 消息描述
 	 */
 	public static final String HTTPHEADER_MESSAGE = "X-Message";
-
-//	public static HttpHeaders pageHeaders(com.github.pagehelper.Page page) {
-//		HttpHeaders httpHeaders = new HttpHeaders();
-//		httpHeaders.add(HTTPHEADER_TOTALPAGES, (page.getPages() <= MAX_TOTAL_PAGES ? page.getPages() : MAX_TOTAL_PAGES) + "");
-//		httpHeaders.add(HTTPHEADER_TOTALCOUNT, page.getTotal() + "");
-//		return httpHeaders;
-//	}
+	/**
+	 * 是否内部服务间调用的标记
+	 */
+	public static final String HTTPHEADER_INTERNAL_RPC = "X-Internal-Rpc";
 
 	public static HttpHeaders pageHeaders(int totalPages, long totalCount) {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -67,31 +59,6 @@ public class WebUtils {
 			return 0;
 		}
 		return Integer.parseInt(first);
-	}
-
-//	public static String getHttpStatus(ResponseEntity<?> re) {
-//		return re.getHeaders().getFirst(HTTPHEADER_HTTPSTATUS);
-//	}
-
-	public static boolean isInternalRpc() {
-		HttpServletRequest request = getRequest();
-		if (request == null) {
-			return false;
-		}
-		return request.getHeader(HTTPHEADER_INTERNAL_RPC) != null;
-	}
-
-	public static boolean isSuccess(ResponseEntity<?> re) {
-		if (re.getStatusCode().is2xxSuccessful()) {
-//			if (isInternalRpc()) {
-//				String status = getHttpStatus(re);
-//				if (!status.startsWith("2")) {// 2xx
-//					return false;
-//				}
-//			}
-			return true;
-		}
-		return false;
 	}
 
 	public static HttpServletRequest getRequest() {
@@ -121,11 +88,6 @@ public class WebUtils {
 		}
 	}
 
-	public static void responseJWT(String jwt, HttpServletResponse response) {
-		String bearerToken = createBearerToken(jwt, " ");
-		response.setHeader(AUTHORIZATION_HEADER, bearerToken);
-	}
-
 	private static String createBearerToken(String originToken, @Nullable String concat) {
 		if (concat == null) {
 			concat = " ";
@@ -143,8 +105,7 @@ public class WebUtils {
 		}
 		return null;
 	}
-	
-	
+
 	public static String getBasicAuthorizationToken() {
 		String basicToken = getAuthorizationToken();
 		if (basicToken != null) {
@@ -152,7 +113,7 @@ public class WebUtils {
 		}
 		return null;
 	}
-	
+
 	private static String resolveBasicToken(String basicToken, @Nullable String concat) {
 		if (concat == null) {
 			concat = " ";
@@ -173,12 +134,38 @@ public class WebUtils {
 		return authorizationToken != null ? authorizationToken : request.getHeader(AUTHORIZATION_HEADER);
 	}
 
+	public static boolean isInternalRpc() {
+		HttpServletRequest request = getRequest();
+		if (request == null) {
+			return false;
+		}
+		
+		String header = request.getHeader(HTTPHEADER_INTERNAL_RPC);
+		return header != null && Boolean.valueOf(header);
+	}
+
+	public static void responseJWT(String jwt, HttpServletResponse response) {
+		String bearerToken = createBearerToken(jwt, " ");
+		response.setHeader(AUTHORIZATION_HEADER, bearerToken);
+	}
+
 //	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
 //		response.setStatus(status);
 //		response.setContentType("application/json;charset=utf-8");
 //		response.getWriter().println(body);
 //	}
-	
+
+	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
+		Assert.hasText(body, "body must not empty");
+		responseWrite(status, null, body, response);
+	}
+
+	public static void responseWrite(int status, List<Tuple2<String, List<String>>> headers,
+			HttpServletResponse response) throws IOException {
+		Assert.notEmpty(headers, "headers must not empty");
+		responseWrite(status, headers, null, response);
+	}
+
 	public static void responseWrite(int status, @Nullable List<Tuple2<String, List<String>>> headers,
 			@Nullable String body, HttpServletResponse response) throws IOException {
 		response.setStatus(status);

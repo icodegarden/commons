@@ -2,7 +2,6 @@ package io.github.icodegarden.commons.springboot.web.util;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
@@ -20,6 +19,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import io.github.icodegarden.commons.lang.util.SystemUtils;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -27,11 +28,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 public abstract class MappingJackson2HttpMessageConverters {
 
-	private static final DateTimeFormatter STANDARD_DATETIME_FORMATTER = DateTimeFormatter
-			.ofPattern("yyyy-MM-dd HH:mm:ss");
-
 	/**
 	 * 通常你需要 @Bean
+	 * 
 	 * @return
 	 */
 	public static MappingJackson2HttpMessageConverter simple() {
@@ -64,7 +63,7 @@ public abstract class MappingJackson2HttpMessageConverters {
 			@Override
 			public void serialize(LocalDateTime localDateTime, JsonGenerator jsonGenerator,
 					SerializerProvider serializerProvider) throws IOException {
-				jsonGenerator.writeString(STANDARD_DATETIME_FORMATTER.format(localDateTime));
+				jsonGenerator.writeString(SystemUtils.STANDARD_DATETIME_FORMATTER.format(localDateTime));
 			}
 		});
 		timeModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
@@ -72,7 +71,7 @@ public abstract class MappingJackson2HttpMessageConverters {
 			public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
 					throws IOException, JsonProcessingException {
 				String valueAsString = jsonParser.getValueAsString();
-				return LocalDateTime.parse(valueAsString, STANDARD_DATETIME_FORMATTER);
+				return LocalDateTime.parse(valueAsString, SystemUtils.STANDARD_DATETIME_FORMATTER);
 			}
 		});
 		om.registerModule(timeModule);

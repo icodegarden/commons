@@ -1,6 +1,5 @@
 package io.github.icodegarden.commons.springboot.web.handler;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,13 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
@@ -23,9 +20,7 @@ import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingEr
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
-import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
-import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
  * 使用 @Bean
@@ -44,7 +39,7 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 				ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
 				"parameter:" + cause.getParameterName());
 		if (log.isWarnEnabled()) {
-			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.toString(), cause);
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
 		OpenApiRequestBody body = extractOpenApiRequestBody(request);
 		if (body != null) {
@@ -61,7 +56,7 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 				ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(),
 				"parameter:" + cause.getName()/* 对应的字段名 */);
 		if (log.isWarnEnabled()) {
-			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.toString(), cause);
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
 		OpenApiRequestBody body = extractOpenApiRequestBody(request);
 		if (body != null) {
@@ -93,7 +88,7 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 					cause.getMessage());
 		}
 		if (log.isWarnEnabled()) {
-			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.toString(), cause);
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
 
 		OpenApiRequestBody body = extractOpenApiRequestBody(request);
@@ -115,7 +110,7 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 				ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(),
 				"Invalid:json-field-type");
 		if (log.isWarnEnabled()) {
-			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.toString(), cause);
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
 		OpenApiRequestBody body = extractOpenApiRequestBody(request);
 		if (body != null) {
@@ -127,11 +122,10 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 
 	@Override
 	public ResponseEntity<ApiResponse> onException(HttpServletRequest request, Exception cause) {
-		ServerErrorCodeException ece = new ServerErrorCodeException(cause);
-		if (log.isWarnEnabled()) {
-			log.warn("{} {}", EXCEPTION_LOG_MODULE, ece.toString(), cause);
-		}
 		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+
+		ErrorCodeException ece = convertErrorCodeException(cause, body);
+
 		if (body != null) {
 			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
 		}
@@ -139,24 +133,4 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 		return ResponseEntity.ok(InternalApiResponse.fail(ece));
 	}
 
-	/**
-	 * 
-	 * @return Nullable
-	 */
-	private OpenApiRequestBody extractOpenApiRequestBody(HttpServletRequest request) {
-		if (request != null && request instanceof ContentCachingRequestWrapper) {
-			ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
-			String content;
-			try {
-				content = new String(wrapper.getContentAsByteArray(), "utf-8");
-			} catch (UnsupportedEncodingException e) {
-				throw new IllegalArgumentException(e);
-			}
-			OpenApiRequestBody body = JsonUtils.deserialize(content, OpenApiRequestBody.class);
-			if (StringUtils.hasText(body.getSign())) {
-				return body;
-			}
-		}
-		return null;
-	}
 }

@@ -9,13 +9,13 @@ import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
  * @author Fangfang.Xu
  *
  */
+@Deprecated
 public abstract class AbstractTransferAspect {
 
 	protected boolean printErrorStackOnWarn = true;
 
-	public AbstractTransferAspect setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
+	public void setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
 		this.printErrorStackOnWarn = printErrorStackOnWarn;
-		return this;
 	}
 
 	protected ErrorCodeException causeErrorCodeException(Throwable e) {

@@ -28,6 +28,7 @@ import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
  * @author Fangfang.Xu
  *
  */
+@Deprecated
 @Aspect
 @EnableAspectJAutoProxy
 @SuppressWarnings("rawtypes")

@@ -1,8 +1,6 @@
 package io.github.icodegarden.commons.springboot.security;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.util.ClassUtils;
 
 /**
  * 
@@ -10,12 +8,28 @@ import org.springframework.security.core.userdetails.User;
  */
 public abstract class SecurityUtils {
 
+	private static AuthenticationContainer authenticationContainer;
+
+	static {
+		boolean present = ClassUtils.isPresent("org.springframework.security.core.Authentication",
+				ClassUtils.getDefaultClassLoader());
+		if (present) {
+			authenticationContainer = new SpringSecurityAuthenticationContainer();
+		} else {
+			authenticationContainer = new SimpleAuthenticationContainer();
+		}
+	}
+
+	public static void configAuthenticationContainer(AuthenticationContainer authenticationContainer) {
+		SecurityUtils.authenticationContainer = authenticationContainer;
+	}
+
 	/**
 	 * 
 	 * @return Nullable
 	 */
 	public static Authentication getAuthentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
+		return authenticationContainer.getAuthentication();
 	}
 
 	/**
@@ -23,12 +37,17 @@ public abstract class SecurityUtils {
 	 * @return Nullable
 	 */
 	public static User getAuthenticatedUser() {
-		Authentication authentication = getAuthentication();
-		if (authentication != null) {
-			Object principal = authentication.getPrincipal();
-			if (principal instanceof User) {
-				return (User) principal;
-			}
+		return authenticationContainer.getAuthenticatedUser();
+	}
+
+	/**
+	 * 
+	 * @return Nullable
+	 */
+	public static String getUserId() {
+		User user = getAuthenticatedUser();
+		if (user != null) {
+			return user.getUserId();
 		}
 		return null;
 	}
@@ -46,7 +65,7 @@ public abstract class SecurityUtils {
 	}
 
 	public static void setAuthentication(Authentication authentication) {
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		authenticationContainer.setAuthentication(authentication);
 	}
 
 }
