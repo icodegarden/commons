@@ -24,7 +24,7 @@ class RestRequestTemplateTests {
 	void postForObject() {
 		// 400
 		try {
-			httpRequestTemplate.postForObject("http://localhost:8080/api/v1/users", new UserDTO("", ""), UserDTO.class);
+			httpRequestTemplate.postForObject("http://localhost:18080/api/v1/users", new UserDTO("", ""), UserDTO.class);
 			throw new RuntimeException();
 		} catch (Exception e) {
 			Assertions.assertThat(e).isInstanceOf(HttpClientRemoteException.class);
@@ -33,7 +33,7 @@ class RestRequestTemplateTests {
 
 		// ok
 		UserDTO userDTO = new UserDTO("xff", "123");
-		UserDTO ret = httpRequestTemplate.postForObject("http://localhost:8080/api/v1/users", userDTO, UserDTO.class);
+		UserDTO ret = httpRequestTemplate.postForObject("http://localhost:18080/api/v1/users", userDTO, UserDTO.class);
 		Assertions.assertThat(ret).isEqualTo(userDTO);
 	}
 
@@ -41,7 +41,7 @@ class RestRequestTemplateTests {
 	void postForEntity() {
 		// 400
 		try {
-			httpRequestTemplate.postForEntity("http://localhost:8080/api/v1/users", new UserDTO("", ""), UserDTO.class);
+			httpRequestTemplate.postForEntity("http://localhost:18080/api/v1/users", new UserDTO("", ""), UserDTO.class);
 			throw new RuntimeException();
 		} catch (Exception e) {
 			Assertions.assertThat(e).isInstanceOf(HttpClientRemoteException.class);
@@ -50,7 +50,7 @@ class RestRequestTemplateTests {
 
 		// ok
 		UserDTO userDTO = new UserDTO("xff", "123");
-		HttpEntity<UserDTO> ret = httpRequestTemplate.postForEntity("http://localhost:8080/api/v1/users", userDTO,
+		HttpEntity<UserDTO> ret = httpRequestTemplate.postForEntity("http://localhost:18080/api/v1/users", userDTO,
 				UserDTO.class);
 		Assertions.assertThat(ret.getBody()).isEqualTo(userDTO);
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
@@ -61,7 +61,7 @@ class RestRequestTemplateTests {
 		// post 400
 		try {
 			HttpEntity<UserDTO> httpEntity = new HttpEntity<>(new UserDTO("", ""), null);
-			httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.POST, httpEntity,
+			httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.POST, httpEntity,
 					UserDTO.class);
 			throw new RuntimeException();
 		} catch (Exception e) {
@@ -72,7 +72,7 @@ class RestRequestTemplateTests {
 		// post ok
 		UserDTO userDTO = new UserDTO("xff", "123");
 
-		HttpEntity<UserDTO> ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.POST,
+		HttpEntity<UserDTO> ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.POST,
 				new HttpEntity<>(userDTO, null), UserDTO.class);
 		Assertions.assertThat(ret.getBody()).isEqualTo(userDTO);
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
@@ -80,7 +80,7 @@ class RestRequestTemplateTests {
 		// put 400
 		try {
 			HttpEntity<UserDTO> httpEntity = new HttpEntity<>(new UserDTO("", ""), null);
-			httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.PUT, httpEntity,
+			httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.PUT, httpEntity,
 					UserDTO.class);
 			throw new RuntimeException();
 		} catch (Exception e) {
@@ -89,20 +89,20 @@ class RestRequestTemplateTests {
 		}
 
 		// put ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.PUT,
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.PUT,
 				new HttpEntity<>(userDTO, null), UserDTO.class);
 		Assertions.assertThat(ret.getBody()).isEqualTo(userDTO);
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
 
 		// delete ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users/1", HttpMethod.DELETE, null,
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users/1", HttpMethod.DELETE, null,
 				UserDTO.class);
 		Assertions.assertThat(ret.getBody()).isNotNull();
 		Assertions.assertThat(ret.getBody().getUsername()).isNotNull();
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
 
 		// find one ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users/1", HttpMethod.GET, null, UserDTO.class);
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users/1", HttpMethod.GET, null, UserDTO.class);
 		Assertions.assertThat(ret.getBody()).isNotNull();
 		Assertions.assertThat(ret.getBody().getUsername()).isNotNull();
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
@@ -110,7 +110,7 @@ class RestRequestTemplateTests {
 		// find all json deseria error
 		Assertions
 				.assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> httpRequestTemplate
-						.exchange("http://localhost:8080/api/v1/users", HttpMethod.GET, null, UserDTO.class))
+						.exchange("http://localhost:18080/api/v1/users", HttpMethod.GET, null, UserDTO.class))
 				.withMessage("deserialize json error");
 	}
 
@@ -119,7 +119,7 @@ class RestRequestTemplateTests {
 		// post 400
 		try {
 			HttpEntity<UserDTO> httpEntity = new HttpEntity<>(new UserDTO("", ""), null);
-			httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.POST, httpEntity,
+			httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.POST, httpEntity,
 					new ParameterizedTypeReference<UserDTO>() {
 					});
 			throw new RuntimeException();
@@ -131,7 +131,7 @@ class RestRequestTemplateTests {
 		// post ok
 		UserDTO userDTO = new UserDTO("xff", "123");
 
-		HttpEntity<UserDTO> ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.POST,
+		HttpEntity<UserDTO> ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.POST,
 				new HttpEntity<>(userDTO, null), new ParameterizedTypeReference<UserDTO>() {
 				});
 		Assertions.assertThat(ret.getBody()).isEqualTo(userDTO);
@@ -140,7 +140,7 @@ class RestRequestTemplateTests {
 		// put 400
 		try {
 			HttpEntity<UserDTO> httpEntity = new HttpEntity<>(new UserDTO("", ""), null);
-			httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.PUT, httpEntity,
+			httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.PUT, httpEntity,
 					new ParameterizedTypeReference<UserDTO>() {
 					});
 			throw new RuntimeException();
@@ -150,14 +150,14 @@ class RestRequestTemplateTests {
 		}
 
 		// put ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users", HttpMethod.PUT,
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users", HttpMethod.PUT,
 				new HttpEntity<>(userDTO, null), new ParameterizedTypeReference<UserDTO>() {
 				});
 		Assertions.assertThat(ret.getBody()).isEqualTo(userDTO);
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
 
 		// delete ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users/1", HttpMethod.DELETE, null,
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users/1", HttpMethod.DELETE, null,
 				new ParameterizedTypeReference<UserDTO>() {
 				});
 		Assertions.assertThat(ret.getBody()).isNotNull();
@@ -165,7 +165,7 @@ class RestRequestTemplateTests {
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
 
 		// find one ok
-		ret = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users/1", HttpMethod.GET, null,
+		ret = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users/1", HttpMethod.GET, null,
 				new ParameterizedTypeReference<UserDTO>() {
 				});
 		Assertions.assertThat(ret.getBody()).isNotNull();
@@ -173,7 +173,7 @@ class RestRequestTemplateTests {
 		Assertions.assertThat(ret.getHeaders().getFirst("X-Test-Web")).isNotNull();
 
 		// find all ok
-		HttpEntity<List<UserDTO>> retList = httpRequestTemplate.exchange("http://localhost:8080/api/v1/users",
+		HttpEntity<List<UserDTO>> retList = httpRequestTemplate.exchange("http://localhost:18080/api/v1/users",
 				HttpMethod.GET, null, new ParameterizedTypeReference<List<UserDTO>>() {
 				});
 		Assertions.assertThat(retList.getBody()).isNotNull();
