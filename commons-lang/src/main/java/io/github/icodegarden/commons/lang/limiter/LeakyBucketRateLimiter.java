@@ -1,94 +1,76 @@
-package io.github.icodegarden.commons.lang.limiter;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-/**
- * 
- * @author Fangfang.Xu
- *
- */
-public class LeakyBucketRateLimiter implements RateLimiter {
-	private static final Logger log = LoggerFactory.getLogger(LeakyBucketRateLimiter.class);
-
-	private String name;
-
-	private long lastResetTime;
-
-	private long interval;
-
-	private AtomicInteger token;
-
-	private int rate;
-
-	/**
-	 * 
-	 * @param name
-	 * @param rate     在给定的interval中允许的次数
-	 * @param interval 刷新间隔millis
-	 */
-	public LeakyBucketRateLimiter(String name, int bucketSize, int outflowSize,Duration outflowDuration) {
-		if (name == null) {
-			throw new IllegalArgumentException("name must not null");
-		}
-		if (rate <= 0) {
-			throw new IllegalArgumentException("rate must gt 0");
-		}
-		if (interval <= 0) {
-			throw new IllegalArgumentException("interval must gt 0");
-		}
-		this.name = name;
-		this.rate = rate;
-		this.interval = interval;
-		
-		long millis = outflowDuration.toMillis();
-		long millis10 = millis/10;
-		
-		int size = (int)(outflowSize/(millis/10));
-
-		start();
-	}
-
-	private LeakyBucketRateLimiter start() {
-		this.lastResetTime = System.currentTimeMillis();
-		this.token = new AtomicInteger(rate);
-		return this;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public long getLastResetTime() {
-		return lastResetTime;
-	}
-
-	public long getInterval() {
-		return interval;
-	}
-
-	public int getRate() {
-		return rate;
-	}
-
-	@Override
-	public boolean isAllowable() {
-		long now = System.currentTimeMillis();
-		if (now > lastResetTime + interval) {
-			token = new AtomicInteger(rate);
-			lastResetTime = now;
-		}
-		if (token.intValue() < 1) {
-			if (log.isInfoEnabled()) {
-				log.info("rate limit:{} not allowed", name);
-			}
-			return false;
-		}
-		token.decrementAndGet();
-		return true;
-	}
-}
+//package io.github.icodegarden.commons.lang.limiter;
+//
+//import java.time.Duration;
+//import java.util.concurrent.atomic.AtomicInteger;
+//
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//
+///**
+// * 漏桶算法，以恒定的速率访问<br>
+// * 桶满则丢弃，按给定的速率流出水<br>
+// * 
+// * @author Fangfang.Xu
+// *
+// */
+//public class LeakyBucketRateLimiter implements RateLimiter {
+//	private static final Logger log = LoggerFactory.getLogger(LeakyBucketRateLimiter.class);
+//
+//	private int bucketSize;
+//	private int outflowSize;
+//	private Duration outflowDuration;
+//
+//	private long lastResetTime = System.currentTimeMillis();
+//
+//	private AtomicInteger token;
+//
+//	/**
+//	 * 
+//	 * @param bucketSize      桶大小
+//	 * @param outflowSize     流出大小
+//	 * @param outflowDuration 流出时间单位
+//	 */
+//	public LeakyBucketRateLimiter(int bucketSize, int outflowSize, Duration outflowDuration) {
+//		this.token = new AtomicInteger(bucketSize);
+//
+//		this.bucketSize = bucketSize;
+//		this.outflowSize = outflowSize;
+//		this.outflowDuration = outflowDuration;
+//	}
+//
+//	private void reset() {
+//		long now = System.currentTimeMillis();
+//
+//		long cost = now - lastResetTime;
+//		double rate = cost * 1.0 / outflowDuration.toMillis();
+//		int shouldOutflow = (int) (outflowSize * rate);
+//		System.out.println("shouldOutflow=" + shouldOutflow);
+//		if (shouldOutflow == 0) {
+//			return;
+//		}
+//
+//		token.updateAndGet(pre -> {
+//			int v = pre + shouldOutflow;
+//			return v <= bucketSize ? v : bucketSize;
+//		});
+//		this.lastResetTime = System.currentTimeMillis();
+//	}
+//
+//	@Override
+//	public boolean isAllowable(int weight) {
+//		if (token.intValue() < weight) {
+//			/**
+//			 * 当桶满了再放水即可
+//			 */
+//			reset();
+//		}
+//		if (token.intValue() < weight) {
+//			if (log.isInfoEnabled()) {
+//				log.info("{}:{} not allowed", LeakyBucketRateLimiter.class.getSimpleName(), getName());
+//			}
+//			return false;
+//		}
+//		token.addAndGet(-weight);
+//		return true;
+//	}
+//}

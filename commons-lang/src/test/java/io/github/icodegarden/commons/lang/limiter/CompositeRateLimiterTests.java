@@ -15,8 +15,8 @@ public class CompositeRateLimiterTests {
 	
 	@Test
 	public void isAllowable() throws Exception {
-		DefaultRateLimiter rateLimiter1 = new DefaultRateLimiter("name1", 3, 1000);
-		DefaultRateLimiter rateLimiter2 = new DefaultRateLimiter("name2", 2, 1000);
+		CounterRateLimiter rateLimiter1 = new CounterRateLimiter(3, 1000);
+		CounterRateLimiter rateLimiter2 = new CounterRateLimiter(2, 1000);
 
 		CompositeRateLimiter compositeRateLimiter = new CompositeRateLimiter(Arrays.asList(rateLimiter1,rateLimiter2));
 		

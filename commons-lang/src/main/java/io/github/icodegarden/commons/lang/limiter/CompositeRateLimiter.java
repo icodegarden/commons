@@ -16,7 +16,9 @@ public class CompositeRateLimiter implements RateLimiter {
 	}
 
 	@Override
-	public boolean isAllowable() {
-		return rateLimiters.stream().allMatch(RateLimiter::isAllowable);
+	public boolean isAllowable(int weight) {
+		return rateLimiters.stream().allMatch(rateLimiter -> {
+			return rateLimiter.isAllowable(weight);
+		});
 	}
 }
