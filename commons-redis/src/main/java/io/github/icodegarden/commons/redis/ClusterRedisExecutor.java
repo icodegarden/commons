@@ -78,6 +78,41 @@ public class ClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public Long incr(byte[] key) {
+		return jc.incr(key);
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long value) {
+		return jc.incrBy(key, value);
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double value) {
+		return jc.incrByFloat(key, value);
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return jc.hincrBy(key, field, value);
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return jc.hincrByFloat(key, field, value);
+	}
+	
+	@Override
+	public Long decr(byte[] key) {
+		return jc.decr(key);
+	}
+	
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return jc.decrBy(key, value);
+	}
+
+	@Override
 	public void subscribe(byte[] channel, BinaryJedisPubSub jedisPubSub, Consumer<Unsubscribe> unsubscribeReceiver) {
 		unsubscribeReceiver.accept(new Unsubscribe() {
 			@Override

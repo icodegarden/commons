@@ -1,0 +1,56 @@
+package io.github.icodegarden.commons.lang.limiter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 
+ * @author Fangfang.Xu
+ *
+ */
+public abstract class CounterRateLimiterSupport implements RateLimiter {
+	private static final Logger log = LoggerFactory.getLogger(CounterRateLimiterSupport.class);
+
+	private long interval;
+
+	private long lastResetTime;
+
+	/**
+	 * @param interval 计数间隔millis
+	 */
+	public CounterRateLimiterSupport(long interval) {
+		if (interval <= 0) {
+			throw new IllegalArgumentException("interval must gt 0");
+		}
+		this.interval = interval;
+	}
+
+	@Override
+	public boolean isAllowable(int weight) {
+		long now = System.currentTimeMillis();
+		/**
+		 * 刷新计数
+		 */
+		if (now > lastResetTime + interval) {// 首次会进来
+			resetToken();
+			lastResetTime = now;
+		}
+
+		if (getTokenValue() < weight) {
+			if (log.isInfoEnabled()) {
+				log.info("{}:{} not allowed", CounterRateLimiterSupport.class.getSimpleName(), getName());
+			}
+			return false;
+		}
+
+		decrmentToken(weight);
+		return true;
+	}
+
+	protected abstract void resetToken();
+
+	protected abstract int getTokenValue();
+
+	protected abstract void decrmentToken(int value);
+
+}

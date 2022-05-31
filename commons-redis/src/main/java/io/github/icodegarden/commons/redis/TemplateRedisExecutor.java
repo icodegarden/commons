@@ -92,6 +92,55 @@ public class TemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public Long incr(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incr(key);
+		});
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incrBy(key, value);
+		});
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double value) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incrBy(key, value);
+		});
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hIncrBy(key, field, value);
+		});
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hIncrBy(key, field, value);
+		});
+	}
+
+	@Override
+	public Long decr(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.decr(key);
+		});
+	}
+
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.decrBy(key, value);
+		});
+	}
+
+	@Override
 	public void subscribe(byte[] channel, BinaryJedisPubSub jedisPubSub, Consumer<Unsubscribe> unsubscribeReceiver) {
 		redisTemplate.execute((RedisCallback) connection -> {
 			unsubscribeReceiver.accept(new Unsubscribe() {

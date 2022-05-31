@@ -91,6 +91,41 @@ public class PoolRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public Long incr(byte[] key) {
+		return execCommand(jedis -> jedis.incr(key));
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long value) {
+		return execCommand(jedis -> jedis.incrBy(key, value));
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double value) {
+		return execCommand(jedis -> jedis.incrByFloat(key, value));
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return execCommand(jedis -> jedis.hincrBy(key, field, value));
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return execCommand(jedis -> jedis.hincrByFloat(key, field, value));
+	}
+
+	@Override
+	public Long decr(byte[] key) {
+		return execCommand(jedis -> jedis.decr(key));
+	}
+
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return execCommand(jedis -> jedis.decrBy(key, value));
+	}
+
+	@Override
 	public void subscribe(byte[] channel, BinaryJedisPubSub jedisPubSub, Consumer<Unsubscribe> unsubscribeReceiver) {
 		execCommand(jedis -> {
 			unsubscribeReceiver.accept(new Unsubscribe() {
