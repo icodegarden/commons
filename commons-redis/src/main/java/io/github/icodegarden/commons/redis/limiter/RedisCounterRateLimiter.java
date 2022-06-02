@@ -17,6 +17,9 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
+	private static final byte[] SETBATCH_SCRIPT = "local v = redis.call('get',KEYS[1]);redis.call('decrBy',KEYS[1],ARGV[1]);return v;"
+			.getBytes(Charset.forName("utf-8"));
+
 	private byte[] count;
 
 	private byte[] key;
@@ -31,7 +34,7 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 	 */
 	public RedisCounterRateLimiter(RedisExecutor redisExecutor, String key, int count, long interval) {
 		super(interval);
-		
+
 		Assert.notNull(redisExecutor, "redisExecutor must not null");
 		Assert.hasText(key, "key must not empty");
 		if (count <= 0) {
@@ -42,7 +45,7 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 		}
 		this.redisExecutor = redisExecutor;
 		this.key = key.getBytes(CHARSET);
-		this.count = new Integer(count).toString().getBytes(CHARSET);
+		this.count = Integer.valueOf(count).toString().getBytes(CHARSET);
 	}
 
 	@Override
@@ -51,14 +54,16 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 	}
 
 	@Override
-	protected int getTokenValue() {
-		byte[] bs = redisExecutor.get(key);
-		String str = new String(bs, CHARSET);
-		return Integer.parseInt(str);
-	}
+	protected int getAndDecrement(int value) {
+		/**
+		 * 直接使用decrBy得到的是减去后的结果，相当于decrementAndGet
+		 */
+		
+		byte[] valuebs = Integer.valueOf(value).toString().getBytes(CHARSET);
+		byte[] bs = (byte[]) redisExecutor.eval(SETBATCH_SCRIPT, 1, key, valuebs);
 
-	@Override
-	protected void decrmentToken(int value) {
-		redisExecutor.decrBy(key, value);
+		String str = new String(bs, CHARSET);
+		int v = Integer.parseInt(str);
+		return v;
 	}
 }

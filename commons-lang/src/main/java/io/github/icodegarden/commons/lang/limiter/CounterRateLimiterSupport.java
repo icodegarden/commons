@@ -35,26 +35,23 @@ public abstract class CounterRateLimiterSupport implements RateLimiter {
 			synchronized (this) {
 				if (now > lastResetTime + interval) {
 					resetToken();
-					lastResetTime = now;					
+					lastResetTime = now;
 				}
 			}
 		}
 
-		if (getTokenValue() < weight) {
+		if (getAndDecrement(weight) < weight) {
 			if (log.isInfoEnabled()) {
 				log.info("{}:{} not allowed", CounterRateLimiterSupport.class.getSimpleName(), getName());
 			}
 			return false;
 		}
 
-		decrmentToken(weight);
 		return true;
 	}
 
 	protected abstract void resetToken();
 
-	protected abstract int getTokenValue();
-
-	protected abstract void decrmentToken(int value);
+	protected abstract int getAndDecrement(int value);
 
 }

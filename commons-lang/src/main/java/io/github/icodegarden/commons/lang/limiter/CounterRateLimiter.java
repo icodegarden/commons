@@ -33,12 +33,7 @@ public class CounterRateLimiter extends CounterRateLimiterSupport {
 	}
 
 	@Override
-	protected int getTokenValue() {
-		return token.intValue();
-	}
-
-	@Override
-	protected void decrmentToken(int value) {
-		token.addAndGet(-value);
+	protected int getAndDecrement(int value) {
+		return token.getAndAdd(-value);
 	}
 }
