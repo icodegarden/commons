@@ -13,7 +13,7 @@ public abstract class CounterRateLimiterSupport implements RateLimiter {
 
 	private long interval;
 
-	private long lastResetTime;
+	private volatile long lastResetTime;
 
 	/**
 	 * @param interval 计数间隔millis
@@ -31,9 +31,13 @@ public abstract class CounterRateLimiterSupport implements RateLimiter {
 		/**
 		 * 刷新计数
 		 */
-		if (now > lastResetTime + interval) {// 首次会进来
-			resetToken();
-			lastResetTime = now;
+		if (now > lastResetTime + interval) {// 首次lastResetTime=0,会进来
+			synchronized (this) {
+				if (now > lastResetTime + interval) {
+					resetToken();
+					lastResetTime = now;					
+				}
+			}
 		}
 
 		if (getTokenValue() < weight) {
