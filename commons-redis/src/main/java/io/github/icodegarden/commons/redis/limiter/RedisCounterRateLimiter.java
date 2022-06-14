@@ -18,7 +18,7 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
 	private static final byte[] SETBATCH_SCRIPT = "local v = redis.call('get',KEYS[1]);redis.call('decrBy',KEYS[1],ARGV[1]);return v;"
-			.getBytes(Charset.forName("utf-8"));
+			.getBytes(CHARSET);
 
 	private byte[] count;
 
@@ -45,7 +45,7 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 		}
 		this.redisExecutor = redisExecutor;
 		this.key = key.getBytes(CHARSET);
-		this.count = Integer.valueOf(count).toString().getBytes(CHARSET);
+		this.count = Integer.toString(count).getBytes(CHARSET);
 	}
 
 	@Override
@@ -60,6 +60,7 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 		 */
 		
 		byte[] valuebs = Integer.valueOf(value).toString().getBytes(CHARSET);
+		//这里返回类型是bytes的原因是value是设置进去的，设置进去时是bytes
 		byte[] bs = (byte[]) redisExecutor.eval(SETBATCH_SCRIPT, 1, key, valuebs);
 
 		String str = new String(bs, CHARSET);

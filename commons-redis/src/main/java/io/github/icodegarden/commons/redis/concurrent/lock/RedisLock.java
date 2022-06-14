@@ -24,12 +24,15 @@ public class RedisLock implements DistributedLock {
 
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
+	private static final byte[] SCRIPT = "local v = redis.call('setnx',KEYS[1],ARGV[1]);if(v==1) then redis.call('expire',KEYS[1],ARGV[2]); end;return v;"
+			.getBytes(CHARSET);
+
 	private final RedisExecutor redisExecutor;
 
 	private final byte[] identifier = UUID.randomUUID().toString().getBytes(CHARSET);
 
 	private final byte[] key;
-	private final Long expireSeconds;
+	private final byte[] expireSecondsBytes;
 
 	private long acquireIntervalMillis = 100;
 
@@ -42,7 +45,7 @@ public class RedisLock implements DistributedLock {
 	public RedisLock(RedisExecutor redisExecutor, String name, Long expireSeconds) {
 		this.redisExecutor = redisExecutor;
 		this.key = name.getBytes(CHARSET);
-		this.expireSeconds = expireSeconds;
+		expireSecondsBytes = Long.toString(expireSeconds).getBytes(CHARSET);
 	}
 
 	public void setAcquiredIntervalMillis(long acquireIntervalMillis) {
@@ -75,14 +78,11 @@ public class RedisLock implements DistributedLock {
 		LocalDateTime start = SystemUtils.now();
 		for (;;) {
 			try {
-				/**
-				 * 不可重入
-				 */
-				boolean success = redisExecutor.setnx(key, identifier) == 1;
+				// 这里返回类型是Long的原因是redis直接返回的0或1，而不是设置进去的
+				Long result = (Long) redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
+				boolean success = result == 1;
 
 				if (success) {
-					// FIXME setnx 和 expire 合并eval
-					redisExecutor.expire(key, expireSeconds);
 					return true;
 				}
 
