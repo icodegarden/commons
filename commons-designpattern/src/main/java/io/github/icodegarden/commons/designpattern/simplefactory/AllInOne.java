@@ -1,0 +1,41 @@
+package io.github.icodegarden.commons.designpattern.simplefactory;
+
+public class AllInOne 
+{
+
+	/**
+     * 3个角色合并
+     */
+    public static AllInOne factory(String which) throws BadFruitException
+    {
+        if (which.equalsIgnoreCase("apple"))
+        {
+            return new AllInOne();
+        }
+        else
+        {
+         	throw new BadFruitException("Bad fruit request");
+        }
+    }
+	
+    public void grow()
+    {
+    	System.out.println("Apple is growing...");
+    }
+
+    public void harvest()
+    {
+    	System.out.println("Apple has been harvested.");
+    }
+
+    public void plant()
+    {
+        System.out.println("Apple has been planted.");
+    }
+
+    public int getTreeAge(){ return treeAge; }
+
+    public void setTreeAge(int treeAge){ this.treeAge = treeAge; }
+
+    private int treeAge;
+}
