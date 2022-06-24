@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons-nio</artifactId>
-		<version>0.2.1</version>
+		<version>0.2.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-nio-api</artifactId>
@@ -25,7 +25,7 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>0.2.1</version>
+			<version>0.2.2</version>
 		</dependency>
 
 		<dependency>

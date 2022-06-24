@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 
 /**
@@ -45,7 +46,7 @@ public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<Stri
 	}
 
 	@Override
-	public ResponseEntity<String> onBodyParameterMissing(HttpServletRequest request,
+	public ResponseEntity<String> onBodyParameterInvalid(HttpServletRequest request,
 			MethodArgumentNotValidException cause) {
 		String subMsg;
 		if (cause.getBindingResult().hasErrors()) {
@@ -64,7 +65,8 @@ public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<Stri
 		if (log.isWarnEnabled()) {
 			log.warn("{}", PARAMETER_INVALID_LOG_MODULE, cause);
 		}
-		return ResponseEntity.status(400).body("Missing:" + subMsg);
+		return ResponseEntity.status(400)
+				.body(ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER + ":" + subMsg);
 	}
 
 	@Override

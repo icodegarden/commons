@@ -67,7 +67,7 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 	}
 
 	@Override
-	public ResponseEntity<ApiResponse> onBodyParameterMissing(HttpServletRequest request,
+	public ResponseEntity<ApiResponse> onBodyParameterInvalid(HttpServletRequest request,
 			MethodArgumentNotValidException cause) {
 		ErrorCodeException ece;
 		if (cause.getBindingResult().hasErrors()) {
@@ -80,11 +80,11 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 				return cause.getMessage();
 			}).get();
 
-			ece = new ClientParameterMissingErrorCodeException(
-					ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(), subMsg);
+			ece = new ClientParameterInvalidErrorCodeException(
+					ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(), subMsg);
 		} else {
 			ece = new ClientParameterMissingErrorCodeException(
-					ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
+					ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(),
 					cause.getMessage());
 		}
 		if (log.isWarnEnabled()) {

@@ -107,7 +107,7 @@ public abstract class AbstractExceptionHandler<T> {
 	 * @return
 	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public abstract ResponseEntity<T> onBodyParameterMissing(HttpServletRequest request,
+	public abstract ResponseEntity<T> onBodyParameterInvalid(HttpServletRequest request,
 			MethodArgumentNotValidException cause);
 
 	/**
