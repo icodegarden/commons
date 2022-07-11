@@ -1,9 +1,9 @@
 DROP TABLE IF EXISTS id_sequence;
 CREATE TABLE id_sequence (
-  NAME VARCHAR (50) NOT NULL,
+  name VARCHAR (50) NOT NULL,
   current_value BIGINT NOT NULL,
   increment INT NOT NULL,
-PRIMARY KEY (NAME)
+PRIMARY KEY (name)
 ) ENGINE = INNODB ;
 
 

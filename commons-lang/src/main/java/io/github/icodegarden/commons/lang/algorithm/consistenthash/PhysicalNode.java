@@ -8,7 +8,7 @@ import java.util.Objects;
  * @author Fangfang.Xu
  *
  */
-class PhysicalNode implements Node {
+public class PhysicalNode implements Node {
 
 	private final String key;
 

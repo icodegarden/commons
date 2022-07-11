@@ -17,13 +17,15 @@ import org.springframework.util.Assert;
  */
 public class MysqlSequenceManager implements SequenceManager {
 
-	private volatile long max = -1;
-	private AtomicLong current;
-
 	private String moduleName;
+	private AtomicLong localCurrent = new AtomicLong(-1);
+	private AtomicLong localMax = new AtomicLong(-1);
+	private final long increment;
+
 	private DataSource dataSource;
 
-	private final String currentIdSql;
+	private final String getIncrementSql;
+//	private final String currentIdSql;
 	private final String nextMaxIdSql;
 
 	public MysqlSequenceManager(String moduleName, DataSource dataSource) {
@@ -32,68 +34,57 @@ public class MysqlSequenceManager implements SequenceManager {
 		this.moduleName = moduleName;
 		this.dataSource = dataSource;
 
-		currentIdSql = "select id_seq_currval('" + moduleName + "')";
+		getIncrementSql = "select `increment` from `id_sequence` where name = ('" + moduleName + "')";
+//		currentIdSql = "select id_seq_currval('" + moduleName + "')";
 		nextMaxIdSql = "select id_seq_nextval('" + moduleName + "')";
+
+		this.increment = sqlValue(getIncrementSql);
+	}
+
+	public String getModuleName() {
+		return moduleName;
+	}
+
+	/**
+	 * @return 步长
+	 */
+	public long getIncrement() {
+		return increment;
 	}
 
 	@Override
 	public long currentId() {
-		return current.get();
+		return localCurrent.get();
 	}
 
+	/**
+	 * 如果本地当前值>=本地最大值<br>
+	 * 首次 取next最大值 起点=最大值-步长 最大值=next最大值<br>
+	 * 后续 取next最大值 起点=最大值-步长 最大值=next最大值<br>
+	 * 
+	 */
 	@Override
 	public long nextId() {
-		initIfNecessary();
-
-		long id = current.incrementAndGet();
-		updateMaxIfNecessary();
-
-		return id;
+		if (localCurrent.get() >= localMax.get()) {
+			synchronized (this) {
+				if (localCurrent.get() >= localMax.get()) {
+					long nextMaxIdInDb = sqlValue(nextMaxIdSql);
+					localCurrent.set(nextMaxIdInDb - increment);
+					localMax.set(nextMaxIdInDb);
+				}
+			}
+		}
+		return localCurrent.incrementAndGet();
 	}
 
-	private long currentIdInDb() {
+	private long sqlValue(String sql) {
 		try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement();) {
-			try (ResultSet rs = st.executeQuery(currentIdSql)) {
+			try (ResultSet rs = st.executeQuery(sql)) {
 				rs.next();
 				return rs.getLong(1);
 			}
 		} catch (SQLException e) {
-			throw new IllegalStateException("ex on get current id", e);
-		}
-	}
-
-	private void initIfNecessary() {
-		if (current == null) {
-			synchronized (this) {
-				if (current == null) {
-					long currentId = currentIdInDb();
-					current = new AtomicLong(currentId);
-
-					updateMaxIfNecessary();
-				}
-			}
-		}
-	}
-
-	private void updateMaxIfNecessary() {
-		if (current.get() > max) {
-			synchronized (this) {
-				while (current.get() > max) {
-					long nextMax = nextMaxIdInDb();
-					max = nextMax;
-				}
-			}
-		}
-	}
-
-	private long nextMaxIdInDb() {
-		try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement();) {
-			try (ResultSet rs = st.executeQuery(nextMaxIdSql)) {
-				rs.next();
-				return rs.getLong(1);
-			}
-		} catch (SQLException e) {
-			throw new IllegalStateException("ex on get next max id", e);
+			throw new IllegalStateException("ex on sqlValue sql:" + sql, e);
 		}
 	}
 }
