@@ -5,7 +5,7 @@ package io.github.icodegarden.commons.lang.algorithm;
  * @author Fangfang.Xu
  *
  */
-public interface Hasher {
+public interface HashFunction {
 
-	long hash(String s);
+	int hash(String s);
 }

@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import io.github.icodegarden.commons.lang.algorithm.Hasher;
-import io.github.icodegarden.commons.lang.algorithm.MD5Hasher;
+import io.github.icodegarden.commons.lang.algorithm.HashFunction;
+import io.github.icodegarden.commons.lang.algorithm.MD5Function;
 
 /**
  * 将节点对象散列到具有一定数量虚拟节点的散列环中<br>
@@ -17,15 +17,15 @@ import io.github.icodegarden.commons.lang.algorithm.MD5Hasher;
  */
 public class ConsistentHashRouter<T extends Node> {
 
-	private final SortedMap<Long, VirtualNode<T>> ring = new TreeMap<Long, VirtualNode<T>>();
-	private final Hasher hasher;
+	private final SortedMap<Number, VirtualNode<T>> ring = new TreeMap<Number, VirtualNode<T>>();
+	private final HashFunction hashFunc;
 
 	public ConsistentHashRouter(Collection<T> pNodes, int vNodeCount) {
-		this(pNodes, vNodeCount, new MD5Hasher());
+		this(pNodes, vNodeCount, new MD5Function());
 	}
 
-	public ConsistentHashRouter(Collection<T> pNodes, int vNodeCount, Hasher hasher) {
-		this.hasher = hasher;
+	public ConsistentHashRouter(Collection<T> pNodes, int vNodeCount, HashFunction hashFunc) {
+		this.hashFunc = hashFunc;
 		if (pNodes != null) {
 			for (T pNode : pNodes) {
 				addOrUpdatePhysicalNode(pNode, vNodeCount);
@@ -45,7 +45,7 @@ public class ConsistentHashRouter<T extends Node> {
 		int existingCount = countExistingVirtualNodes(pNode);
 		for (int i = 0; i < vNodeCount; i++) {
 			VirtualNode<T> vNode = new VirtualNode<T>(pNode, i + existingCount);
-			ring.put(hasher.hash(vNode.getKey()), vNode);
+			ring.put(hashFunc.hash(vNode.getKey()), vNode);
 		}
 	}
 
@@ -55,9 +55,9 @@ public class ConsistentHashRouter<T extends Node> {
 	 * @return 移除的虚拟节点
 	 */
 	public void removePhysicalNode(T pNode) {
-		Iterator<Entry<Long, VirtualNode<T>>> it = ring.entrySet().iterator();
+		Iterator<Entry<Number, VirtualNode<T>>> it = ring.entrySet().iterator();
 		while (it.hasNext()) {
-			Entry<Long, VirtualNode<T>> next = it.next();
+			Entry<Number, VirtualNode<T>> next = it.next();
 			VirtualNode<T> virtualNode = next.getValue();
 			if (virtualNode.isVirtualNodeOf(pNode)) {
 				it.remove();
@@ -75,15 +75,15 @@ public class ConsistentHashRouter<T extends Node> {
 		/**
 		 * 用跟虚拟节点一样的hash算法
 		 */
-		Long hashVal = hasher.hash(key);
+		Number hashVal = hashFunc.hash(key);
 		/**
 		 * tail后，得到的是 >= 传参的hash值的 那段hash环，有可能是空的
 		 */
-		SortedMap<Long, VirtualNode<T>> tailMap = ring.tailMap(hashVal);
+		SortedMap<Number, VirtualNode<T>> tailMap = ring.tailMap(hashVal);
 		/**
 		 * 不为空，应该落到最近的虚拟节点对应的物理节点； 为空，即相当于要落到整个hash环的第一个虚拟节点对应的物理节点
 		 */
-		Long nodeHashVal = !tailMap.isEmpty() ? tailMap.firstKey() : ring.firstKey();
+		Number nodeHashVal = !tailMap.isEmpty() ? tailMap.firstKey() : ring.firstKey();
 		return ring.get(nodeHashVal);
 	}
 

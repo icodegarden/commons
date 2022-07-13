@@ -6,7 +6,7 @@ package io.github.icodegarden.commons.lang.algorithm;
  * @author Fangfang.Xu
  *
  */
-public class JavaStringHasher implements Hasher {
+public class JavaStringFunction implements HashFunction {
 	/**
 	 * String类的seed默认是31
 	 */
@@ -15,16 +15,16 @@ public class JavaStringHasher implements Hasher {
 	/**
 	 * 使用String默认的seed=31
 	 */
-	public JavaStringHasher() {
+	public JavaStringFunction() {
 		this.seed = 31;
 	}
 
-	public JavaStringHasher(int seed) {
+	public JavaStringFunction(int seed) {
 		this.seed = seed;
 	}
 
 	@Override
-	public long hash(String value) {
+	public int hash(String value) {
 		int hash = 0;
 
 		int h = hash;

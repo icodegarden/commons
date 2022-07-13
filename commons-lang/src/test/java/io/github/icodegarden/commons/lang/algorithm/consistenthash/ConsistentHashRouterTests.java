@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.algorithm.Hasher;
-import io.github.icodegarden.commons.lang.algorithm.MD5Hasher;
+import io.github.icodegarden.commons.lang.algorithm.HashFunction;
+import io.github.icodegarden.commons.lang.algorithm.MD5Function;
 
 /**
  * 
@@ -71,10 +71,10 @@ class ConsistentHashRouterTests {
 		PhysicalNode c2 = new PhysicalNode("id-2000000");
 		PhysicalNode c3 = new PhysicalNode("id-3000000");
 
-		Hasher hasher = new MD5Hasher();
-		System.out.println(hasher.hash(c1.getKey()));
-		System.out.println(hasher.hash(c2.getKey()));
-		System.out.println(hasher.hash(c3.getKey()));
+		HashFunction hashFunc = new MD5Function();
+		System.out.println(hashFunc.hash(c1.getKey()));
+		System.out.println(hashFunc.hash(c2.getKey()));
+		System.out.println(hashFunc.hash(c3.getKey()));
 
 		ConsistentHashRouter<PhysicalNode> router = new ConsistentHashRouter<PhysicalNode>(Arrays.asList(c1, c2, c3),
 				160/* 每个物理节点有多少个虚拟节点 */);
@@ -86,6 +86,9 @@ class ConsistentHashRouterTests {
 		System.out.println(node.getKey());
 	}
 
+	/**
+	 * 演示真实场景
+	 */
 	@Test
 	void sample() {
 		/**
