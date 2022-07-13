@@ -1,18 +1,16 @@
 package io.github.icodegarden.commons.mybatis.interceptor;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
@@ -62,18 +60,46 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	};
 	private Method oracleGetOriginalSqlMethod;
 	private Method druidGetSQLMethod;
+
 	private Method shardingSphereGetSQLMethod;
+	private Method shardingSphereGetParamtersMethod;
+	private Field shardingSphereSqlField;
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		long start = System.currentTimeMillis();
+
+		Statement statement;
+		Object firstArg = invocation.getArgs()[0];
+		if (Proxy.isProxyClass(firstArg.getClass())) {
+			statement = (Statement) SystemMetaObject.forObject(firstArg).getValue("h.statement");
+		} else {
+			statement = (Statement) firstArg;
+		}
+		MetaObject stmtMetaObj = SystemMetaObject.forObject(statement);
+		try {
+			statement = (Statement) stmtMetaObj.getValue("stmt.statement");
+		} catch (Exception e) {
+			// do nothing
+		}
+		if (stmtMetaObj.hasGetter("delegate")) {
+			// Hikari
+			try {
+				statement = (Statement) stmtMetaObj.getValue("delegate");
+			} catch (Exception ignored) {
+
+			}
+		}
+
+		List<Object> paramters = extractParamters(statement);
+
 		Object result = invocation.proceed();
 		long timing = System.currentTimeMillis() - start;
 
 		if (timing > unhealthMillis) {
 			StringBuilder formatSql;
 			try {
-				String originalSql = resolveOriginalSql(invocation);
+				String originalSql = resolveOriginalSql(statement, paramters);
 
 				// 格式化 SQL 打印执行结果
 				Object target = PluginUtils.realTarget(invocation.getTarget());
@@ -100,29 +126,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 		return result;
 	}
 
-	private String resolveOriginalSql(Invocation invocation) {
-		Statement statement;
-		Object firstArg = invocation.getArgs()[0];
-		if (Proxy.isProxyClass(firstArg.getClass())) {
-			statement = (Statement) SystemMetaObject.forObject(firstArg).getValue("h.statement");
-		} else {
-			statement = (Statement) firstArg;
-		}
-		MetaObject stmtMetaObj = SystemMetaObject.forObject(statement);
-		try {
-			statement = (Statement) stmtMetaObj.getValue("stmt.statement");
-		} catch (Exception e) {
-			// do nothing
-		}
-		if (stmtMetaObj.hasGetter("delegate")) {
-			// Hikari
-			try {
-				statement = (Statement) stmtMetaObj.getValue("delegate");
-			} catch (Exception ignored) {
-
-			}
-		}
-
+	private String resolveOriginalSql(Statement statement, List<Object> paramters) {
 		String originalSql = null;
 		String stmtClassName = statement.getClass().getName();
 		if (DruidPooledPreparedStatement.equals(stmtClassName)) {
@@ -164,27 +168,40 @@ public class SqlPerformanceInterceptor implements Interceptor {
 			}
 		} else if (ShardingSpherePreparedStatement.equals(stmtClassName)) {
 			try {
-				if (shardingSphereGetSQLMethod == null) {
+//				if (shardingSphereGetSQLMethod == null) {
+//					Class<?> clazz = Class.forName(ShardingSpherePreparedStatement);
+//					shardingSphereGetSQLMethod = clazz.getMethod("getRoutedStatements");
+//				}
+//				/**
+//				 * 当分页等查询时，sharding需要向多个库（表）发送sql，例如2个库时 statements 就会相应的有2个
+//				 */
+//				Collection<PreparedStatement> statements = (Collection<PreparedStatement>) shardingSphereGetSQLMethod
+//						.invoke(statement);
+//				if (firstSqlOnSharding) {
+//					originalSql = statements.stream().findFirst().map(s -> {
+//						String sql = s.toString();
+//						return resolveRealSql(sql) + "\n!sharding-first";
+//					}).get().toString();
+//				} else {
+//					originalSql = statements.stream().map(s -> {
+//						String sql = s.toString();
+//						return resolveRealSql(sql);
+//					}).collect(Collectors.joining("\n!sharding-" + statements.size()));// 多条sql换行
+//				}
+//				return originalSql;
+
+				if (shardingSphereSqlField == null) {
 					Class<?> clazz = Class.forName(ShardingSpherePreparedStatement);
-					shardingSphereGetSQLMethod = clazz.getMethod("getRoutedStatements");
+					shardingSphereSqlField = clazz.getDeclaredField("sql");
+					shardingSphereSqlField.setAccessible(true);
 				}
-				/**
-				 * 当分页等查询时，sharding需要向多个库（表）发送sql，例如2个库时 statements 就会相应的有2个
-				 */
-				Collection<PreparedStatement> statements = (Collection<PreparedStatement>) shardingSphereGetSQLMethod
-						.invoke(statement);
-				if (firstSqlOnSharding) {
-					originalSql = statements.stream().findFirst().map(s -> {
-						String sql = s.toString();
-						return resolveRealSql(sql) + "\n!sharding-first";
-					}).get().toString();
-				} else {
-					originalSql = statements.stream().map(s -> {
-						String sql = s.toString();
-						return resolveRealSql(sql);
-					}).collect(Collectors.joining("\n!sharding-" + statements.size()));// 多条sql换行
+				String sql = (String) shardingSphereSqlField.get(statement);
+				if (paramters != null) {
+					for (Object paramter : paramters) {
+						sql = sql.replaceFirst("\\?"/*该参数是个正则，不能直接?号*/, paramter.toString());
+					}
 				}
-				return originalSql;
+				return sql;
 			} catch (Exception e) {
 				log.error("", e);
 			}
@@ -193,6 +210,24 @@ public class SqlPerformanceInterceptor implements Interceptor {
 			originalSql = statement.toString();
 		}
 		return resolveRealSql(originalSql);
+	}
+
+	private List<Object> extractParamters(Statement statement) {
+		String stmtClassName = statement.getClass().getName();
+
+		if (ShardingSpherePreparedStatement.equals(stmtClassName)) {
+			try {
+				if (shardingSphereGetParamtersMethod == null) {
+					Class<?> clazz = Class.forName(ShardingSpherePreparedStatement);
+					shardingSphereGetParamtersMethod = clazz.getMethod("getParameters");
+				}
+				List<Object> paramters = (List<Object>) shardingSphereGetParamtersMethod.invoke(statement);
+				return new ArrayList<Object>(paramters);//要赋值一份新的，否则引用会发生变化
+			} catch (Exception e) {
+				log.error("WARN ex on extractParamters", e);
+			}
+		}
+		return null;
 	}
 
 	private String resolveRealSql(String originalSql) {
