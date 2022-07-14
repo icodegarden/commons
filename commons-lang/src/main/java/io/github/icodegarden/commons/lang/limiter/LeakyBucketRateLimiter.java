@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * 漏桶算法，以恒定的速率访问<br>
  * 桶满则丢弃，按给定的速率流出水<br>
  * 
- * FIXME 目前没有实现固定速率出水访问server，效果与令牌桶等同
+ * 目前没有实现固定速率出水访问server，效果上与令牌桶等同，但思想不同
  * 
  * @author Fangfang.Xu
  *
