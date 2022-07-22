@@ -1,5 +1,6 @@
 package io.github.icodegarden.commons.nio.task;
 
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import io.github.icodegarden.commons.nio.health.Heartbeat;
 
 /**
+ * 客户端主动发起
  * 
  * @author Fangfang.Xu
  *
@@ -17,6 +19,8 @@ public class HeartbeatTimerTask {
 
 	public static final long DEFAULT_INTERVAL_MILLIS = 60000;
 	private long heartbeatIntervalMillis;
+	private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = TimerTaskThreadPools.newScheduledThreadPool(2,
+			HeartbeatTimerTask.class.getSimpleName());
 
 	public static final HeartbeatTimerTask DEFAULT = new HeartbeatTimerTask(DEFAULT_INTERVAL_MILLIS);
 
@@ -26,7 +30,7 @@ public class HeartbeatTimerTask {
 
 	public ScheduleCancelableRunnable register(Heartbeat heartbeat) {
 		ScheduleCancelableRunnable scheduleCancelableRunnable = new ScheduleCancelableRunnable(
-				"HeartbeatTimerTask-" + heartbeat.toString(), TimerTaskThreadPools.SCHEDULED_THREADPOOLS) {
+				"HeartbeatTimerTask-" + heartbeat.toString(), scheduledThreadPoolExecutor) {
 			@Override
 			public void run() {
 				try {
@@ -40,7 +44,8 @@ public class HeartbeatTimerTask {
 		/**
 		 * 初始delay heartbeatIntervalMillis而不是0
 		 */
-		scheduleCancelableRunnable.scheduleWithFixedDelay(heartbeatIntervalMillis, heartbeatIntervalMillis, TimeUnit.MILLISECONDS);
+		scheduleCancelableRunnable.scheduleWithFixedDelay(heartbeatIntervalMillis, heartbeatIntervalMillis,
+				TimeUnit.MILLISECONDS);
 		return scheduleCancelableRunnable;
 	}
 }

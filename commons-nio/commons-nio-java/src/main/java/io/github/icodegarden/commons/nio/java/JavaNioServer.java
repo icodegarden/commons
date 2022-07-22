@@ -112,6 +112,7 @@ public class JavaNioServer implements NioServer, ServerNioEventListener {
 		}
 		nioServerSelector.close();
 		serverSocketChannel.close();
+		idleStateTimerTask.shutdown();
 		workerThreadPool.shutdown();
 		closed = true;
 		if (log.isInfoEnabled()) {

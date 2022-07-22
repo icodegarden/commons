@@ -3,7 +3,6 @@ package io.github.icodegarden.commons.lang.metrics;
 import java.io.IOException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +31,9 @@ public class DefaultMetricsOverload implements MetricsOverload {
 	private final InstanceMetrics<? extends Metrics> instanceMetrics;
 	private Metrics metrics;
 
-	private AtomicLong localVersion = new AtomicLong();
-	private AtomicLong flushedVersion = new AtomicLong();
+//	private AtomicLong localVersion = new AtomicLong();
+//	private AtomicLong flushedVersion = new AtomicLong();
+	private long lastFlushTimestamp;
 	private boolean scheduleFlushMetrics;
 
 	public DefaultMetricsOverload(InstanceRegistry<? extends RegisteredInstance> instanceRegistry,
@@ -45,7 +45,7 @@ public class DefaultMetricsOverload implements MetricsOverload {
 
 	public void resetMetrics(Metrics metrics) {
 		this.metrics = metrics;
-		localVersion.set(0);
+//		localVersion.set(0);
 	}
 
 	public void enableScheduleFlushMetrics(int scheduleMillis) {
@@ -53,7 +53,7 @@ public class DefaultMetricsOverload implements MetricsOverload {
 			if (!scheduleFlushMetrics) {
 				scheduleFlushMetricsThreadPool.scheduleWithFixedDelay(() -> {
 					try {
-						flushMetricsIfNecessary();
+						flushMetricsIfNecessary(scheduleMillis);
 					} catch (Throwable e) {
 						if (log.isWarnEnabled()) {
 							log.warn("ex on flushMetricsIfNecessary", e);
@@ -97,9 +97,9 @@ public class DefaultMetricsOverload implements MetricsOverload {
 				return false;
 			}
 			boolean changed = metrics.incrementDimension(DimensionName.Jobs, calc.ofOverload());
-			if (changed) {
-				localVersion.incrementAndGet();
-			}
+//			if (changed) {
+//				localVersion.incrementAndGet();
+//			}
 			return true;
 		}
 	}
@@ -110,9 +110,9 @@ public class DefaultMetricsOverload implements MetricsOverload {
 		 * 方法内线程安全
 		 */
 		boolean changed = metrics.decrementDimension(DimensionName.Jobs, calc.ofOverload());
-		if (changed) {
-			localVersion.incrementAndGet();
-		}
+//		if (changed) {
+//			localVersion.incrementAndGet();
+//		}
 	}
 
 	@Override
@@ -122,11 +122,20 @@ public class DefaultMetricsOverload implements MetricsOverload {
 		RegisteredInstance instance = instanceRegistry.registerIfNot();
 		instanceMetrics.setMetrics(instance, metrics);
 
-		flushedVersion.set(localVersion.get());
+//		flushedVersion.set(localVersion.get());
+		lastFlushTimestamp = System.currentTimeMillis();
 	}
 
-	private void flushMetricsIfNecessary() {
-		if (localVersion.get() != flushedVersion.get()) {
+	private void flushMetricsIfNecessary(int scheduleMillis) {
+		// 这种方式，单独cpu 内存变化时不会刷入
+//		if (localVersion.get() != flushedVersion.get()) {
+//			flushMetrics();
+//		}
+
+		/**
+		 * 如果近期已经被外部调用刷入过了，这次就不需要处理，这样可以降低开销
+		 */
+		if ((System.currentTimeMillis() - scheduleMillis) > lastFlushTimestamp) {
 			flushMetrics();
 		}
 	}

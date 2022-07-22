@@ -1,5 +1,6 @@
 package io.github.icodegarden.commons.nio.task;
 
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -8,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import io.github.icodegarden.commons.nio.health.Heartbeat;
 
 /**
- * heartbeat*3检测一次,超时没有来自客户端的心跳，则触发关闭
+ * 服务端检测。heartbeat*3检测一次,超时没有来自客户端的心跳，则触发关闭
  * 
  * @author Fangfang.Xu
  *
@@ -17,6 +18,8 @@ public class IdleStateTimerTask {
 	private static Logger log = LoggerFactory.getLogger(IdleStateTimerTask.class);
 
 	private long heartbeatIntervalMillis;
+	private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = TimerTaskThreadPools
+			.newScheduledThreadPool(1/* idle检测任务是轻量的 */, IdleStateTimerTask.class.getSimpleName());
 
 	public static final IdleStateTimerTask DEFAULT = new IdleStateTimerTask(HeartbeatTimerTask.DEFAULT_INTERVAL_MILLIS);
 
@@ -26,8 +29,7 @@ public class IdleStateTimerTask {
 
 	public ScheduleCancelableRunnable register(Heartbeat heartbeat) {
 		ScheduleCancelableRunnable scheduleCancelableRunnable = new ScheduleCancelableRunnable(
-				"IdleStateTimerTask-" + heartbeat.toString(),
-				TimerTaskThreadPools.SCHEDULED_THREADPOOLS) {
+				"IdleStateTimerTask-" + heartbeat.toString(), scheduledThreadPoolExecutor) {
 			@Override
 			public void run() {
 				long lastReceive = heartbeat.lastReceive();
@@ -53,4 +55,7 @@ public class IdleStateTimerTask {
 		return scheduleCancelableRunnable;
 	}
 
+	public void shutdown() {
+		scheduledThreadPoolExecutor.shutdown();
+	}
 }

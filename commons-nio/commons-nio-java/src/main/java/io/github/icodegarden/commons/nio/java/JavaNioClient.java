@@ -46,11 +46,7 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 
 	private ScheduleCancelableRunnable heartbeatTask;
 	private ScheduleCancelableRunnable reconnectTask;
-	/**
-	 * 被动关闭，非用户行为。
-	 */
-	private Runnable clientPassiveCloseListener;
-
+	
 	public JavaNioClient(InetSocketAddress address, ClientNioSelector clientNioSelector) {
 		this(address, clientNioSelector, HeartbeatTimerTask.DEFAULT, ReconnectTimerTask.DEFAULT);
 	}
@@ -66,15 +62,6 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 		this.clientNioSelector = clientNioSelector;
 		this.heartbeatTimerTask = heartbeatTimerTask;
 		this.reconnectTimerTask = reconnectTimerTask;
-	}
-
-	/**
-	 * 被动关闭时
-	 * 
-	 * @param listener
-	 */
-	public void setClientPassiveCloseListener(Runnable listener) {
-		this.clientPassiveCloseListener = listener;
 	}
 
 	@Override
@@ -178,19 +165,19 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 				Future.received(message.getRequestId(), message.getBody());
 			}
 		} catch (ClosedChannelException e) {
-			// 通常是client自身网络断开
+			// 通常是client自身网络断开，实测证明也可能是server下线等
 			if (log.isWarnEnabled()) {
-				log.warn("client channel was closed, reconnect...");
+				log.warn("client channel was closed, may be client disconnect or server was Not Available");
 			}
-			reconnect();
+			//reconnect(); 是否重连交给ReconnectTimerTask
 		} catch (IOException e) {
 			/**
-			 * IMPT 通常由于server主动关闭，因为客户端要close自己，后续NioClientPool就能够在获取连接时识别已关闭并移除
+			 * IMPT 通常由于server主动关闭，客户端要close自己，后续NioClientPool就能够在获取连接时识别已关闭并移除
 			 */
 			if (log.isWarnEnabled()) {
 				log.warn("client channel was closed, that more means server was closed, close client.");
 			}
-			closeInternal();
+			close();
 		}
 	}
 
@@ -252,9 +239,9 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 
 	@Override
 	public synchronized void close() throws IOException {
-		/**
-		 * 用户主动发起
-		 */
+		if(log.isInfoEnabled()) {
+			log.info("client do close...");
+		}
 		try {
 			if (socketChannel != null) {
 				socketChannel.close();
@@ -269,14 +256,7 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 			closed = true;
 		}
 	}
-
-	private synchronized void closeInternal() throws IOException {
-		close();
-		if (clientPassiveCloseListener != null) {
-			clientPassiveCloseListener.run();
-		}
-	}
-
+	
 	@Override
 	public String toString() {
 		return "[closed=" + closed + ", socketChannel=" + socketChannel + "]";
