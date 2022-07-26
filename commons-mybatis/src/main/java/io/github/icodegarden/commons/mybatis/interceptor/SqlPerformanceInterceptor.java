@@ -198,7 +198,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 				String sql = (String) shardingSphereSqlField.get(statement);
 				if (paramters != null) {
 					for (Object paramter : paramters) {
-						sql = sql.replaceFirst("\\?"/*该参数是个正则，不能直接?号*/, paramter.toString());
+						sql = sql.replaceFirst("\\?"/* 该参数是个正则，不能直接?号 */, paramter != null ? paramter.toString() : "null");
 					}
 				}
 				return sql;
