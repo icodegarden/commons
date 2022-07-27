@@ -90,7 +90,7 @@ public class ReliabilityConsumer<K, V> extends KafkaConsumer<K, V> {
 			throw new IllegalStateException("consumer is not running");
 		}
 		try {
-			while (true) {
+			while (!closed) {
 				ConsumerRecords<K, V> records = this.poll(Duration.ofMillis(pollTimeoutMillis));
 				recordReliabilityProcessor.handleReliability(records);
 			}
@@ -111,11 +111,17 @@ public class ReliabilityConsumer<K, V> extends KafkaConsumer<K, V> {
 		}
 	}
 
+	/**
+	 * 优雅的
+	 */
 	@Override
 	public void close() {
 		this.close(timeout);
 	}
 
+	/**
+	 * 优雅的
+	 */
 	@Override
 	public void close(Duration timeout) {
 		if (this.closed) {
@@ -133,5 +139,16 @@ public class ReliabilityConsumer<K, V> extends KafkaConsumer<K, V> {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/**
+	 * 强制的，将会导致处理中的消息commit失败
+	 */
+	public void forceClose() {
+		this.closed = true;
+		log.info("consumer named {} received forceClose signal", name);
+
+		this.wakeup();
+		super.close(timeout);//不能使用super.close(); 否则它会调用this.close(Duration timeout);
 	}
 }

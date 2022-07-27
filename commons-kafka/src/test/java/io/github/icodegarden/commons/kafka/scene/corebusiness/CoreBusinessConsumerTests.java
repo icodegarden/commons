@@ -53,6 +53,7 @@ public class CoreBusinessConsumerTests {
 		}.start();
 
 		consumer.consume(100);
+		System.out.println("consumer exit.");
 	}
 
 	static ReliabilityHandler<Integer, OrderDetail> recordReliabilityHandler = new ReliabilityHandler<Integer, OrderDetail>() {

@@ -29,7 +29,7 @@ public class CoreBusinessProducerTests {
 
 		OrderDetail orderDetail = new OrderDetail();
 
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < 10; i++) {
 			orderDetail.setOrderNum("orderNum-" + i);
 			try {
 				producer.sendSync(new ProducerRecord<Integer, OrderDetail>("test-corebusiness", i, orderDetail));
