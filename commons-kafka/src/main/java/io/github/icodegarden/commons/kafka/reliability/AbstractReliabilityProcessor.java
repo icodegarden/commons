@@ -120,6 +120,9 @@ public abstract class AbstractReliabilityProcessor<K, V> implements ReliabilityP
 	 */
 	private void handleReliability(Iterable<ConsumerRecord<K, V>> records, int count, boolean handled) {
 		if (count > 0) {
+			/**
+			 * CountDownLatch允许先执行countDown，因此线程池满了执行CallerRun也会正确处理
+			 */
 			CountDownLatch countDownLatch = new CountDownLatch(count);
 			records.forEach(record -> {
 				try {

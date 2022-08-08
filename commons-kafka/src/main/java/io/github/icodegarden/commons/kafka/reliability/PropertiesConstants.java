@@ -25,10 +25,10 @@ public class PropertiesConstants {
 	public static final Tuple2<String, Long> HANDLERECORDS_THREADPOOL_KEEPALIVEMILLIS = Tuples
 			.of("io.kafka.record.handle.threadpool.keepAliveMillis", 600000L);
 	/**
-	 * 不要太大，因为每个批次的预处理必须等待全部完成的结果，如果max.poll.records小于这个数量，将无法提升至maxsize
+	 * 建议不做修改，因为每个批次的预处理必须等待全部完成的结果，如果max.poll.records小于这个数量，将无法提升至maxsize
 	 */
 	public static final Tuple2<String, Integer> HANDLERECORDS_THREADPOOL_QUEUESIZE = Tuples
-			.of("io.kafka.record.handle.threadpool.queueSize", 10);
+			.of("io.kafka.record.handle.threadpool.queueSize", 0);
 
 	public static final Tuple2<String, String> HANDLERECORDS_THREADPOOL_NAMEPREFIX = Tuples
 			.of("io.kafka.record.handle.threadpool.namePrefix", "io.kafka.record.handle.threadpool");

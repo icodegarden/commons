@@ -203,7 +203,7 @@ producer是按照batch进行发送的，但是还要看linger.ms的值，默认�
 		/**限制批量发送的bytes发小，这跟batch.size哪个先达就发送*/
 		props.put("max.request.size", 1048576);//Type: intDefault: 1048576 Valid Values: [0,...]Importance: medium
 		/**send时如果不指定partition参数，则使用这里设置的class来计算partition*/
-		props.put("partitioner.class", "xff.kafka.ProducerTest$KeyPartitionerTest");//Type: classDefault: org.apache.kafka.clients.producer.internals.DefaultPartitioner Valid Values: Importance: medium
+		props.put("partitioner.class", "io.github.icodegarden.commons.kafka.ProducerTest$KeyPartitionerTest");//Type: classDefault: org.apache.kafka.clients.producer.internals.DefaultPartitioner Valid Values: Importance: medium
 //		props.put("receive.buffer.bytes", 32768);//Type: intDefault: 32768 Valid Values: [-1,...]Importance: medium
 		/**发送请求超时时间，超时则进行重试直到用尽后再报失败；这个值应该配置大于replica.lag.time.max.ms（acks为all发送时，消息复制到同步副本的超时时间）*/
 		props.put("request.timeout.ms", 30000);//Type: intDefault: 30000 Valid Values: [0,...]Importance: medium

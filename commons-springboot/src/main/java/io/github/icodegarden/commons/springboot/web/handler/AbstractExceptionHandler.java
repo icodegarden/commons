@@ -54,7 +54,11 @@ public abstract class AbstractExceptionHandler<T> {
 	public void setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
 		this.printErrorStackOnWarn = printErrorStackOnWarn;
 	}
-
+	
+	/**
+	 * 自带了 ContentCachingRequestWrapper 功能
+	 * @return
+	 */
 	@Bean
 	public FilterRegistrationBean<Filter> contentCachingFilter() {
 		OncePerRequestFilter filter = new OncePerRequestFilter() {

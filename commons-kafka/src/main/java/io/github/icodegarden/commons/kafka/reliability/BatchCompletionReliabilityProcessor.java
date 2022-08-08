@@ -38,6 +38,7 @@ public class BatchCompletionReliabilityProcessor<K, V> extends AbstractReliabili
 				try {
 					consumer.commitAsync(OFFSETCOMMIT_CALLBACK);
 				} catch (Exception e) {
+					log.warn("commit offset failed after handle record.", e);
 					// commit失败则忽略，待下批覆盖式commit
 				}
 			} finally {

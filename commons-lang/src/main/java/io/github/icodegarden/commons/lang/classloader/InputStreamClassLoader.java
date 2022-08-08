@@ -11,22 +11,22 @@ import java.lang.reflect.Constructor;
  */
 public final class InputStreamClassLoader extends ClassLoader {
 
-	private final String name;
+	private final String className;
 	private InputStream is;
 	private ClassLoader appClassLoader;
 
 	/**
 	 * 
-	 * @param name 完整类名，例如 com.geely.ros.sync.util.classloader.Tester
+	 * @param className 完整类名，例如io.github.icodegarden.commons.lang.classloader.Tester
 	 * @param is
 	 * @throws IOException
 	 */
-	public InputStreamClassLoader(String name, InputStream is) throws IOException {
+	public InputStreamClassLoader(String className, InputStream is) throws IOException {
 		super(null);// 脱离双亲，否则无法重复加载classpath下的class
 		if (is.available() == 0) {
 			throw new IOException("InputStream's available must > 0");
 		}
-		this.name = name;
+		this.className = className;
 		appClassLoader = getSystemClassLoader();
 		this.is = is;
 	}
@@ -37,7 +37,7 @@ public final class InputStreamClassLoader extends ClassLoader {
 	 * @return 加载完成的类
 	 */
 	public Class<?> loadClass() throws ClassNotFoundException {
-		return loadClass(name);
+		return loadClass(className);
 	}
 
 	/**
@@ -66,8 +66,8 @@ public final class InputStreamClassLoader extends ClassLoader {
 
 	/**
 	 * 时序：
-	 * 第1次进来：加载name指定的类，如com.geely.ros.sync.util.classloader.Tester，此时从stream中读取bytes并触发defineClass(...)<br>
-	 * 第2次进来：加载依赖的接口，例如com.geely.ros.sync.util.classloader.ITester，而接口应使用已加载的class而不需要重新加载，所以进到if分支内<br>
+	 * 第1次进来：加载name指定的类，如io.github.icodegarden.commons.lang.classloader.Tester，此时从stream中读取bytes并触发defineClass(...)<br>
+	 * 第2次进来：加载依赖的接口，例如io.github.icodegarden.commons.lang.classloader.ITester，而接口应使用已加载的class而不需要重新加载，所以进到if分支内<br>
 	 */
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {

@@ -6,3 +6,7 @@
 * 优化shardingshare时sql语句的打印输出
 * 修复nio java包中server下线后一直尝试重连的问题
 
+# 0.2.3
+
+* 增加kafka消费者强制关闭
+
