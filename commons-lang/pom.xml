@@ -67,7 +67,24 @@
 <!-- 		    <optional>true</optional>不是必须的，用于给spring-jcl copy包做依赖,spring-jcl自己也是这么做的 -->
 <!-- 		</dependency> -->
 		
-
+		<dependency>
+			<groupId>com.github.pagehelper</groupId>
+		    <artifactId>pagehelper</artifactId>
+		    <version>5.3.0</version>
+			<optional>true</optional><!-- 可选的 -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-client</artifactId>
+			<version>2.4.12</version>
+			<optional>true</optional><!-- 可选的 -->
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.hbase</groupId>
+		    <artifactId>hbase-endpoint</artifactId>
+		    <version>2.4.12</version>
+		    <optional>true</optional><!-- 可选的 -->
+		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>

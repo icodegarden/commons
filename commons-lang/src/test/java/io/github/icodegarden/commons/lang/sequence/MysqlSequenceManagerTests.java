@@ -42,6 +42,10 @@ class MysqlSequenceManagerTests {
 		for (int i = 0; i < threads; i++) {
 			new Thread() {
 				public void run() {
+					/**
+					 * 每个线程独占数据源，模拟不同的进程
+					 */
+					
 					HikariDataSource dataSource = new HikariDataSource();
 					dataSource.setDriverClassName(properties.getProperty("dataSource.driverClassName"));
 					dataSource.setJdbcUrl(properties.getProperty("dataSource.jdbcUrl"));

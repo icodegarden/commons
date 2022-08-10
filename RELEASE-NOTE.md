@@ -9,4 +9,6 @@
 # 0.2.3
 
 * 增加kafka消费者强制关闭
+* 增加NextQuery支持类
+* 增加是否允许TableCount的支持类
 
