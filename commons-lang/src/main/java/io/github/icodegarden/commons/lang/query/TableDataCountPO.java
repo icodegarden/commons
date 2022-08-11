@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  * @author Fangfang.Xu
  *
  */
-class TableDataCountPO {
+public class TableDataCountPO {
 
 	/**
 	 * String 对非关系数据库友好

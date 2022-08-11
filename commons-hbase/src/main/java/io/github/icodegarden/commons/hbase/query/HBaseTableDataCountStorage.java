@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.lang.query;
+package io.github.icodegarden.commons.hbase.query;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -16,6 +16,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import io.github.icodegarden.commons.lang.query.TableDataCountPO;
+import io.github.icodegarden.commons.lang.query.TableDataCountStorage;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 
 /**

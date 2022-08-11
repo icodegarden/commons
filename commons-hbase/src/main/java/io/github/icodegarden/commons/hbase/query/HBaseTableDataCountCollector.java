@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.lang.query;
+package io.github.icodegarden.commons.hbase.query;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +10,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.coprocessor.AggregationClient;
 import org.apache.hadoop.hbase.client.coprocessor.LongColumnInterpreter;
+
+import io.github.icodegarden.commons.lang.query.AbstractTableDataCountCollector;
 
 /**
  * 
