@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 
 /**
  * 
@@ -12,6 +13,29 @@ import com.github.pagehelper.Page;
  *
  */
 public abstract class PageHelperUtils {
+
+	/**
+	 * 是否执行了分页，即是否执行了PageHelper.startPage 且 正在分页中<br>
+	 * 如果分页调用已经结束，则是false，因为LocalPage已被自动remove
+	 * 
+	 * @return
+	 */
+	public static boolean isPage() {
+		Page<Object> page = PageHelper.getLocalPage();
+
+		return page != null;
+	}
+
+	/**
+	 * 是否执行count，即是否执行了PageHelper.startPage 且 正在分页中 + count参数=true<br>
+	 * 否则false
+	 * 
+	 * @return
+	 */
+	public static boolean isCount() {
+		Page<Object> page = PageHelper.getLocalPage();
+		return page != null ? page.isCount() : false;
+	}
 
 	public static <E, T> Page<E> ofPage(Page<T> page, Function<T, E> elementConvertor) {
 		Page<E> p = new Page<E>(page.getPageNum(), page.getPageSize());

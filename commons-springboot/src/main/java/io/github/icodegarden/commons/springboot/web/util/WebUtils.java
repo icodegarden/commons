@@ -14,6 +14,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.lang.query.BaseQuery;
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 
 /**
@@ -24,9 +25,6 @@ import io.github.icodegarden.commons.lang.tuple.Tuple2;
 public class WebUtils {
 	private WebUtils() {
 	}
-
-	public static final int MAX_TOTAL_PAGES = 1000;
-	public static final int MAX_PAGE_SIZE = 100;
 
 	public final static String AUTHORIZATION_HEADER = "Authorization";
 	/**
@@ -48,7 +46,8 @@ public class WebUtils {
 
 	public static HttpHeaders pageHeaders(int totalPages, long totalCount) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.add(HTTPHEADER_TOTALPAGES, (totalPages <= MAX_TOTAL_PAGES ? totalPages : MAX_TOTAL_PAGES) + "");
+		httpHeaders.add(HTTPHEADER_TOTALPAGES,
+				(totalPages <= BaseQuery.MAX_TOTAL_PAGES ? totalPages : BaseQuery.MAX_TOTAL_PAGES) + "");
 		httpHeaders.add(HTTPHEADER_TOTALCOUNT, totalCount + "");
 		return httpHeaders;
 	}
@@ -139,7 +138,7 @@ public class WebUtils {
 		if (request == null) {
 			return false;
 		}
-		
+
 		String header = request.getHeader(HTTPHEADER_INTERNAL_RPC);
 		return header != null && Boolean.valueOf(header);
 	}

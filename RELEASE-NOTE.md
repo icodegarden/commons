@@ -6,9 +6,9 @@
 * 优化shardingshare时sql语句的打印输出
 * 修复nio java包中server下线后一直尝试重连的问题
 
-# 0.2.3
+# 0.3.0
 
 * 增加kafka消费者强制关闭
 * 增加NextQuery支持类
 * 增加是否允许TableCount的支持类
-
+* 增加hbase模块

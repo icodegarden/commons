@@ -49,7 +49,7 @@ public class NextQuerySupportArrayList<E> extends ArrayList<E> implements NextQu
 	}
 
 	@SuppressWarnings("unchecked")
-	public static final <E> NextQuerySupportList<E> emptyList() {
+	public static final <E> NextQuerySupportList<E> empty() {
 		return (NextQuerySupportList<E>) EMPTY;
 	}
 
