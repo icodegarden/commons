@@ -13,7 +13,7 @@ public abstract class BaseQuery {
 	/**
 	 * 仅用于方便常量用，可配
 	 */
-	public static int MAX_PAGE_SIZE = 100;
+	public static int MAX_PAGE_SIZE = 1000;
 	/**
 	 * 仅用于方便常量用，可配
 	 */

@@ -62,7 +62,7 @@ public class HBaseTableDataCountStorage implements TableDataCountStorage {
 	@Override
 	public int updateCount(String tableName, long count) {
 		// Table 为非线程安全对象，每个线程在对Table操作时，都必须从Connection中获取相应的Table对象
-		try (Table table = connection.getTable(TableName.valueOf(tableName))) {
+		try (Table table = connection.getTable(TableName.valueOf(HBaseTableDataCountStorage.tableName))) {
 			/**
 			 * 表名作为主键
 			 */

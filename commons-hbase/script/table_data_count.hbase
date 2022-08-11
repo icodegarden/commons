@@ -1,4 +1,4 @@
-create 'table_data_count',{NAME => 'f', DATA_BLOCK_ENCODING =>'DIFF' }, { NUMREGIONS => 1, SPLITALGO => 'UniformSplit' , 'Coprocessor' => 'org.apache.hadoop.hbase.coprocessor.AggregateImplementation' };
+create 'table_data_count',{NAME => 'f', DATA_BLOCK_ENCODING =>'DIFF' }, {'Coprocessor' => 'org.apache.hadoop.hbase.coprocessor.AggregateImplementation' };
 
 #create 'data_main',{NAME => 'f',COMPRESSION => 'lz4', DATA_BLOCK_ENCODING =>'DIFF', VERSIONS => 10 }, { NUMREGIONS => 20, SPLITALGO => 'UniformSplit', 'Coprocessor' => 'org.apache.hadoop.hbase.coprocessor.AggregateImplementation' };	
 #create_index 'idx1', 'test', {INDEXED_COLUMNS => ['f:c1']}

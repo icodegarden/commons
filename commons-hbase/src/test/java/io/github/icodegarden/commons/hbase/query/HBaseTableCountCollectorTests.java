@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test;
  */
 class HBaseTableCountCollectorTests {
 
+	/**
+	 * 使用devAliyun必须使用aliyun hbase客户端，否则阻塞不动
+	 */
 	HBaseEnv hBaseEnv = HBaseEnv.devAliyun();
 	Connection connection = hBaseEnv.getConnection();
 	AggregationClient aggregationClient = hBaseEnv.getAggregationClient();
@@ -25,6 +28,7 @@ class HBaseTableCountCollectorTests {
 
 	@Test
 	void version() throws Exception {
+		
 	}
 
 	@Test
