@@ -36,7 +36,7 @@ public class HeartbeatTimerTask {
 				try {
 					heartbeat.send();
 				} catch (Throwable e) {
-					log.error("heartbeat:{} send beat occur ex", heartbeat, e);
+					log.error("WARN heartbeat:{} send beat occur ex", heartbeat, e);
 				}
 			}
 		};

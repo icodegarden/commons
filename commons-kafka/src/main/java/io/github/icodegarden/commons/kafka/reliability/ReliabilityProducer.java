@@ -5,7 +5,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -26,6 +28,8 @@ public class ReliabilityProducer<K, V> implements TimeoutableCloseable {
 
 	private static final Logger log = LoggerFactory.getLogger(ReliabilityProducer.class);
 
+	private static final AtomicLong CLINET_SEQ = new AtomicLong();
+
 	private final String name;
 	private final KafkaProducer<K, V> producer;
 
@@ -35,13 +39,15 @@ public class ReliabilityProducer<K, V> implements TimeoutableCloseable {
 	}
 
 	public ReliabilityProducer(Properties properties) {
+//		Object bootstrapServers = properties.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
+		
 		name = (String) properties.getOrDefault(PropertiesConstants.CLIENT_NAME.getT1(),
 				PropertiesConstants.CLIENT_NAME.getT2());
 
 		Properties props = new Properties();
 		try {
 			String hostName = InetAddress.getLocalHost().getHostName();
-			props.put("client.id", hostName + "-" + name);
+			props.put("client.id", hostName + "-" + name + "-" + CLINET_SEQ.incrementAndGet());
 		} catch (UnknownHostException e) {
 		}
 		props.put("acks", "all");// 所有同步副本复制成功

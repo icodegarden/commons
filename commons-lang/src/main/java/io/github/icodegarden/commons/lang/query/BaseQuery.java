@@ -24,11 +24,11 @@ public abstract class BaseQuery {
 	/**
 	 * 可配
 	 */
-	public static int DEFAULT_SIZE = 10;
+	public static int DEFAULT_PAGE_SIZE = 10;
 
 	private int page = 1;
 
-	private int size = DEFAULT_SIZE;
+	private int size = DEFAULT_PAGE_SIZE;
 
 //	/**
 //	 * 需要完整的字符串：例如mysql的 order by id desc ； ES的 "sort" : [...]

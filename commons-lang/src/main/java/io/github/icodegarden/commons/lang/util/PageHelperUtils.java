@@ -22,7 +22,6 @@ public abstract class PageHelperUtils {
 	 */
 	public static boolean isPage() {
 		Page<Object> page = PageHelper.getLocalPage();
-
 		return page != null;
 	}
 
