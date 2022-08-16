@@ -22,19 +22,22 @@ public class NextQuerySupportArrayList<E> extends ArrayList<E> implements NextQu
 	private String searchAfter;
 
 	/**
+	 * 仅支持SearchAfter
 	 * 
-	 * @param <E>
-	 * @param source
-	 * @param searchAfterSupplier last E in source
-	 * @return
+	 * @param searchAfterSupplier source中的最后一个元素
 	 */
 	public static <E> NextQuerySupportArrayList<E> newSupportSearchAfter(List<E> source,
-			Function<E, String> searchAfterSupplier) {
+			Function<? super E, String> searchAfterSupplier) {
 		return newSupportSearchAfter(source, e -> e, searchAfterSupplier);
 	}
 
+	/**
+	 * 支持转换
+	 * 
+	 * @param searchAfterSupplier source中的最后一个元素
+	 */
 	public static <E, R> NextQuerySupportArrayList<R> newSupportSearchAfter(List<E> source,
-			Function<? super E, ? extends R> mapper, Function<E, String> searchAfterSupplier) {
+			Function<? super E, ? extends R> mapper, Function<? super E, String> searchAfterSupplier) {
 		if (source.isEmpty()) {
 			return EMPTY;
 		}

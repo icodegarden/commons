@@ -12,12 +12,15 @@ public class NextQuerySupportPage<E> extends Page<E> implements NextQuerySupport
 
 	private static final long serialVersionUID = 1L;
 
-	private final NextQuerySupportList<E> nextQuerySupportList;
+	private final NextQuerySupportList<? extends E> nextQuerySupportList;
 
-	public NextQuerySupportPage(int pageNum, int pageSize, long total, NextQuerySupportList<E> nextQuerySupportList) {
+	public NextQuerySupportPage(int pageNum, int pageSize, long total, boolean count, String orderBy,
+			NextQuerySupportList<? extends E> nextQuerySupportList) {
 		super(pageNum, pageSize);
 //		super.setPages(pages);pages会自动算
 		super.setTotal(total);
+		super.setCount(count);
+		super.setOrderBy(orderBy);
 
 		this.nextQuerySupportList = nextQuerySupportList;
 		addAll(nextQuerySupportList);
