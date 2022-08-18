@@ -9,11 +9,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.WebAttributes;
+import org.springframework.security.web.access.AccessDeniedHandler;
 
 /**
  * @author Fangfang.Xu
  */
-public class AccessDeniedHandler implements org.springframework.security.web.access.AccessDeniedHandler {
+public class Http403AccessDeniedHandler implements AccessDeniedHandler {
 
 //	private static final Logger log = LoggerFactory.getLogger(AccessDeniedHandler.class);
 
@@ -22,6 +23,7 @@ public class AccessDeniedHandler implements org.springframework.security.web.acc
 	/**
 	 * 当授权不通过时
 	 */
+	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response,
 			AccessDeniedException accessDeniedException) throws IOException, ServletException {
 		if (!response.isCommitted()) {
