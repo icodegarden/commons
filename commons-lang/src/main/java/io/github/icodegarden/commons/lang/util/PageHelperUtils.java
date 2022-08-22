@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 
+import io.github.icodegarden.commons.lang.query.BaseQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportArrayList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
@@ -17,8 +18,6 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
  *
  */
 public abstract class PageHelperUtils {
-
-	public static final long MAX_TOTAL = 10000;
 
 	/**
 	 * 是否执行了分页，即是否执行了PageHelper.startPage 且 正在分页中<br>
@@ -61,7 +60,7 @@ public abstract class PageHelperUtils {
 	 * <h1>自适应可能不进行count</h1>
 	 */
 	public static <E> Page<E> ofPageNoCountAdapt(Page<E> page) {
-		ofPageNoCountAdapt(page, MAX_TOTAL);
+		ofPageNoCountAdapt(page, BaseQuery.MAX_TOTAL_COUNT);
 		return page;
 	}
 
@@ -79,7 +78,7 @@ public abstract class PageHelperUtils {
 	 * <h1>自适应可能不进行count</h1>
 	 */
 	public static <E, T> Page<E> ofPageNoCountAdapt(Page<T> page, Function<T, E> elementConvertor) {
-		return ofPageNoCountAdapt(page, elementConvertor, MAX_TOTAL);
+		return ofPageNoCountAdapt(page, elementConvertor, BaseQuery.MAX_TOTAL_COUNT);
 	}
 
 	/**
@@ -173,7 +172,7 @@ public abstract class PageHelperUtils {
 	 * <h1>自适应可能不进行count</h1>
 	 */
 	public static <E> NextQuerySupportPage<E> ofNextQuerySupportPageNoCountAdapt(NextQuerySupportPage<E> page) {
-		return ofNextQuerySupportPageNoCountAdapt(page, MAX_TOTAL);
+		return ofNextQuerySupportPageNoCountAdapt(page, BaseQuery.MAX_TOTAL_COUNT);
 	}
 
 	/**
@@ -192,7 +191,7 @@ public abstract class PageHelperUtils {
 	 */
 	public static <E, T> NextQuerySupportPage<E> ofNextQuerySupportPageNoCountAdapt(NextQuerySupportPage<T> page,
 			Function<T, E> elementConvertor) {
-		return ofNextQuerySupportPageNoCountAdapt(page, elementConvertor, MAX_TOTAL);
+		return ofNextQuerySupportPageNoCountAdapt(page, elementConvertor, BaseQuery.MAX_TOTAL_COUNT);
 	}
 
 	/**

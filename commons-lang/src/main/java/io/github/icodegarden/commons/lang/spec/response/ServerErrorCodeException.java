@@ -34,7 +34,7 @@ public class ServerErrorCodeException extends ErrorCodeException {
 				String applicationName = env.getRequiredProperty("spring.application.name");
 				ServerErrorCodeException.configApplicationName(applicationName);
 			} catch (Exception e) {
-				log.error("WARN ex on init configApplicationName", e);
+				log.warn("failed on init configApplicationName", e);
 			}
 		}
 	}

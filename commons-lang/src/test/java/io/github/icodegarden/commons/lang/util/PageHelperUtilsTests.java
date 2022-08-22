@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.pagehelper.Page;
 
+import io.github.icodegarden.commons.lang.query.BaseQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 
 /**
@@ -110,7 +111,7 @@ class PageHelperUtilsTests {
 		 */
 		Page<String> ofPage2 = PageHelperUtils.ofPageNoCountAdapt(countFalsePage2, one -> one.toString());
 		Assertions.assertThat(ofPage2.isCount()).isEqualTo(countFalsePage2.isCount());
-		Assertions.assertThat(ofPage2.getTotal()).isEqualTo(PageHelperUtils.MAX_TOTAL);
+		Assertions.assertThat(ofPage2.getTotal()).isEqualTo(BaseQuery.MAX_TOTAL_COUNT);
 		Assertions.assertThat(ofPage2.getOrderBy()).isEqualTo(countFalsePage2.getOrderBy());
 		Assertions.assertThat(ofPage2.getPageNum()).isEqualTo(countFalsePage2.getPageNum());
 		Assertions.assertThat(ofPage2.getPageSize()).isEqualTo(countFalsePage2.getPageSize());
@@ -196,7 +197,7 @@ class PageHelperUtilsTests {
 		NextQuerySupportPage<String> ofPage2 = PageHelperUtils.ofNextQuerySupportPageNoCountAdapt(p2,
 				one -> one.toString());
 		Assertions.assertThat(ofPage2.isCount()).isEqualTo(countFalsePage2.isCount());
-		Assertions.assertThat(ofPage2.getTotal()).isEqualTo(PageHelperUtils.MAX_TOTAL);
+		Assertions.assertThat(ofPage2.getTotal()).isEqualTo(BaseQuery.MAX_TOTAL_COUNT);
 		Assertions.assertThat(ofPage2.getOrderBy()).isEqualTo(countFalsePage2.getOrderBy());
 		Assertions.assertThat(ofPage2.getPageNum()).isEqualTo(countFalsePage2.getPageNum());
 		Assertions.assertThat(ofPage2.getPageSize()).isEqualTo(countFalsePage2.getPageSize());

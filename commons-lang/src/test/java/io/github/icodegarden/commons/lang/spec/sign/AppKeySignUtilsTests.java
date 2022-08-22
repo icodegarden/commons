@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.lang.util.JsonUtils;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -11,11 +13,11 @@ import org.junit.jupiter.api.Test;
  */
 class AppKeySignUtilsTests {
 
-	private static final String appKey = "edcrfv567tgbnjkdfgcghjoqaz";
+	private static final String appKey = "100ota-cn001";
 
 	OpenApiRequestBody openApiBody = new OpenApiRequestBody();
 	{
-		openApiBody.setApp_id("2014072300007148");
+		openApiBody.setApp_id("ota-cn");
 		openApiBody.setMethod("type.software.part");
 		openApiBody.setFormat("JSON");
 		openApiBody.setCharset("utf-8");
@@ -28,6 +30,7 @@ class AppKeySignUtilsTests {
 
 	@Test
 	void requestSign() {
+		System.out.println("test requestSign origin body:"+JsonUtils.serialize(openApiBody));
 		String sign = AppKeySignUtils.requestSign(openApiBody, appKey);
 		System.out.println(sign);
 		openApiBody.setSign(sign);

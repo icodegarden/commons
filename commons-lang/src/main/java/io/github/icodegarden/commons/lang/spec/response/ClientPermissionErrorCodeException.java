@@ -25,9 +25,7 @@ public class ClientPermissionErrorCodeException extends ErrorCodeException {
 	}
 
 	public enum SubPair {
-		INSUFFICIENT_PERMISSIONS("client.insufficient-permissions", "Insufficient:permissions"),
-		INSUFFICIENT_INVALID_AUTH("client.insufficient-invalid-auth", "Insufficient:invalid-auth"),
-		INSUFFICIENT_EXPIRED_AUTH("client.insufficient-expired-auth", "Insufficient:expired-auth"),;
+		INSUFFICIENT_PERMISSIONS("client.insufficient-permissions", "Insufficient:permissions");
 
 		private final String sub_code;
 		private final String sub_msg;

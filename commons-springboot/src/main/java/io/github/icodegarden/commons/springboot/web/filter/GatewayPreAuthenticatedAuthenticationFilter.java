@@ -45,11 +45,12 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 	private OrRequestMatcher shouldAuthInternalApiMatcher;
 
 	/**
-	 * 默认认为POST /openapi/**、/api/** 应该已经pre认证了 
+	 * 默认认为POST /openapi/**、/api/** 应该已经pre认证了
 	 */
 	public GatewayPreAuthenticatedAuthenticationFilter() {
 		setShouldAuthOpenapi(Arrays.asList(new AntPath("/openapi/**", "POST")));
-		setShouldAuthInternalApi(Arrays.asList(new AntPath("/api/**", null)));
+		setShouldAuthInternalApi(Arrays.asList(new AntPath("/api/**", null), new AntPath("/internalapi/**", null),
+				new AntPath("/innerapi/**", null)));
 	}
 
 //	public void setResponseType(ResponseType responseType) {
@@ -59,7 +60,8 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 	/**
 	 * path以 / 开头,method可以null表示无感<br>
 	 * path例如/**、/xxxx/**、/file/api/v1/softwareParts/{id}/files/{filename}/upload
-	 * @param antPaths 
+	 * 
+	 * @param antPaths
 	 */
 	public void setShouldAuthOpenapi(Collection<AntPath> antPaths) {
 		List<AntPathRequestMatcher> ants = antPaths.stream()
@@ -67,11 +69,12 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 				.collect(Collectors.toList());
 		shouldAuthOpenapiMatcher = new OrRequestMatcher(ants);
 	}
-	
+
 	/**
 	 * path以 / 开头,method可以null表示无感<br>
 	 * path例如/**、/xxxx/**、/file/api/v1/softwareParts/{id}/files/{filename}/upload
-	 * @param antPaths 
+	 * 
+	 * @param antPaths
 	 */
 	public void setShouldAuthInternalApi(Collection<AntPath> antPaths) {
 		List<AntPathRequestMatcher> ants = antPaths.stream()
@@ -175,9 +178,8 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 //		}
 //	}
 
-	
-	
-	//为了适应不依赖spring-security的项目，以下代码copy spring-security --------------------------------------------
+	// 为了适应不依赖spring-security的项目，以下代码copy spring-security
+	// --------------------------------------------
 	/**
 	 * {@link RequestMatcher} that will return true if any of the passed in
 	 * {@link RequestMatcher} instances match.

@@ -7,6 +7,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -16,12 +18,12 @@ import org.springframework.security.web.access.AccessDeniedHandler;
  */
 public class Http403AccessDeniedHandler implements AccessDeniedHandler {
 
-//	private static final Logger log = LoggerFactory.getLogger(AccessDeniedHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(AccessDeniedHandler.class);
 
 	private String errorPage;
 
 	/**
-	 * 当授权不通过时
+	 * 当授权未通过时
 	 */
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response,
@@ -37,7 +39,12 @@ public class Http403AccessDeniedHandler implements AccessDeniedHandler {
 			} else {
 				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 				response.setContentType("application/json;charset=utf-8");
-				response.getWriter().println("Access Denied, Forbidden Authority");
+
+				String message = "Access Denied, Not Authorized.";
+				if (log.isInfoEnabled()) {
+					log.info("request {}", message);
+				}
+				response.getWriter().println(message);
 			}
 		}
 	}

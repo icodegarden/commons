@@ -15,6 +15,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.lang.query.BaseQuery;
+import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 
 /**
@@ -36,6 +37,10 @@ public class WebUtils {
 	 */
 	public static final String HTTPHEADER_TOTALCOUNT = "X-Total-Count";
 	/**
+	 * 下一页搜索的searchAfter
+	 */
+	public static final String HTTPHEADER_SEARCHAFTER = "X-Search-After";
+	/**
 	 * 消息描述
 	 */
 	public static final String HTTPHEADER_MESSAGE = "X-Message";
@@ -49,6 +54,15 @@ public class WebUtils {
 		httpHeaders.add(HTTPHEADER_TOTALPAGES,
 				(totalPages <= BaseQuery.MAX_TOTAL_PAGES ? totalPages : BaseQuery.MAX_TOTAL_PAGES) + "");
 		httpHeaders.add(HTTPHEADER_TOTALCOUNT, totalCount + "");
+		return httpHeaders;
+	}
+
+	public static <E> HttpHeaders pageHeaders(int totalPages, long totalCount,
+			NextQuerySupportList<E> nextQuerySupportList) {
+		HttpHeaders httpHeaders = pageHeaders(totalPages, totalCount);
+		if (nextQuerySupportList.getSearchAfter() != null) {
+			httpHeaders.add(HTTPHEADER_SEARCHAFTER, nextQuerySupportList.getSearchAfter());
+		}
 		return httpHeaders;
 	}
 

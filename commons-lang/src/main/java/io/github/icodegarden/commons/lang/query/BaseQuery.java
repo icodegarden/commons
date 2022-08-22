@@ -7,24 +7,21 @@ package io.github.icodegarden.commons.lang.query;
  */
 public abstract class BaseQuery {
 	/**
-	 * 仅用于方便常量用，可配
+	 * 仅用于方便常量用
 	 */
-	public static int MAX_TOTAL_PAGES = 1000;
+	public static final int MAX_TOTAL_PAGES = 1000;
 	/**
-	 * 仅用于方便常量用，可配
+	 * 仅用于方便常量用
 	 */
-	public static int MAX_PAGE_SIZE = 1000;
+	public static final int MAX_PAGE_SIZE = 1000;
 	/**
-	 * 仅用于方便常量用，可配
+	 * 仅用于方便常量用
 	 */
-	public static int MAX_TOTAL_COUNT = 10000;
+	public static final int MAX_TOTAL_COUNT = 10000;
 
 	// -------------------------------------------
 
-	/**
-	 * 可配
-	 */
-	public static int DEFAULT_PAGE_SIZE = 10;
+	public static final int DEFAULT_PAGE_SIZE = 10;
 
 	private int page = 1;
 
