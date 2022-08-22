@@ -16,9 +16,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
  * @author Fangfang.Xu
  *
  */
-public class Http401AuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class NativeRestApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-	private static final Logger log = LoggerFactory.getLogger(Http401AuthenticationEntryPoint.class);
+	private static final Logger log = LoggerFactory.getLogger(NativeRestApiAuthenticationEntryPoint.class);
 
 	/**
 	 * 认证失败时

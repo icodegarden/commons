@@ -16,7 +16,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 /**
  * @author Fangfang.Xu
  */
-public class Http403AccessDeniedHandler implements AccessDeniedHandler {
+public class NativeRestApiAccessDeniedHandler implements AccessDeniedHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(AccessDeniedHandler.class);
 

@@ -13,11 +13,11 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
  */
 class AppKeySignUtilsTests {
 
-	private static final String appKey = "100ota-cn001";
+	private static final String appKey = "edcrfv567tgbnjkdfgcghjoqaz";
 
 	OpenApiRequestBody openApiBody = new OpenApiRequestBody();
 	{
-		openApiBody.setApp_id("ota-cn");
+		openApiBody.setApp_id("2014072300007148");
 		openApiBody.setMethod("type.software.part");
 		openApiBody.setFormat("JSON");
 		openApiBody.setCharset("utf-8");
@@ -31,6 +31,7 @@ class AppKeySignUtilsTests {
 	@Test
 	void requestSign() {
 		System.out.println("test requestSign origin body:"+JsonUtils.serialize(openApiBody));
+		
 		String sign = AppKeySignUtils.requestSign(openApiBody, appKey);
 		System.out.println(sign);
 		openApiBody.setSign(sign);
