@@ -119,6 +119,7 @@ public class TableDataCountManager {
 		TableDataCountPO po = new TableDataCountPO();
 		po.setTableName(tableName);
 		po.setUpdatedAt(SystemUtils.now());
+		po.setDataCount(0L);
 		tableCountStorage.add(po);
 	}
 
