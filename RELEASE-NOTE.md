@@ -12,3 +12,7 @@
 * 增加NextQuery支持类
 * 增加是否允许TableCount的支持类
 * 增加hbase模块
+
+# 0.3.1
+
+* fix hbase 客户端类型修改为可选

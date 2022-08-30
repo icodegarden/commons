@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>0.3.0</version>
+		<version>0.3.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-hbase</artifactId>
@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1</version>
 		</dependency>
 		
 		<!-- 原生hbase和alihabse存在个别的小冲突，需要2选1 -->
