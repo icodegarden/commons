@@ -83,6 +83,10 @@ public class DefaultMetricsOverload implements MetricsOverload {
 
 	@Override
 	public boolean willOverload(OverloadCalc calc) {
+		if(metrics.isOverload()) {
+			return true;
+		}
+		
 		Dimension dimension = metrics.getDimension(DimensionName.Jobs);
 		return dimension.getUsed() + calc.ofOverload() > dimension.getMax();
 	}
