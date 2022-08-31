@@ -157,7 +157,7 @@ public class Metrics implements NamedObject, Comparable<Metrics>, Serializable {
 	 */
 	public boolean isOverload() {
 		for (Dimension dimension : dimensions.values()) {
-			if (dimension.getUsed() >= dimension.getMax()) {
+			if (dimension.getWeight() > 0 && dimension.getUsed() >= dimension.getMax()) {
 				return true;
 			}
 		}
