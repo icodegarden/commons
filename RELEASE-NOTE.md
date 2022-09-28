@@ -16,3 +16,4 @@
 # 0.3.1
 
 * fix hbase 客户端类型修改为可选
+* NioClientPool优化
