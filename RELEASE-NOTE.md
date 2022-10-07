@@ -17,3 +17,10 @@
 
 * fix hbase 客户端类型修改为可选
 * NioClientPool优化
+
+# 0.3.2
+
+* fix RedisLock 使用RedisTemplate 类型转换问题
+* 优化AbstractExceptionHandler
+
+

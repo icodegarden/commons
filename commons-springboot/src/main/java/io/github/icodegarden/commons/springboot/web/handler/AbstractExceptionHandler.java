@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -124,6 +125,18 @@ public abstract class AbstractExceptionHandler<T> {
 	public abstract ResponseEntity<T> onBodyParameterTypeInvalid(HttpServletRequest request,
 			HttpMessageNotReadableException cause);
 
+	/**
+	 * method不匹配，这种情况属于客户端用错了method，不做处理直接按原生响应
+	 * 
+	 * @param cause
+	 * @return
+	 */
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<T> onMethodNotSupported(HttpServletRequest request,
+			HttpRequestMethodNotSupportedException cause) throws Exception {
+		throw cause;
+	}
+	
 	/**
 	 * 其他错误，包含业务异常
 	 * 

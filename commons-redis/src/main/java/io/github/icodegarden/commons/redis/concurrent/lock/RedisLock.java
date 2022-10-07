@@ -78,8 +78,15 @@ public class RedisLock implements DistributedLock {
 		LocalDateTime start = SystemUtils.now();
 		for (;;) {
 			try {
+				Object obj = redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
+				// redisTemplate返回的是boolean
+				if (obj instanceof Boolean) {
+					return (Boolean) obj;
+				}
+
 				// 这里返回类型是Long的原因是redis直接返回的0或1，而不是设置进去的
-				Long result = (Long) redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
+				Long result = (Long) obj;
+
 				boolean success = result == 1;
 
 				if (success) {
