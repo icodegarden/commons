@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 
 /**
- * 可以统计处理中的web请求数，可以优雅停机
+ * 可以统计处理中的web请求数，可以优雅停机<br>
+ * 这个类的shutdownOrder数值应该配置的比 服务注销 的GracefullyShutdown数值大
+ * 
  * @author Fangfang.Xu
  *
  */
@@ -26,12 +28,22 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 	private AtomicLong count = new AtomicLong(0);
 	private volatile boolean closed;
 	private final int gracefullyShutdownOrder;
-	private final long maxWaitMillisOnShutdown;
+	/**
+	 * 服务列表刷新间隔
+	 */
+	private final long instanceRefreshIntervalMs;
+	/**
+	 * 等待Processing处理完毕的时间
+	 */
+	private long maxProcessingWaitMs = 10000;
 
-	public ProcessingRequestCountFilter(int gracefullyShutdownOrder, long maxWaitMillisOnShutdown) {
+	public ProcessingRequestCountFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
 		this.gracefullyShutdownOrder = gracefullyShutdownOrder;
-		this.maxWaitMillisOnShutdown = maxWaitMillisOnShutdown;
+		this.instanceRefreshIntervalMs = instanceRefreshIntervalMs;
+	}
 
+	public void setMaxProcessingWaitMs(long maxProcessingWaitMs) {
+		this.maxProcessingWaitMs = maxProcessingWaitMs;
 	}
 
 	@Override
@@ -79,23 +91,30 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 	}
 
 	/**
-	 * 等待足够的时间处理完毕来自web接口的请求或超时
+	 * 等待足够的时间处理完毕来自web接口的请求或超时<br>
+	 * 因为先进行 服务注销，因此一段时间后不会再有新的请求进来
 	 */
 	@Override
 	public void shutdown() {
-		closed = true;
+		log.info("gracefully shutdown wait instanceRefresh ms:{}", instanceRefreshIntervalMs);
+		try {
+			Thread.sleep(instanceRefreshIntervalMs);
+		} catch (InterruptedException ignore) {
+		}
 
 		if (count.get() > 0) {
 			synchronized (this) {
 				try {
-					log.info("gracefully shutdown max wait ms:{}", maxWaitMillisOnShutdown);
+					log.info("gracefully shutdown max wait ms:{}", maxProcessingWaitMs);
 
-					this.wait(maxWaitMillisOnShutdown);
+					this.wait(maxProcessingWaitMs);
 				} catch (InterruptedException ignore) {
 					Thread.currentThread().interrupt();
 				}
 			}
 		}
+
+		closed = true;
 	}
 
 	@Override
