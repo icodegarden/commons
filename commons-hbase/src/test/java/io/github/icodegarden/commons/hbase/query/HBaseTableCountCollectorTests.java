@@ -9,6 +9,8 @@ import org.apache.hadoop.hbase.client.coprocessor.AggregationClient;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.hbase.HBaseEnv;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -19,7 +21,7 @@ class HBaseTableCountCollectorTests {
 	/**
 	 * 使用devAliyun必须使用aliyun hbase客户端，否则阻塞不动
 	 */
-	HBaseEnv hBaseEnv = HBaseEnv.devAliyun();
+	HBaseEnv hBaseEnv = HBaseEnvFactory.devAliyun();
 	Connection connection = hBaseEnv.getConnection();
 	AggregationClient aggregationClient = hBaseEnv.getAggregationClient();
 

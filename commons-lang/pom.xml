@@ -67,9 +67,14 @@
 <!-- 		</dependency> -->
 		
 		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper</artifactId>
-		    <version>5.3.0</version>
+		    <version>${pagehelper.version}</version>
 			<optional>true</optional><!-- 可选的 -->
 		</dependency>
 		<dependency>
@@ -77,12 +82,6 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.6</version>
 			<optional>true</optional><!-- 实现是可选的，为了test时有输出 -->
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

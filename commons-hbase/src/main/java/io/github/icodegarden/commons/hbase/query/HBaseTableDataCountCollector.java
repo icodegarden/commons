@@ -36,13 +36,13 @@ public class HBaseTableDataCountCollector extends AbstractTableDataCountCollecto
 		this.supportTables = new ArrayList<String>(supportTables);
 	}
 
-	public HBaseTableDataCountCollector(Set<String> supportTables, Connection connection,
-			AggregationClient aggregationClient, Set<String> whiteListTables) {
-		super(whiteListTables);
-		this.connection = connection;
-		this.aggregationClient = aggregationClient;
-		this.supportTables = new ArrayList<String>(supportTables);
-	}
+//	public HBaseTableDataCountCollector(Set<String> supportTables, Connection connection,
+//			AggregationClient aggregationClient, Set<String> whiteListTables) {
+//		super(whiteListTables);
+//		this.connection = connection;
+//		this.aggregationClient = aggregationClient;
+//		this.supportTables = new ArrayList<String>(supportTables);
+//	}
 
 	@Override
 	public String version() {

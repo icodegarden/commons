@@ -9,7 +9,7 @@
 		<version>0.3.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>commons-hbase</artifactId>
+	<artifactId>commons-elasticsearch</artifactId>
 	<packaging>jar</packaging>
 
 	<name>${project.artifactId}</name>
@@ -33,38 +33,54 @@
 			<!--<optional>true</optional> 需要 -->
 		</dependency>
 		
-		<!-- 原生hbase和alihabse存在个别的小冲突，需要2选1 -->
+		<!-- 7和8 2选1 -->
+		<!-- v8 -->
+		<dependency>
+	      	<groupId>co.elastic.clients</groupId>
+	      	<artifactId>elasticsearch-java</artifactId>
+	      	<version>8.4.2</version>
+	      	<optional>true</optional>
+   	 	</dependency>
+   	 	<dependency>
+	      	<groupId>org.elasticsearch.client</groupId>
+		  	<artifactId>elasticsearch-rest-client</artifactId>
+		  	<version>8.4.2</version><!-- 防止被spring版本覆盖 -->
+		  	<optional>true</optional>
+   	 	</dependency>
+		<dependency>
+		    <groupId>jakarta.json</groupId>
+		    <artifactId>jakarta.json-api</artifactId>
+		    <version>2.1.1</version>
+		    <optional>true</optional>
+		</dependency>
 		
+		<!-- v7 -->
 		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-client</artifactId>
-			<version>${hbase.version}</version>
-			<optional>true</optional><!-- 可选 -->
+		    <groupId>org.elasticsearch</groupId>
+		    <artifactId>elasticsearch</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		<!--
+        <dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		上面同名的v8兼容v7 
+		-->
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
 		</dependency>
 		<dependency>
-		    <groupId>org.apache.hbase</groupId>
-		    <artifactId>hbase-endpoint</artifactId>
-		    <version>${hbase.version}</version>
-		    <optional>true</optional><!-- 可选 -->
-		</dependency>
-<!-- 		<dependency> -->
-<!-- 		    <groupId>org.apache.hbase</groupId> -->
-<!-- 		    <artifactId>hbase-mapreduce</artifactId> -->
-<!-- 		    <version>${hbase.version}</version> -->
-<!-- 			<optional>true</optional>可选 -->
-<!-- 		</dependency> -->
-		
-		<dependency>
-		  	<groupId>com.aliyun.hbase</groupId>
-		  	<artifactId>alihbase-client</artifactId>
-		  	<version>${alihbase.version}</version>
-		  	<optional>true</optional><!-- 可选 -->
-		</dependency>
-		<dependency>
-		    <groupId>com.aliyun.hbase</groupId>
-		    <artifactId>alihbase-endpoint</artifactId>
-		    <version>${alihbase.version}</version>
-		    <optional>true</optional><!-- 可选 -->
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client-sniffer</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
 		</dependency>
 		
 		<dependency>

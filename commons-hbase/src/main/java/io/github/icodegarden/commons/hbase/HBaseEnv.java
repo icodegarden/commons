@@ -1,7 +1,9 @@
-package io.github.icodegarden.commons.hbase.query;
+package io.github.icodegarden.commons.hbase;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -9,12 +11,8 @@ import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.coprocessor.AggregationClient;
-import org.springframework.util.StringUtils;
 
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,17 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class HBaseEnv implements Closeable {
 
 	public static enum VersionFrom {
-		Native/*hbase-2.4.12*/, AliyunLindorm/*HBase增强版(Lindorm) 主版本2.0 小版本2.3.1（该版本已经是最新版本）*/
-	}
-
-	@Builder
-	@Getter
-	@ToString
-	public static class Config {
-		@NonNull
-		private String quorum;
-		private String username;
-		private String password;
+		Native/* hbase-2.4.12 */, AliyunLindorm/* HBase增强版(Lindorm) 主版本2.0 小版本2.3.1（该版本已经是最新版本） */
 	}
 
 	private final VersionFrom versionFrom;
@@ -53,21 +41,7 @@ public class HBaseEnv implements Closeable {
 
 	private final AggregationClient aggregationClient;
 
-	public static HBaseEnv devLocal() {
-		HBaseEnv hBaseEnv = new HBaseEnv(VersionFrom.Native, Config.builder().quorum("127.0.0.1:2181").build());
-		hBaseEnv.setNamePrefix("dev_");
-		return hBaseEnv;
-	}
-
-	public static HBaseEnv devAliyun() {
-		HBaseEnv hBaseEnv = new HBaseEnv(VersionFrom.AliyunLindorm,
-				Config.builder().quorum("ld-bp129w63278nrhys9-proxy-hbaseue.hbaseue.rds.aliyuncs.com:30020")
-						.username("root").password("root").build());
-		hBaseEnv.setNamePrefix("dev_");
-		return hBaseEnv;
-	}
-
-	public HBaseEnv(VersionFrom versionFrom, Config config) {
+	public HBaseEnv(VersionFrom versionFrom, Properties config) {
 		log.info("init HBase Env with config:{}", config);
 		try {
 			this.versionFrom = versionFrom;
@@ -85,15 +59,17 @@ public class HBaseEnv implements Closeable {
 			Configuration conf = HBaseConfiguration.create();
 //			conf.set("hbase.zookeeper.quorum", "10.200.188.40:2181");
 //			conf.set("hbase.zookeeper.quorum", "dev-host:2181");
-			conf.set("hbase.zookeeper.quorum", config.getQuorum());
 //			conf.set("hbase.zookeeper.property.clientPort", config.getClientPort());
-			if (StringUtils.hasText(config.getUsername())) {
-				conf.set("hbase.client.username", config.getUsername());
-				conf.set("hbase.client.password", config.getPassword());
-			}
+//			conf.set("hbase.client.username", config.getUsername());
+//			conf.set("hbase.client.password", config.getPassword());
 
 //			conf.set("hbase.client.keyvalue.maxsize","20485760");//Default 10485760
 			// hbase.server.keyvalue.maxsize //Default 10485760
+
+			for (Entry<Object, Object> entry : config.entrySet()) {
+				conf.set(entry.getKey().toString(), entry.getValue().toString());
+			}
+
 			connection = ConnectionFactory.createConnection(conf);
 			admin = connection.getAdmin();
 			aggregationClient = new AggregationClient(conf);

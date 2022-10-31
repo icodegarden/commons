@@ -2,12 +2,14 @@ package io.github.icodegarden.commons.lang.query;
 
 import java.time.LocalDateTime;
 
+import io.github.icodegarden.commons.lang.IdObject;
+
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-public class TableDataCountPO {
+public class TableDataCountPO implements IdObject<String> {
 
 	/**
 	 * String 对非关系数据库友好
@@ -17,6 +19,7 @@ public class TableDataCountPO {
 	private Long dataCount;
 	private LocalDateTime updatedAt;// timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+	@Override
 	public String getId() {
 		return id;
 	}

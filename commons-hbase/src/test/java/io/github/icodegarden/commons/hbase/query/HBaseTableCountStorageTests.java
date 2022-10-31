@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.hbase.HBaseEnv;
 import io.github.icodegarden.commons.lang.query.TableDataCountPO;
 
 /**
@@ -16,7 +17,7 @@ import io.github.icodegarden.commons.lang.query.TableDataCountPO;
  */
 class HBaseTableCountStorageTests {
 
-	HBaseEnv hBaseEnv = HBaseEnv.devAliyun();
+	HBaseEnv hBaseEnv = HBaseEnvFactory.devAliyun();
 	Connection connection = hBaseEnv.getConnection();
 	HBaseTableDataCountStorage dao = new HBaseTableDataCountStorage(connection);
 

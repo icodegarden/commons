@@ -19,6 +19,9 @@
 * NioClientPool优化
 
 # 0.3.2
+* 增加dao系列接口（mybatis、hbase、elasticsearch）
+* 增加elasticsearch模块
+
 
 * fix RedisLock 使用RedisTemplate 类型转换问题
 * 优化AbstractExceptionHandler
