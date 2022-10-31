@@ -1,6 +1,8 @@
-package com.geely.gddc.commons.dao.mybatis;
+package io.github.icodegarden.commons.mybatis.dao;
 
 import org.apache.ibatis.annotations.Param;
+
+import io.github.icodegarden.commons.mybatis.dao.MysqlDao;
 
 /**
  * 

@@ -300,9 +300,6 @@ public class RestRequestTemplate {
 				return (T) new String(bs, "utf-8");
 			}
 
-//			ObjectMapper objectMapper = new ObjectMapper();//TODO
-//			JavaType javaType = objectMapper.constructType(responseType);
-//			return objectMapper.readValue(response.getBody(), javaType);
 			return JsonUtils.deserialize(response.getBody(), responseType);
 		}
 	}

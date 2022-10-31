@@ -1,4 +1,4 @@
-package com.geely.gddc.commons.dao.mybatis;
+package io.github.icodegarden.commons.mybatis.dao;
 
 import io.github.icodegarden.commons.lang.query.BaseQuery;
 import lombok.Builder;

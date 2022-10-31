@@ -1,4 +1,4 @@
-package com.geely.gddc.commons.dao.elasticsearch;
+package io.github.icodegarden.commons.elasticsearch.dao;
 
 import java.util.Arrays;
 import java.util.List;

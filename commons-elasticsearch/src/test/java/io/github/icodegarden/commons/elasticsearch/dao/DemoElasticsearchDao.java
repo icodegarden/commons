@@ -1,4 +1,4 @@
-package com.geely.gddc.commons.dao.elasticsearch;
+package io.github.icodegarden.commons.elasticsearch.dao;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import io.github.icodegarden.commons.elasticsearch.dao.GenericElasticsearchDao;

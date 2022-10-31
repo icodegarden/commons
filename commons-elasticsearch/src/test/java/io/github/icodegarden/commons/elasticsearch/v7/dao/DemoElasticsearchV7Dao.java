@@ -1,9 +1,8 @@
-package com.geely.gddc.commons.dao.elasticsearch.v7;
+package io.github.icodegarden.commons.elasticsearch.v7.dao;
 
 import org.elasticsearch.client.RestHighLevelClient;
 
-import com.geely.gddc.commons.dao.elasticsearch.DemoPO;
-
+import io.github.icodegarden.commons.elasticsearch.dao.DemoPO;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.elasticsearch.v7.dao.GenericElasticsearchV7Dao;
 

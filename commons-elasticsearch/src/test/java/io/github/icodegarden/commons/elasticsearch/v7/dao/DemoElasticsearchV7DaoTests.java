@@ -1,4 +1,4 @@
-package com.geely.gddc.commons.dao.elasticsearch.v7;
+package io.github.icodegarden.commons.elasticsearch.v7.dao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -7,8 +7,7 @@ import org.assertj.core.api.Assertions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Test;
 
-import com.geely.gddc.commons.dao.elasticsearch.DemoPO;
-
+import io.github.icodegarden.commons.elasticsearch.dao.DemoPO;
 import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchClientConfig;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;

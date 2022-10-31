@@ -18,11 +18,10 @@
 * fix hbase 客户端类型修改为可选
 * NioClientPool优化
 
-# 0.3.2
+# 1.0.0
 * 增加dao系列接口（mybatis、hbase、elasticsearch）
 * 增加elasticsearch模块
-
-
+* 增加springboot模块支持sentinel
 * fix RedisLock 使用RedisTemplate 类型转换问题
 * 优化AbstractExceptionHandler
 

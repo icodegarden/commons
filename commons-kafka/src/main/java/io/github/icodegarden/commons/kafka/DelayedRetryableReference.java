@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO 这个类可以迁移到lang？
+ * 这个类应该迁移到lang?
  * @author Fangfang.Xu
  *
  */
