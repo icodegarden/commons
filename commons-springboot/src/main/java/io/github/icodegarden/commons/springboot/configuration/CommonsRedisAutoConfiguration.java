@@ -30,33 +30,29 @@ import redis.clients.jedis.JedisPool;
 public class CommonsRedisAutoConfiguration {
 
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
-	@Configuration
-	protected static class RedisExecutorAutoConfiguration {
+	@Bean
+	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
+		Cluster cluster = redisProperties.getCluster();
+		if (cluster != null) {
+			Set<HostAndPort> clusterNodes = cluster.getNodes().stream()
+					.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
 
-		@Bean
-		public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
-			Cluster cluster = redisProperties.getCluster();
-			if (cluster != null) {
-				Set<HostAndPort> clusterNodes = cluster.getNodes().stream()
-						.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
+			JedisCluster jc = new JedisCluster(clusterNodes, cluster.getConnectionTimeout(), cluster.getSoTimeout(),
+					cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
+					cluster, cluster.isSsl());
 
-				JedisCluster jc = new JedisCluster(clusterNodes, cluster.getConnectionTimeout(), cluster.getSoTimeout(),
-						cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
-						cluster, cluster.isSsl());
-
-				return new ClusterRedisExecutor(jc);
-			}
-
-			Pool pool = redisProperties.getPool();
-			if (pool != null) {
-				JedisPool jp = new JedisPool(pool, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
-						pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(),
-						pool.getClientName(), pool.isSsl());
-				return new PoolRedisExecutor(jp);
-			}
-
-			throw new IllegalStateException("RedisProperties config error");
+			return new ClusterRedisExecutor(jc);
 		}
+
+		Pool pool = redisProperties.getPool();
+		if (pool != null) {
+			JedisPool jp = new JedisPool(pool, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
+					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
+					pool.isSsl());
+			return new PoolRedisExecutor(jp);
+		}
+
+		throw new IllegalStateException("CommonsRedisProperties config error, cluster or pool must not null");
 	}
 
 }
