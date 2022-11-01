@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.elasticsearch.dao;
+package io.github.icodegarden.commons.elasticsearch;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,8 +42,8 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import io.github.icodegarden.commons.elasticsearch.v7.dao.RestHighLevelClientBuilder;
-import io.github.icodegarden.commons.elasticsearch.v7.dao.SnifferRestHighLevelClientBuilder;
+import io.github.icodegarden.commons.elasticsearch.v7.RestHighLevelClientBuilder;
+import io.github.icodegarden.commons.elasticsearch.v7.SnifferRestHighLevelClientBuilder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;

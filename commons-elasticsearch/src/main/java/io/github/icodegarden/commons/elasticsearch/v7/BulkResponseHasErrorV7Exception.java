@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.elasticsearch.v7.dao;
+package io.github.icodegarden.commons.elasticsearch.v7;
 
 import java.util.Arrays;
 import java.util.List;

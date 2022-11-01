@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.elasticsearch.dao;
+package io.github.icodegarden.commons.elasticsearch;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -9,7 +9,7 @@ import io.github.icodegarden.commons.lang.query.TableDataCountPO;
  * @author Fangfang.Xu
  *
  */
-public class TableDataCountElasticsearchDao extends
+class TableDataCountElasticsearchDao extends
 		GenericElasticsearchDao<TableDataCountPO, TableDataCountPO, ElasticsearchQuery<Object>, Object, TableDataCountPO> {
 
 	public TableDataCountElasticsearchDao(ElasticsearchClient client, String index) {

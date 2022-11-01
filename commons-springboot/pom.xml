@@ -37,6 +37,12 @@
 		    <version>1.4.1</version>
 		    <optional>true</optional><!-- 可选 -->
 		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-redis</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.elasticsearch.v7.dao;
+package io.github.icodegarden.commons.elasticsearch.v7;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,10 +20,9 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.sniff.SniffOnFailureListener;
 import org.springframework.util.StringUtils;
 
-import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchClientConfig;
+import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
 
 /**
  * 
@@ -31,7 +30,7 @@ import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchClientConfig
  *
  */
 
-public class SnifferRestHighLevelClientBuilder {
+public class RestHighLevelClientBuilder {
 
 	public static RestHighLevelClient buildRestHighLevelClient(ElasticsearchClientConfig esProperties) {
 		if (esProperties.getHttpHosts() == null) {
@@ -50,12 +49,12 @@ public class SnifferRestHighLevelClientBuilder {
 			/**
 			 * 在使用云ES时，提供的是一个域名负载均衡地址（就像一个单节点地址），似乎应该把云ES的地址认为是一直可用
 			 */
-//		builder.setFailureListener(new RestClient.FailureListener() {
-//		    @Override
-//		    public void onFailure(Node node) {
-//		        log.error("node:{} was failed", node);
-//		    }
-//		});
+//			builder.setFailureListener(new RestClient.FailureListener() {
+//			    @Override
+//			    public void onFailure(Node node) {
+//			        log.error("node:{} was failed", node);
+//			    }
+//			});
 			builder.setNodeSelector(NodeSelector.ANY); // default
 			builder.setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
 				@Override
@@ -84,44 +83,18 @@ public class SnifferRestHighLevelClientBuilder {
 							return keepAliveDuration;
 						}
 					});
-//				httpClientBuilder.setConnectionManager(connManager)
-//				httpClientBuilder.setConnectionReuseStrategy(reuseStrategy)
+//					httpClientBuilder.setConnectionManager(connManager)
+//					httpClientBuilder.setConnectionReuseStrategy(reuseStrategy)
 					httpClientBuilder.setMaxConnPerRoute(esProperties.getMaxConnPerRoute());
 					httpClientBuilder.setMaxConnTotal(esProperties.getMaxConnTotal());
-//				httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom().setIoThreadCount(1).build());
+//					httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom().setIoThreadCount(1).build());
 					return httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom()
 							.setIoThreadCount(Runtime.getRuntime().availableProcessors()/* default */).build());
 				}
 			});
 
-			ElasticsearchClientConfig.Sniffer snifferProps = esProperties.getSniffer();
-			if (snifferProps.isEnabled()) {
-				SniffOnFailureListener sniffOnFailureListener = new SniffOnFailureListener();
-
-				builder.setFailureListener(sniffOnFailureListener);
-
-				RestHighLevelClient client = new RestHighLevelClient(builder);
-				RestClient restClient = client.getLowLevelClient();
-
-//			ElasticsearchNodesSniffer nodesSniffer = new ElasticsearchNodesSniffer(restClient);
-//			NodesSniffer nodesSniffer = new NodesSniffer() {
-//				@Override
-//				public List<Node> sniff() throws IOException {
-//					return Arrays.asList(nodes);
-//				}
-//			};
-				org.elasticsearch.client.sniff.Sniffer sniffer = org.elasticsearch.client.sniff.Sniffer
-						.builder(restClient)
-						.setSniffIntervalMillis(snifferProps.getSniffIntervalMillis()/* by default every 5 minutes */)
-						.setSniffAfterFailureDelayMillis(snifferProps.getSniffAfterFailureDelayMillis())
-//					.setNodesSniffer(nodesSniffer)
-						.build();
-				sniffOnFailureListener.setSniffer(sniffer);
-				return client;
-			} else {
-				RestHighLevelClient client = new RestHighLevelClient(builder);
-				return client;
-			}
+			RestHighLevelClient client = new RestHighLevelClient(builder);
+			return client;
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(e);
 		}

@@ -46,6 +46,7 @@ import org.springframework.util.StringUtils;
 
 import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchDaoSupport;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
+import io.github.icodegarden.commons.elasticsearch.v7.BulkResponseHasErrorV7Exception;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportArrayList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;

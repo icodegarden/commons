@@ -5,6 +5,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -14,8 +15,9 @@ import org.springframework.util.ClassUtils;
 import com.alibaba.cloud.nacos.NacosConfigProperties;
 import com.alibaba.csp.sentinel.SphU;
 
-import io.github.icodegarden.commons.springboot.configuration.CommonsSentinelProperties.Cluster;
-import io.github.icodegarden.commons.springboot.configuration.CommonsSentinelProperties.Nacos;
+import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProperties;
+import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProperties.Cluster;
+import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProperties.Nacos;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelClusterClientStarter;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelEventStarter;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelNacosDynamicRuleStarter;
@@ -63,6 +65,7 @@ public class CommonsSentinelAutoConfiguration {
 
 	@ConditionalOnBean(NacosConfigProperties.class)
 	@ConditionalOnClass({ SphU.class })
+	@ConditionalOnProperty(value = "commons.sentinel.nacos.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected static class DynamicRuleAutoConfiguration {
 		@Autowired

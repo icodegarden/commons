@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.springboot.configuration;
+package io.github.icodegarden.commons.springboot.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

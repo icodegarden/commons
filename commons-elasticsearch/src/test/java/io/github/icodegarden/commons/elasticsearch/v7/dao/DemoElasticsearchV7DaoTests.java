@@ -7,8 +7,8 @@ import org.assertj.core.api.Assertions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
 import io.github.icodegarden.commons.elasticsearch.dao.DemoPO;
-import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchClientConfig;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 

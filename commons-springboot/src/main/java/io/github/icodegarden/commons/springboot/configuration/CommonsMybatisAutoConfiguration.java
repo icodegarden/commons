@@ -1,5 +1,6 @@
 package io.github.icodegarden.commons.springboot.configuration;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.icodegarden.commons.mybatis.interceptor.SqlPerformanceInterceptor;
+import io.github.icodegarden.commons.springboot.properties.CommonsMybatisProperties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
+@ConditionalOnClass(Mapper.class)
 @EnableConfigurationProperties({ CommonsMybatisProperties.class })
 @Configuration
 @Slf4j
