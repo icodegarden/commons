@@ -40,18 +40,9 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	 * 预估sql长度，跟生成完整sql的性能有关
 	 */
 	private int estimatedSqlLength = 256;
-	/**
-	 * 超过这个毫秒数的属于非健康sql
-	 */
-	private long unhealthMillis = -1;
-	/**
-	 * SQL 是否格式化
-	 */
-	private boolean format = false;
-	/**
-	 * 当使用sharding时是否只关注第一条sql，如分页查询时
-	 */
-	private boolean firstSqlOnSharding = true;
+
+	private SqlPerformanceConfig sqlPerformanceConfig = new SqlPerformanceConfig();
+	
 	/**
 	 * 非健康sql默认处理方式是打印err
 	 */
@@ -64,6 +55,10 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	private Method shardingSphereGetSQLMethod;
 	private Method shardingSphereGetParamtersMethod;
 	private Field shardingSphereSqlField;
+
+	public void setSqlPerformanceConfig(SqlPerformanceConfig sqlPerformanceConfig) {
+		this.sqlPerformanceConfig = sqlPerformanceConfig;
+	}
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
@@ -96,7 +91,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 		Object result = invocation.proceed();
 		long timing = System.currentTimeMillis() - start;
 
-		if (timing > unhealthMillis) {
+		if (timing > sqlPerformanceConfig.getUnhealthMs()) {
 			StringBuilder formatSql;
 			try {
 				String originalSql = resolveOriginalSql(statement, paramters);
@@ -107,11 +102,11 @@ public class SqlPerformanceInterceptor implements Interceptor {
 				MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
 				formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
 						.append(ms.getId());
-				if (format) {
+				if (sqlPerformanceConfig.isFormat()) {
 					formatSql.append(StringPool.NEWLINE).append("Execute SQL：")
-							.append(SqlUtils.sqlFormat(originalSql, format)).append(StringPool.NEWLINE);
+							.append(SqlUtils.sqlFormat(originalSql, sqlPerformanceConfig.isFormat())).append(StringPool.NEWLINE);
 				} else {
-					formatSql.append("Execute SQL：").append(SqlUtils.sqlFormat(originalSql, format));
+					formatSql.append("Execute SQL：").append(SqlUtils.sqlFormat(originalSql, sqlPerformanceConfig.isFormat()));
 				}
 
 				try {
@@ -302,32 +297,32 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	}
 
 	public long getUnhealthMillis() {
-		return unhealthMillis;
+		return sqlPerformanceConfig.getUnhealthMs();
 	}
 
 	public void setUnhealthMillis(long unhealthMillis) {
-		this.unhealthMillis = unhealthMillis;
+		sqlPerformanceConfig.setUnhealthMs(unhealthMillis);
 	}
 
 	public boolean isFormat() {
-		return format;
+		return sqlPerformanceConfig.isFormat();
 	}
 
 	public void setFormat(boolean format) {
-		this.format = format;
+		sqlPerformanceConfig.setFormat(format);
 	}
 
 	public void setUnhealthSqlConsumer(Consumer<String> unhealthSqlConsumer) {
 		this.unhealthSqlConsumer = unhealthSqlConsumer;
 	}
 
-	public boolean isFirstSqlOnSharding() {
-		return firstSqlOnSharding;
-	}
-
-	public void setFirstSqlOnSharding(boolean firstSqlOnSharding) {
-		this.firstSqlOnSharding = firstSqlOnSharding;
-	}
+//	public boolean isFirstSqlOnSharding() {
+//		return sqlPerformanceConfig.isFirstSqlOnSharding();
+//	}
+//
+//	public void setFirstSqlOnSharding(boolean firstSqlOnSharding) {
+//		sqlPerformanceConfig.setFirstSqlOnSharding(firstSqlOnSharding);
+//	}
 
 	// -------------------------------------
 

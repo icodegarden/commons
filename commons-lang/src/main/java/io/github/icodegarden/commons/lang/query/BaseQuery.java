@@ -27,23 +27,6 @@ public abstract class BaseQuery {
 
 	private int size = DEFAULT_PAGE_SIZE;
 
-//	/**
-//	 * 需要完整的字符串：例如mysql的 order by id desc ； ES的 "sort" : [...]
-//	 */
-//	private String sort;
-//	
-//	public BaseQuery(int page, int size, String sort) {
-//		if (page <= 0) {
-//			page = 1;
-//		}
-//		if (size <= 0) {
-//			size = 1;
-//		}
-//		this.page = page;
-//		this.size = size;
-//		this.sort = sort;
-//	}
-
 	/**
 	 * 需要排序的值部分：例如mysql的 id desc ； ES的 "sort":后面部分的json [...]
 	 */
@@ -54,7 +37,7 @@ public abstract class BaseQuery {
 			page = 1;
 		}
 		if (size <= 0) {
-			size = 1;
+			size = DEFAULT_PAGE_SIZE;
 		}
 		this.page = page;
 		this.size = size;
@@ -77,14 +60,6 @@ public abstract class BaseQuery {
 		this.size = size;
 	}
 
-//	public String getSort() {
-//		return sort;
-//	}
-//
-//	public void setSort(String sort) {
-//		this.sort = sort;
-//	}
-
 	public String getOrderBy() {
 		return orderBy;
 	}
@@ -92,11 +67,6 @@ public abstract class BaseQuery {
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 	}
-
-//	@Override
-//	public String toString() {
-//		return "BaseQuery [page=" + page + ", size=" + size + ", sort=" + sort + "]";
-//	}
 
 	@Override
 	public String toString() {

@@ -25,6 +25,18 @@
 			<artifactId>commons-lang</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-mybatis</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+		    <groupId>com.github.pagehelper</groupId>
+		    <artifactId>pagehelper-spring-boot-starter</artifactId>
+		    <version>1.4.1</version>
+		    <optional>true</optional><!-- 可选 -->
+		</dependency>
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -60,6 +72,11 @@
 		    <artifactId>spring-cloud-starter-bootstrap</artifactId>
 		    <optional>true</optional><!-- 可选 -->
 		</dependency>
+		<dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <optional>true</optional><!-- 可选 -->
+        </dependency>   
 		
 		<!-- sentinel需要nacos配置 -->
 		<dependency>
