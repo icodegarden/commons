@@ -34,6 +34,9 @@ public class CommonsCacheAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.cacher.removeAfterTransactionCommit.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected class RemoveAfterTransactionCommitAutoConfiguration extends AutoConfigurationSupport {
+		{
+			log.info("commons init bean of RemoveAfterTransactionCommitAutoConfiguration");
+		}
 
 		@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 		public void handleRemoveCacheEvent(RemoveCacheEvent event) {
@@ -56,7 +59,10 @@ public class CommonsCacheAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.cacher.removeOnEvent.enabled", havingValue = "true", matchIfMissing = false)
 	@Configuration
 	protected class RemoveOnEventAutoConfiguration extends AutoConfigurationSupport {
-
+		{
+			log.info("commons init bean of RemoveOnEventAutoConfiguration");
+		}
+		
 		@EventListener(value = RemoveCacheEvent.class)
 		public void handleRemoveCacheEvent(RemoveCacheEvent event) {
 			if (!CollectionUtils.isEmpty(event.getCacheKeys())) {
@@ -96,14 +102,18 @@ public class CommonsCacheAutoConfiguration {
 			}).map(name -> {
 				return ac.getBean(name);
 			}).collect(Collectors.toList());
+			
+			log.info("commons init found cachers:{}", cachers);
 		}
 
 		void doRemove(RemoveCacheEvent event) {
-			for (Object cacher : cachers) {
-				try {
-					methodRemove.invoke(cacher, event.getCacheKeys());
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					log.error("ex on remove cache, cacher:{}, keys:{}", cacher, event.getCacheKeys(), e);
+			if(!CollectionUtils.isEmpty(cachers)) {
+				for (Object cacher : cachers) {
+					try {
+						methodRemove.invoke(cacher, event.getCacheKeys());
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						log.error("ex on remove cache, cacher:{}, keys:{}", cacher, event.getCacheKeys(), e);
+					}
 				}
 			}
 		}

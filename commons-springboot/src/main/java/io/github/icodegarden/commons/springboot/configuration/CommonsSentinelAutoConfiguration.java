@@ -41,6 +41,8 @@ public class CommonsSentinelAutoConfiguration {
 
 	@PostConstruct
 	private void init() {
+		log.info("commons init bean of CommonsSentinelAutoConfiguration");
+		
 		if (!ClassUtils.isPresent("com.alibaba.cloud.sentinel.SentinelProperties", null)) {
 			/**
 			 * 当没有依赖spring-cloud-starter-alibaba-sentinel，要在sentinel初始化前设置-D参数地址，而不能通过application.yml自动生效
@@ -77,6 +79,8 @@ public class CommonsSentinelAutoConfiguration {
 
 		@PostConstruct
 		private void init() {
+			log.info("commons init bean of DynamicRuleAutoConfiguration");
+			
 			String dataId = env.getRequiredProperty("spring.application.name");
 			Nacos nacos = sentinelProperties.getNacos();
 

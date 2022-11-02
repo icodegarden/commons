@@ -1,4 +1,4 @@
-package io.github.icodegarden.beecomb.test.web.controller;
+package io.github.icodegarden.commons.test.web.controller;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

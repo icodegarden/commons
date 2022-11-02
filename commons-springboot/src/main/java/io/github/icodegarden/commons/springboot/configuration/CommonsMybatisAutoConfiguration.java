@@ -29,6 +29,8 @@ public class CommonsMybatisAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.mybatis.interceptor.sqlPerformance.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public SqlPerformanceInterceptor sqlPerformanceInterceptor() {
+		log.info("commons init bean of SqlPerformanceInterceptor");
+		
 		SqlPerformanceInterceptor sqlPerformanceInterceptor = new SqlPerformanceInterceptor();
 		sqlPerformanceInterceptor.setSqlPerformanceConfig(mybatisProperties.getSql());
 		sqlPerformanceInterceptor.setUnhealthSqlConsumer(sql -> {
@@ -42,5 +44,8 @@ public class CommonsMybatisAutoConfiguration {
 	@MapperScan(basePackages = "${" + CommonsMybatisProperties.SCAN_BASE_PACKAGES + "}")
 	@Configuration
 	protected static class MapperScanAutoConfiguration {
+		{
+			log.info("commons init bean of MapperScanAutoConfiguration");
+		}
 	}
 }

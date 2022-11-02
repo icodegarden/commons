@@ -23,6 +23,7 @@ import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCoun
 import io.github.icodegarden.commons.springboot.web.handler.ApiResponseExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.util.MappingJackson2HttpMessageConverters;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
@@ -31,17 +32,21 @@ import io.github.icodegarden.commons.springboot.web.util.MappingJackson2HttpMess
  */
 @ConditionalOnClass({ MappingJackson2HttpMessageConverter.class, Filter.class, ControllerAdvice.class })
 @Configuration
+@Slf4j
 public class CommonsWebAutoConfiguration {
 
 	@ConditionalOnProperty(value = "commons.web.converter.mappingJackson.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+		log.info("commons init bean of MappingJackson2HttpMessageConverter");
 		return MappingJackson2HttpMessageConverters.simple();
 	}
 
 	@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
+		log.info("commons init bean of GatewayPreAuthenticatedAuthenticationFilter");
+		
 		GatewayPreAuthenticatedAuthenticationFilter filter = new GatewayPreAuthenticatedAuthenticationFilter();
 
 		FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
@@ -57,6 +62,8 @@ public class CommonsWebAutoConfiguration {
 	@Bean
 	public FilterRegistrationBean<Filter> processingRequestCountFilter(ServiceRegistry serviceRegistry,
 			Registration registration) {
+		log.info("commons init bean of ProcessingRequestCountFilter");
+		
 		/**
 		 * 顺序最后，30秒实例刷新间隔+10秒冗余
 		 */
@@ -82,6 +89,7 @@ public class CommonsWebAutoConfiguration {
 	protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
 		@Bean
 		public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
+			log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
 			return new SentinelAdaptiveApiResponseExceptionHandler();
 		}
 	}
@@ -92,6 +100,7 @@ public class CommonsWebAutoConfiguration {
 	protected static class ApiResponseExceptionHandlerAutoConfiguration {
 		@Bean
 		public ApiResponseExceptionHandler apiResponseExceptionHandler() {
+			log.info("commons init bean of ApiResponseExceptionHandler");
 			return new ApiResponseExceptionHandler();
 		}
 	}

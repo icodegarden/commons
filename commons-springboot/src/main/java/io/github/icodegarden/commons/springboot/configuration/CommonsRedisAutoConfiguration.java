@@ -15,6 +15,7 @@ import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
+import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
@@ -27,11 +28,14 @@ import redis.clients.jedis.JedisPool;
 @ConditionalOnClass(RedisExecutor.class)
 @EnableConfigurationProperties({ CommonsRedisProperties.class })
 @Configuration
+@Slf4j
 public class CommonsRedisAutoConfiguration {
 
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
+		log.info("commons init bean of RedisExecutor");
+		
 		Cluster cluster = redisProperties.getCluster();
 		if (cluster != null) {
 			Set<HostAndPort> clusterNodes = cluster.getNodes().stream()

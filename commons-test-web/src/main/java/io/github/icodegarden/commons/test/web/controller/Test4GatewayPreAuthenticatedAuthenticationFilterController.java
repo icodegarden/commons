@@ -1,4 +1,4 @@
-package io.github.icodegarden.beecomb.test.web.controller;
+package io.github.icodegarden.commons.test.web.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;

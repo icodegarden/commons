@@ -17,6 +17,7 @@ import io.github.icodegarden.commons.springboot.properties.CommonsFeignPropertie
 import io.github.icodegarden.commons.springboot.security.SecurityUtils;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
@@ -27,9 +28,14 @@ import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 @ConditionalOnProperty(value = "commons.feign.requestInterceptor.enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({ CommonsFeignProperties.class })
 @Configuration
+@Slf4j
 public class CommonsFeignAutoConfiguration implements RequestInterceptor {
 	public static final String ACCEPT_LANGUAGE = "Accept-Language";
 
+	{
+		log.info("commons init bean of CommonsFeignAutoConfiguration");
+	}
+	
 	@Autowired
 	private CommonsFeignProperties commonsFeignProperties;
 
