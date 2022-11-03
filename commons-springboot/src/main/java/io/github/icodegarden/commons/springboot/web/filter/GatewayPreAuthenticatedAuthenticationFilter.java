@@ -30,6 +30,10 @@ import io.github.icodegarden.commons.springboot.security.SimpleUser;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 
 /**
+ * 适用于spring-web<br>
+ * 
+ * 网关预认证的身份filter<br>
+ * 
  * @author Fangfang.Xu
  */
 public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBean {

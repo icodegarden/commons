@@ -1,21 +1,21 @@
 package io.github.icodegarden.commons.springboot.web.filter;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
+import reactor.core.publisher.Mono;
 
 /**
- * 适用于spring-web<br>
+ * 适用于spring-webflux<br>
+ * 
+ * spring gateway不需要这个，因为gateway支持server.shutdown: graceful，自动等待请求处理完<br>
  * 
  * 可以统计处理中的请求数，可以优雅停机<br>
  * 这个类的shutdownOrder数值应该配置的比 服务注销 的GracefullyShutdown数值大
@@ -23,9 +23,11 @@ import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
  * @author Fangfang.Xu
  *
  */
-public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown {
+public class ProcessingRequestCountWebFilter implements WebFilter, Ordered, GracefullyShutdown {
 
-	private static final Logger log = LoggerFactory.getLogger(ProcessingRequestCountFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(ProcessingRequestCountWebFilter.class);
+
+	private int order = HIGHEST_PRECEDENCE;
 
 	private AtomicLong count = new AtomicLong(0);
 	private volatile boolean closed;
@@ -39,7 +41,7 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 	 */
 	private long maxProcessingWaitMs = 10000;
 
-	public ProcessingRequestCountFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
+	public ProcessingRequestCountWebFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
 		this.gracefullyShutdownOrder = gracefullyShutdownOrder;
 		this.instanceRefreshIntervalMs = instanceRefreshIntervalMs;
 	}
@@ -49,48 +51,28 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
+	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		if (closed) {
-			/**
-			 * 此时client收到的将是500
-			 * 
-			 * body：<br>
-			 * <html><body>
-			 * <h1>Whitelabel Error Page</h1>
-			 * <p>
-			 * This application has no explicit mapping for /error, so you are seeing this
-			 * as a fallback.
-			 * </p>
-			 * <div id='created'>Fri Feb 11 17:26:57 CST 2022</div><div>There was an
-			 * unexpected error (type=Internal Server Error,
-			 * status=500).</div></body></html>
-			 */
-			throw new ServletException(shutdownName() + " was closed");
+			return Mono.error(new IllegalStateException(shutdownName() + " was closed"));
 		}
-		try {
-			count.incrementAndGet();
 
-			chain.doFilter(request, response);
-		} finally {
+		count.incrementAndGet();
+
+		return chain.filter(exchange).doFinally(signalType -> {
 			count.decrementAndGet();
-			
+
 //			long c = count.decrementAndGet();
 //			if (c <= 0) {
 //				synchronized (this) {
 //					this.notify();
 //				}
 //			}
-		}
-	}
-
-	public long processingRequestCount() {
-		return count.get();
+		});
 	}
 
 	@Override
 	public String shutdownName() {
-		return "Processing-Request-Count-Filter";
+		return "Processing-Request-Count-WebFilter";
 	}
 
 	/**
@@ -116,13 +98,13 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 //				}
 //			}
 //		}
-		
+
 		/**
 		 * 相比上面的方式不用在 finally中this.notify(); 效率好一点点
 		 */
 		long waitMs = 0;
 		int sleepMs = 1000;
-		while(count.get() > 0 && waitMs++ < maxProcessingWaitMs) {
+		while (count.get() > 0 && waitMs++ < maxProcessingWaitMs) {
 			try {
 				Thread.sleep(sleepMs);
 			} catch (InterruptedException ignore) {
@@ -135,5 +117,14 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 	@Override
 	public int shutdownOrder() {
 		return gracefullyShutdownOrder;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
 	}
 }

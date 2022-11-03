@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.server.WebFilter;
 
 import com.alibaba.csp.sentinel.SphU;
 
@@ -20,6 +21,7 @@ import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdown;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountWebFilter;
 import io.github.icodegarden.commons.springboot.web.handler.ApiResponseExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.util.MappingJackson2HttpMessageConverters;
@@ -30,10 +32,14 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
-@ConditionalOnClass({ MappingJackson2HttpMessageConverter.class, Filter.class, ControllerAdvice.class })
+@ConditionalOnClass({ MappingJackson2HttpMessageConverter.class, ControllerAdvice.class })
 @Configuration
 @Slf4j
 public class CommonsWebAutoConfiguration {
+
+	private static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
+	private static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
+			+ 1;
 
 	@ConditionalOnProperty(value = "commons.web.converter.mappingJackson.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
@@ -42,45 +48,78 @@ public class CommonsWebAutoConfiguration {
 		return MappingJackson2HttpMessageConverters.simple();
 	}
 
-	@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
-	@Bean
-	public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
-		log.info("commons init bean of GatewayPreAuthenticatedAuthenticationFilter");
+	@ConditionalOnClass(Filter.class)
+	@Configuration
+	protected static class FilterAutoConfiguration {
 		
-		GatewayPreAuthenticatedAuthenticationFilter filter = new GatewayPreAuthenticatedAuthenticationFilter();
+		@ConditionalOnProperty(value = "commons.web.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
+		@Bean
+		public FilterRegistrationBean<Filter> processingRequestCountFilter(ServiceRegistry serviceRegistry,
+				Registration registration) {
+			log.info("commons init bean of ProcessingRequestCountFilter");
 
-		FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
-		bean.setFilter(filter);
-		bean.setName("gatewayPreAuthenticatedAuthenticationFilter");
-		bean.addUrlPatterns("/*");
-		bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+			/**
+			 * 下线优先级最低，30秒实例刷新间隔+10秒冗余
+			 */
+			ProcessingRequestCountFilter processingRequestCountFilter = new ProcessingRequestCountFilter(
+					Integer.MAX_VALUE, 30 * 1000 + 10 * 1000);
 
-		return bean;
+			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
+			bean.setFilter(processingRequestCountFilter);
+			bean.setName("processingRequestCountFilter");
+			bean.addUrlPatterns("/*");
+			bean.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
+
+			GracefullyShutdown.Registry.singleton()
+					.register(new ServiceRegistryGracefullyShutdown(serviceRegistry, registration));
+			GracefullyShutdown.Registry.singleton().register(processingRequestCountFilter);
+
+			return bean;
+		}
+		
+		@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
+		@Bean
+		public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
+			log.info("commons init bean of GatewayPreAuthenticatedAuthenticationFilter");
+
+			GatewayPreAuthenticatedAuthenticationFilter filter = new GatewayPreAuthenticatedAuthenticationFilter();
+
+			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
+			bean.setFilter(filter);
+			bean.setName("gatewayPreAuthenticatedAuthenticationFilter");
+			bean.addUrlPatterns("/*");
+			bean.setOrder(FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION);
+
+			return bean;
+		}
 	}
 
-	@ConditionalOnProperty(value = "commons.web.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
-	@Bean
-	public FilterRegistrationBean<Filter> processingRequestCountFilter(ServiceRegistry serviceRegistry,
-			Registration registration) {
-		log.info("commons init bean of ProcessingRequestCountFilter");
+	@ConditionalOnClass(WebFilter.class)
+	@Configuration
+	protected static class WebFilterAutoConfiguration {
+
+		@ConditionalOnProperty(value = "commons.web.webfilter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
+		@Bean
+		public WebFilter processingRequestCountFilter(ServiceRegistry serviceRegistry, Registration registration) {
+			log.info("commons init bean of ProcessingRequestCountFilter");
+
+			/**
+			 * 下线优先级最低，30秒实例刷新间隔+10秒冗余
+			 */
+			ProcessingRequestCountWebFilter processingRequestCountWebFilter = new ProcessingRequestCountWebFilter(
+					Integer.MAX_VALUE, 30 * 1000 + 10 * 1000);
+			processingRequestCountWebFilter.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
+
+			GracefullyShutdown.Registry.singleton()
+					.register(new ServiceRegistryGracefullyShutdown(serviceRegistry, registration));//默认下线优先级最高
+			GracefullyShutdown.Registry.singleton().register(processingRequestCountWebFilter);
+
+			return processingRequestCountWebFilter;
+		}
 		
 		/**
-		 * 顺序最后，30秒实例刷新间隔+10秒冗余
+		 * 暂不实现 GatewayPreAuthenticatedAuthenticationWebFilter，因为webflux是异步的，身份信息跨线程不适合
 		 */
-		ProcessingRequestCountFilter processingRequestCountFilter = new ProcessingRequestCountFilter(Integer.MAX_VALUE,
-				30 * 1000 + 10 * 1000);
-
-		FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
-		bean.setFilter(processingRequestCountFilter);
-		bean.setName("processingRequestCountFilter");
-		bean.addUrlPatterns("/*");
-		bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
-
-		GracefullyShutdown.Registry.singleton()
-				.register(new ServiceRegistryGracefullyShutdown(serviceRegistry, registration));
-		GracefullyShutdown.Registry.singleton().register(processingRequestCountFilter);
-
-		return bean;
 	}
 
 	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
