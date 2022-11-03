@@ -87,7 +87,7 @@ public class ProcessingRequestCountFilter implements Filter, GracefullyShutdown 
 
 	@Override
 	public String shutdownName() {
-		return "Http-Processing-Request-Count-Filter";
+		return "Processing-Request-Count-Filter";
 	}
 
 	/**
