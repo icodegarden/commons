@@ -22,6 +22,8 @@
 * 增加dao系列接口（mybatis、hbase、elasticsearch）
 * 增加elasticsearch模块
 * 增加springboot模块支持sentinel
+* 增加FlowTagLoadBalancer负载均衡
+
 * fix RedisLock 使用RedisTemplate 类型转换问题
 * 优化AbstractExceptionHandler
 
