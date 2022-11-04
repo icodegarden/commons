@@ -1,5 +1,9 @@
 package io.github.icodegarden.commons.springboot.configuration;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +21,27 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class CommonsBeanAutoConfiguration {
+
+	@Autowired(required = false)
+	private DataSource dataSource;
+
+	/**
+	 * 无损上线
+	 */
+	@PostConstruct
+	private void init() {
+		/**
+		 * 使用getConnection促使连接池初始化完成
+		 */
+		if (dataSource != null) {
+			log.info("commons beans init DataSource pool of getConnection, datasource:{}", dataSource);
+			try {
+				dataSource.getConnection();
+			} catch (Exception e) {
+				log.warn("ex on init DataSource pool of getConnection", e);
+			}
+		}
+	}
 
 	@Bean
 	public SpringContext springContext() {
