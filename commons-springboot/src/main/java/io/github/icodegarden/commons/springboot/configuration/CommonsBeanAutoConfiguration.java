@@ -31,7 +31,7 @@ public class CommonsBeanAutoConfiguration {
 	@PostConstruct
 	private void init() {
 		/**
-		 * 使用getConnection促使连接池初始化完成
+		 * 利用getConnection促使连接池初始化完成
 		 */
 		if (dataSource != null) {
 			log.info("commons beans init DataSource pool of getConnection, datasource:{}", dataSource);
