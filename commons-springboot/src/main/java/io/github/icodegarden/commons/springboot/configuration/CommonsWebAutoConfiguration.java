@@ -122,8 +122,8 @@ public class CommonsWebAutoConfiguration {
 		 */
 	}
 
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnClass(SphU.class)
+	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
 		@Bean
@@ -133,8 +133,8 @@ public class CommonsWebAutoConfiguration {
 		}
 	}
 
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean(SentinelAdaptiveApiResponseExceptionHandler.class)
+	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected static class ApiResponseExceptionHandlerAutoConfiguration {
 		@Bean

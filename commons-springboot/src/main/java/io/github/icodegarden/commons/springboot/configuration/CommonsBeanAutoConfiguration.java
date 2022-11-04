@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.springboot.configuration;
 
+import java.sql.Connection;
+
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
@@ -35,8 +37,8 @@ public class CommonsBeanAutoConfiguration {
 		 */
 		if (dataSource != null) {
 			log.info("commons beans init DataSource pool of getConnection, datasource:{}", dataSource);
-			try {
-				dataSource.getConnection();
+			try (Connection connection = dataSource.getConnection();){
+				//do nothing
 			} catch (Exception e) {
 				log.warn("ex on init DataSource pool of getConnection", e);
 			}
