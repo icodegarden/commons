@@ -15,7 +15,7 @@ import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer
  * @author Fangfang.Xu
  *
  */
-public class FlowTagLoadBalancerClientConfiguration {
+public class CommonsLoadBalancerClientConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

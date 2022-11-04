@@ -1,20 +1,12 @@
 package io.github.icodegarden.commons.springboot.web.handler;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.UndeclaredThrowableException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
@@ -23,7 +15,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
@@ -37,12 +28,10 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
  * 使用 @Bean <br>
- * 自带了 ContentCachingRequestWrapper 功能
  * 
  * @author Fangfang.Xu
  *
  */
-@Configuration // 为了对@Bean contentCachingFilter起作用
 @ControllerAdvice
 public abstract class AbstractExceptionHandler<T> {
 	private static final Logger log = LoggerFactory.getLogger(AbstractExceptionHandler.class);
@@ -54,34 +43,6 @@ public abstract class AbstractExceptionHandler<T> {
 
 	public void setPrintErrorStackOnWarn(boolean printErrorStackOnWarn) {
 		this.printErrorStackOnWarn = printErrorStackOnWarn;
-	}
-	
-	/**
-	 * 自带了 ContentCachingRequestWrapper 功能
-	 * @return
-	 */
-	@Bean
-	public FilterRegistrationBean<Filter> contentCachingFilter() {
-		OncePerRequestFilter filter = new OncePerRequestFilter() {
-			@Override
-			protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-					FilterChain filterChain) throws ServletException, IOException {
-				ContentCachingRequestWrapper wrapper = null;
-				if (request instanceof ContentCachingRequestWrapper) {
-					wrapper = (ContentCachingRequestWrapper) request;
-				} else {
-					wrapper = new ContentCachingRequestWrapper(request);
-				}
-				filterChain.doFilter(wrapper, response);
-			}
-		};
-
-		FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
-		bean.setFilter(filter);
-		bean.setName("contentCaching");
-		bean.addUrlPatterns("/*");
-
-		return bean;
 	}
 
 	/**
@@ -136,7 +97,7 @@ public abstract class AbstractExceptionHandler<T> {
 			HttpRequestMethodNotSupportedException cause) throws Exception {
 		throw cause;
 	}
-	
+
 	/**
 	 * 其他错误，包含业务异常
 	 * 

@@ -4,6 +4,7 @@ import javax.servlet.Filter;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.serviceregistry.Registration;
@@ -12,13 +13,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.server.WebFilter;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import com.alibaba.csp.sentinel.SphU;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdown;
+import io.github.icodegarden.commons.springboot.web.filter.CacheRequestBodyFilter;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountWebFilter;
@@ -32,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
-@ConditionalOnClass({ MappingJackson2HttpMessageConverter.class, ControllerAdvice.class })
 @Configuration
 @Slf4j
 public class CommonsWebAutoConfiguration {
@@ -41,6 +43,9 @@ public class CommonsWebAutoConfiguration {
 	private static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
 			+ 1;
 
+	/**
+	 * 公共的
+	 */
 	@ConditionalOnProperty(value = "commons.web.converter.mappingJackson.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
@@ -48,10 +53,33 @@ public class CommonsWebAutoConfiguration {
 		return MappingJackson2HttpMessageConverters.simple();
 	}
 
-	@ConditionalOnClass(Filter.class)
+	// ----------------------------------------------------------------------------------------
+
+	/**
+	 * 有webmvc <br>
+	 * 
+	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+	 */
+	@ConditionalOnClass({ DispatcherServlet.class })
 	@Configuration
 	protected static class FilterAutoConfiguration {
-		
+
+		@ConditionalOnProperty(value = "commons.web.filter.cacheRequestBody.enabled", havingValue = "true", matchIfMissing = true)
+		@Bean
+		public FilterRegistrationBean<Filter> cacheRequestBodyFilter() {
+			log.info("commons init bean of CacheRequestBodyFilter");
+
+			CacheRequestBodyFilter filter = new CacheRequestBodyFilter();
+
+			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
+			bean.setFilter(filter);
+			bean.setName("cacheRequestBodyFilter");
+			bean.addUrlPatterns("/*");
+			bean.setOrder(Ordered.LOWEST_PRECEDENCE);
+
+			return bean;
+		}
+
 		@ConditionalOnProperty(value = "commons.web.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
 		public FilterRegistrationBean<Filter> processingRequestCountFilter(ServiceRegistry serviceRegistry,
@@ -76,7 +104,7 @@ public class CommonsWebAutoConfiguration {
 
 			return bean;
 		}
-		
+
 		@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
 		public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
@@ -94,9 +122,57 @@ public class CommonsWebAutoConfiguration {
 		}
 	}
 
-	@ConditionalOnClass(WebFilter.class)
+	/**
+	 * 内部依赖javax.servlet.<br>
+	 * 有webmvc <br>
+	 * 
+	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+	 */
+	@ConditionalOnClass({ DispatcherServlet.class, SphU.class })
+	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+	@Configuration
+	protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
+		@Bean
+		public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
+			log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
+			return new SentinelAdaptiveApiResponseExceptionHandler();
+		}
+	}
+
+	/**
+	 * 内部依赖javax.servlet.<br>
+	 * 有webmvc <br>
+	 * 
+	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+	 */
+	@ConditionalOnClass({ DispatcherServlet.class })
+	@ConditionalOnMissingBean(SentinelAdaptiveApiResponseExceptionHandler.class)
+	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+	@Configuration
+	protected static class ApiResponseExceptionHandlerAutoConfiguration {
+		@Bean
+		public ApiResponseExceptionHandler apiResponseExceptionHandler() {
+			log.info("commons init bean of ApiResponseExceptionHandler");
+			return new ApiResponseExceptionHandler();
+		}
+	}
+
+	// ----------------------------------------------------------------------------------------
+
+	/**
+	 * 有webflux，且没有webmvc <br>
+	 * 
+	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+	 */
+	@ConditionalOnClass({ DispatcherHandler.class })
+	@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+			"org.glassfish.jersey.servlet.ServletContainer" })
 	@Configuration
 	protected static class WebFilterAutoConfiguration {
+
+		/**
+		 * 暂无Flux的CacheRequestBody
+		 */
 
 		@ConditionalOnProperty(value = "commons.web.webfilter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
@@ -111,37 +187,19 @@ public class CommonsWebAutoConfiguration {
 			processingRequestCountWebFilter.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
 
 			GracefullyShutdown.Registry.singleton()
-					.register(new ServiceRegistryGracefullyShutdown(serviceRegistry, registration));//默认下线优先级最高
+					.register(new ServiceRegistryGracefullyShutdown(serviceRegistry, registration));// 默认下线优先级最高
 			GracefullyShutdown.Registry.singleton().register(processingRequestCountWebFilter);
 
 			return processingRequestCountWebFilter;
 		}
-		
+
 		/**
 		 * 暂不实现 GatewayPreAuthenticatedAuthenticationWebFilter，因为webflux是异步的，身份信息跨线程不适合
 		 */
+
 	}
 
-	@ConditionalOnClass(SphU.class)
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
-	@Configuration
-	protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
-		@Bean
-		public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
-			log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
-			return new SentinelAdaptiveApiResponseExceptionHandler();
-		}
-	}
-
-	@ConditionalOnMissingBean(SentinelAdaptiveApiResponseExceptionHandler.class)
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
-	@Configuration
-	protected static class ApiResponseExceptionHandlerAutoConfiguration {
-		@Bean
-		public ApiResponseExceptionHandler apiResponseExceptionHandler() {
-			log.info("commons init bean of ApiResponseExceptionHandler");
-			return new ApiResponseExceptionHandler();
-		}
-	}
-
+	/**
+	 * 暂无Flux的ExceptionHandler
+	 */
 }

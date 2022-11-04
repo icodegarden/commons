@@ -17,25 +17,49 @@ public class ServerErrorCodeException extends ErrorCodeException {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerErrorCodeException.class);
 
-	private static String applicationName = "NotConfig";
+	private static final String DEFAULT_APPLICATION_NAME = "NotConfig";
+
+	private static String applicationName = DEFAULT_APPLICATION_NAME;
 
 	static {
 		if (ClassUtils.isPresent("io.github.icodegarden.commons.springboot.SpringContext",
 				ClassUtils.getDefaultClassLoader())) {
-			try {
-				Class<?> springContextClass = ClassUtils.forName(
-						"io.github.icodegarden.commons.springboot.SpringContext", ClassUtils.getDefaultClassLoader());
-				Method getApplicationContextMethod = springContextClass.getDeclaredMethod("getApplicationContext");
-				Object applicationContext = getApplicationContextMethod.invoke(null);
-				Class<?> applicationContextClass = ClassUtils.forName("org.springframework.context.ApplicationContext",
-						ClassUtils.getDefaultClassLoader());
-				Method getBeanMethod = applicationContextClass.getMethod("getBean", Class.class);
-				Environment env = (Environment) getBeanMethod.invoke(applicationContext, Environment.class);
-				String applicationName = env.getRequiredProperty("spring.application.name");
-				ServerErrorCodeException.configApplicationName(applicationName);
-			} catch (Exception e) {
-				log.warn("failed on init configApplicationName", e);
-			}
+			new Thread() {
+				public void run() {
+					try {
+						Thread.sleep(30000);
+					} catch (InterruptedException e) {
+					}
+
+					long start = System.currentTimeMillis();
+					while (DEFAULT_APPLICATION_NAME.equals(ServerErrorCodeException.applicationName)
+							&& (System.currentTimeMillis() - start < 1800 * 1000)) {
+						try {
+							Class<?> springContextClass = ClassUtils.forName(
+									"io.github.icodegarden.commons.springboot.SpringContext",
+									ClassUtils.getDefaultClassLoader());
+							Method getApplicationContextMethod = springContextClass
+									.getDeclaredMethod("getApplicationContext");
+							Object applicationContext = getApplicationContextMethod.invoke(null);
+							Class<?> applicationContextClass = ClassUtils.forName(
+									"org.springframework.context.ApplicationContext",
+									ClassUtils.getDefaultClassLoader());
+							Method getBeanMethod = applicationContextClass.getMethod("getBean", Class.class);
+							Environment env = (Environment) getBeanMethod.invoke(applicationContext, Environment.class);
+							String applicationName = env.getRequiredProperty("spring.application.name");
+
+							ServerErrorCodeException.configApplicationName(applicationName);
+						} catch (Exception e) {
+							log.warn("failed on init configApplicationName");
+						}
+
+						try {
+							Thread.sleep(30000);
+						} catch (InterruptedException e) {
+						}
+					}
+				};
+			}.start();
 		}
 	}
 
