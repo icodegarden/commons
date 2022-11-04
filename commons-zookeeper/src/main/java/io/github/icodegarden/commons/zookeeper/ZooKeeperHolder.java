@@ -32,6 +32,8 @@ public class ZooKeeperHolder implements Closeable {
 
 	private volatile boolean closeCalled;
 
+	private int waitConnectedTimes;
+
 	private final Config config;
 
 	private volatile ZooKeeper zk;
@@ -60,6 +62,9 @@ public class ZooKeeperHolder implements Closeable {
 			zkClientConfig.setProperty(ZKClientConfig.ZOOKEEPER_SERVER_PRINCIPAL,
 					"zookeeper/" + config.getConnectString());
 
+			/**
+			 * 不会阻塞；若server处于不可用，zk将一直自动重连
+			 */
 			zk = new ZooKeeper(config.getConnectString(), config.getSessionTimeout(), stateWatcher, zkClientConfig);
 			if (log.isInfoEnabled()) {
 				log.info("success new ZooKeeper, connectString:{}, sessionTimeout:{}", config.getConnectString(),
@@ -99,6 +104,34 @@ public class ZooKeeperHolder implements Closeable {
 					} catch (InterruptedException ignore) {
 					}
 					if (zk.getState() != States.CONNECTED) {
+						/**
+						 * 因为zk client自动重连并不是万无一失的，可能出现下面场景:<br>
+						 * zk server日志：<br>
+						 * Refusing session request for client /172.24.16.157:37402 as it has seen zxid
+						 * 0x83098a our last zxid is 0x3e6 client must try another server<br>
+						 * <br>
+						 * zk client日志：<br>
+						 * o.a.z.ClientCnxn[1290]:Session 0x10313cb829f3c49 for sever
+						 * zk37-svc/172.25.7.41:2181, Closing socket connection. Attempting reconnect
+						 * except it is a SessionExpiredException. <br>
+						 * org.apache.zookeeper.ClientCnxn$EndOfStreamException: Unable to read
+						 * additional data from server sessionid 0x10313cb829f3c49, likely server has
+						 * closed socket<br>
+						 * at
+						 * org.apache.zookeeper.ClientCnxnSocketNIO.doIO(ClientCnxnSocketNIO.java:77)<br>
+						 * at
+						 * org.apache.zookeeper.ClientCnxnSocketNIO.doTransport(ClientCnxnSocketNIO.java:350)<br>
+						 * at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1280)<br>
+						 * <br>
+						 * 
+						 * 以上场景zk client会一直重连，但server却一直拒绝<br>
+						 * 因此当检查到等待连接的次数大于100时，调用reconnect来重新new ZooKeeper保障成功建立新的连接<br>
+						 */
+						if (waitConnectedTimes++ > 100) {
+							log.warn("waitConnectedTimes is exceed, start reconnect to ensure connect success");
+							reconnect();
+						}
+
 						throw new ConnectTimeoutZooKeeperException(
 								String.format("zookeeper connected timeout:%d, connectString:%s",
 										config.getConnectTimeout(), config.getConnectString()));
@@ -106,6 +139,9 @@ public class ZooKeeperHolder implements Closeable {
 				}
 			}
 		}
+
+		waitConnectedTimes = 0;
+
 		/**
 		 * 当有配置auth时，在获取zk前把authInfo加进去
 		 */
@@ -152,17 +188,35 @@ public class ZooKeeperHolder implements Closeable {
 		}
 	}
 
+	/**
+	 * 给内部使用
+	 */
+	private void reconnect() {
+		log.warn("{} start reconnect, close and create a new ZooKeeper", this.getClass().getSimpleName());
+		try {
+			/**
+			 * IMPT 不可以直接使用close()方法，那是给外部调用使用的
+			 */
+			internalClose();
+		} catch (IOException ignore) {
+		}
+		/**
+		 * 必须new新的
+		 */
+		newZooKeeper();
+	}
+
 	private class StateWatcher implements Watcher {
 		private ZooKeeper zk;
 
-		void setZooKeeper(ZooKeeper zk) {
+		private void setZooKeeper(ZooKeeper zk) {
 			this.zk = zk;
 		}
 
 		@Override
 		public void process(WatchedEvent event) {
 			/**
-			 * Event.EventType.None连接状态事件
+			 * Event.EventType.None属于连接状态的Event
 			 */
 			if (event.getType() == Event.EventType.None) {
 				if (log.isInfoEnabled()) {
@@ -170,7 +224,13 @@ public class ZooKeeperHolder implements Closeable {
 				}
 				switch (event.getState()) {
 				/**
-				 * 每当建立连接时触发，包括new ZooKeeper、自动重连成功（只要session没过期就会在Disconnected后SyncConnected）
+				 * Disconnected是不server发给client的，是client自己识别到的<br>
+				 * 当网络不可用较长一段时间、zk server下线或不可用 就会触发，此时zk client会自动一直重连
+				 */
+				case Disconnected:
+					break;
+				/**
+				 * 每当zk client和server建立连接成功时触发，场景如new ZooKeeper之后连接成功、Disconnected出现后又连接成功
 				 */
 				case SyncConnected:
 					synchronized (ZooKeeperHolder.this) {
@@ -178,31 +238,22 @@ public class ZooKeeperHolder implements Closeable {
 					}
 					break;
 				/**
-				 * 当网络不可用一段时间就会触发
+				 * 认证失败
 				 */
-				case Disconnected:
+				case AuthFailed:
 					break;
 				/**
-				 * 当由于网络等问题时间超过sessionTimeout就会触发
+				 * Expired是server发给client的，表示session过期必须new新的ZooKeeper，否则永远无法再自动建立连接<br>
+				 * 当由于网络不稳定等问题时间超过sessionTimeout就会触发
 				 */
 				case Expired:
 					while (true) {
-						log.warn("start create a new ZooKeeper after session Expired");
+						log.warn("Session Expired, start reconnect to ensure connect success");
 						try {
-							/**
-							 * IMPT 不可以直接使用close()方法，那是给外部调用使用的
-							 */
-							internalClose();
-						} catch (IOException ignore) {
-						}
-						try {
-							/**
-							 * 当触发session过期时必须new新的ZooKeeper，否则永远无法再自动建立连接
-							 */
-							newZooKeeper();
+							reconnect();
 							break;// break loop if success
 						} catch (Exception e) {
-							log.warn("ex on newZooKeeper", e);
+							log.warn("ex on newZooKeeper when Session Expired", e);
 							// continue loop
 							try {
 								// 稍后重试
@@ -212,6 +263,11 @@ public class ZooKeeperHolder implements Closeable {
 						}
 					}
 
+					break;
+				/**
+				 * 只在client主动调用close后
+				 */
+				case Closed:
 					break;
 				default:
 					break;

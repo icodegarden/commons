@@ -25,6 +25,7 @@
 * 增加FlowTagLoadBalancer负载均衡
 
 * fix RedisLock 使用RedisTemplate 类型转换问题
+* 优化ZooKeeperHolder重连保障
 * 优化AbstractExceptionHandler
 
 

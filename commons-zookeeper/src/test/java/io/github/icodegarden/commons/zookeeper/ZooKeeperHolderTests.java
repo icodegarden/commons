@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import io.github.icodegarden.commons.zookeeper.NewZooKeeperListener;
 import io.github.icodegarden.commons.zookeeper.ZooKeeperHolder;
 import io.github.icodegarden.commons.zookeeper.ZooKeeperHolder.Config;
+import io.github.icodegarden.commons.zookeeper.exception.ZooKeeperException;
 
 /**
  * 
@@ -19,7 +20,7 @@ class ZooKeeperHolderTests extends PropertiesConfig {
 
 	@Test
 	void addNewZooKeeperListener() throws Exception {
-		Config config = new ZooKeeperHolder.Config(zkConnectString, 30000, 10000);
+		Config config = new ZooKeeperHolder.Config(zkConnectString, 30000, 3000);
 		config.setAclAuth("xff:xff");
 		ZooKeeperHolder zooKeeperHolder = new ZooKeeperHolder(config);
 		
@@ -34,7 +35,6 @@ class ZooKeeperHolderTests extends PropertiesConfig {
 		assertThat(listNewZooKeeperListeners).hasSize(2);
 		assertThat(listNewZooKeeperListeners.get(0)).isEqualTo(l2);
 		assertThat(listNewZooKeeperListeners.get(1)).isEqualTo(l1);
-
 	}
 
 	class MyNewZooKeeperListener1 implements NewZooKeeperListener {
