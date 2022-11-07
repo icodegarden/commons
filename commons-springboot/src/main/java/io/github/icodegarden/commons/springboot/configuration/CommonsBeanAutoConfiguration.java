@@ -16,6 +16,7 @@ import io.github.icodegarden.commons.springboot.SpringContext;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * 通用的bean
  * 
  * @author Fangfang.Xu
  *
@@ -37,8 +38,8 @@ public class CommonsBeanAutoConfiguration {
 		 */
 		if (dataSource != null) {
 			log.info("commons beans init DataSource pool of getConnection, datasource:{}", dataSource);
-			try (Connection connection = dataSource.getConnection();){
-				//do nothing
+			try (Connection connection = dataSource.getConnection();) {
+				// do nothing
 			} catch (Exception e) {
 				log.warn("ex on init DataSource pool of getConnection", e);
 			}
@@ -51,6 +52,9 @@ public class CommonsBeanAutoConfiguration {
 		return new SpringContext();
 	}
 
+	/**
+	 * 无损下线
+	 */
 	@ConditionalOnProperty(value = "commons.bean.lifecycle.gracefullyShutdown.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
 	public SmartLifecycle gracefullyShutdownLifecycle() {

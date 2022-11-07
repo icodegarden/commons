@@ -33,6 +33,6 @@ public class CommonsSentinelProperties {
 	@Setter
 	@ToString
 	public static class Nacos {
-		private String groupId = "Sentinel";
+		private String dynamicRuleGroupId = "Sentinel";
 	}
 }

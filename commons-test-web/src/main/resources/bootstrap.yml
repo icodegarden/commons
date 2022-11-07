@@ -14,4 +14,4 @@ spring:
         password: nacos
 #        namespace: 7eeef4c2-4b9e-4363-82a2-f0effab3b128
   application:
-    name: gddc-admin
+    name: commons-test-web

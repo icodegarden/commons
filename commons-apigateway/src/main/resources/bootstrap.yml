@@ -1,0 +1,19 @@
+---
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 172.22.122.27:8848
+        watchDelay: 30000 #default 30000
+        username: nacos
+        password: nacos
+#        namespace: 7eeef4c2-4b9e-4363-82a2-f0effab3b128    
+      config:
+        server-addr: 172.22.122.27:8848
+        file-extension: yaml
+        username: nacos
+        password: nacos
+#        namespace: 7eeef4c2-4b9e-4363-82a2-f0effab3b128        
+        
+  application:
+    name: commons-apigateway   

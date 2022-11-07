@@ -32,11 +32,13 @@ spring:
       transport:
         port: 8719
         dashboard: localhost:8858    
-sentinel: #com.geely.gddc.commons.spring.configuration.SentinelProperties
-  cluster:
-    enabled: true
-    serverAddr: localhost
-    serverPort: 11111      
+        
+commons:
+  sentinel: 
+    cluster:
+      enabled: true
+      serverAddr: localhost
+      serverPort: 11111      
 
 
 feign:

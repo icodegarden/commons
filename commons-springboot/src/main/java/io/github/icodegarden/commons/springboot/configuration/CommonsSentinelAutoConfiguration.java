@@ -53,7 +53,7 @@ public class CommonsSentinelAutoConfiguration {
 					dashboardAddr);
 			Assert.hasText(dashboardAddr,
 					"dashboardAddr must not empty when dependency not contains spring-cloud-starter-alibaba-sentinel");
-			System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);
+			System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);//IMPT
 		}
 
 		SentinelEventStarter.addDefaultLoggingObserver();
@@ -61,15 +61,16 @@ public class CommonsSentinelAutoConfiguration {
 		Cluster cluster = sentinelProperties.getCluster();
 		log.info("sentinel cluster is enbaled:{}", cluster.getEnabled());
 		if (cluster.getEnabled()) {
-			SentinelClusterClientStarter.start(cluster.getServerAddr(), cluster.getServerPort());
+			String projectName = env.getRequiredProperty("spring.application.name");
+			SentinelClusterClientStarter.start(cluster.getServerAddr(), cluster.getServerPort(), projectName);
 		}
 	}
 
 	@ConditionalOnBean(NacosConfigProperties.class)
 	@ConditionalOnClass({ SphU.class })
-	@ConditionalOnProperty(value = "commons.sentinel.nacos.enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(value = "commons.sentinel.nacos.rule.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
-	protected static class DynamicRuleAutoConfiguration {
+	protected static class NacosDynamicRuleAutoConfiguration {
 		@Autowired
 		private Environment env;
 		@Autowired
@@ -84,7 +85,7 @@ public class CommonsSentinelAutoConfiguration {
 			String dataId = env.getRequiredProperty("spring.application.name");
 			Nacos nacos = sentinelProperties.getNacos();
 
-			SentinelNacosDynamicRuleStarter.start(nacosConfigProperties, dataId, nacos.getGroupId());
+			SentinelNacosDynamicRuleStarter.start(nacosConfigProperties, dataId, nacos.getDynamicRuleGroupId());
 		}
 	}
 }

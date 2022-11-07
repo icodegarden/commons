@@ -1,0 +1,34 @@
+spring:
+  cloud:
+    gateway:  
+      routes:
+      - id: admin_route
+        uri: lb://gddc-admin
+        predicates:
+        - Path=/admin/**
+#        metadata:
+#          connect-timeout: 1000
+#          response-timeout: 3000
+      - id: manage_route
+        uri: lb://gddc-manage
+        predicates:
+        - Path=/manage/**      
+    sentinel: #sentinel-springcloud的自动配置
+      transport:
+        port: 8719
+        dashboard: localhost:8858           
+             
+commons: #CommonsSentinelProperties.java
+  gateway:    
+   security: #CommonsGatewaySecurityProperties.java
+     jwt:
+       issuer: icodegarden
+       secretKey: icodegarden@jwt0123456789        
+  sentinel: 
+    cluster:
+      enabled: true
+      serverAddr: localhost
+      serverPort: 11111
+    nacos:
+      dynamicRuleGroupId: Sentinel                 
+                   

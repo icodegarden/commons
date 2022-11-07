@@ -62,7 +62,7 @@ public class CommonsWebAutoConfiguration {
 	 */
 	@ConditionalOnClass({ DispatcherServlet.class })
 	@Configuration
-	protected static class FilterAutoConfiguration {
+	protected static class WebMvcAutoConfiguration {
 
 		@ConditionalOnProperty(value = "commons.web.filter.cacheRequestBody.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
@@ -120,40 +120,40 @@ public class CommonsWebAutoConfiguration {
 
 			return bean;
 		}
-	}
-
-	/**
-	 * 内部依赖javax.servlet.<br>
-	 * 有webmvc <br>
-	 * 
-	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
-	 */
-	@ConditionalOnClass({ DispatcherServlet.class, SphU.class })
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
-	@Configuration
-	protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
-		@Bean
-		public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
-			log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
-			return new SentinelAdaptiveApiResponseExceptionHandler();
+		
+		/**
+		 * 内部依赖javax.servlet.<br>
+		 * 有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+		 */
+		@ConditionalOnClass({ DispatcherServlet.class, SphU.class })
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@Configuration
+		protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
+			@Bean
+			public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
+				log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
+				return new SentinelAdaptiveApiResponseExceptionHandler();
+			}
 		}
-	}
 
-	/**
-	 * 内部依赖javax.servlet.<br>
-	 * 有webmvc <br>
-	 * 
-	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
-	 */
-	@ConditionalOnClass({ DispatcherServlet.class })
-	@ConditionalOnMissingBean(SentinelAdaptiveApiResponseExceptionHandler.class)
-	@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
-	@Configuration
-	protected static class ApiResponseExceptionHandlerAutoConfiguration {
-		@Bean
-		public ApiResponseExceptionHandler apiResponseExceptionHandler() {
-			log.info("commons init bean of ApiResponseExceptionHandler");
-			return new ApiResponseExceptionHandler();
+		/**
+		 * 内部依赖javax.servlet.<br>
+		 * 有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+		 */
+		@ConditionalOnClass({ DispatcherServlet.class })
+		@ConditionalOnMissingClass("com.alibaba.csp.sentinel.SphU")
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@Configuration
+		protected static class ApiResponseExceptionHandlerAutoConfiguration {
+			@Bean
+			public ApiResponseExceptionHandler apiResponseExceptionHandler() {
+				log.info("commons init bean of ApiResponseExceptionHandler");
+				return new ApiResponseExceptionHandler();
+			}
 		}
 	}
 
@@ -168,7 +168,7 @@ public class CommonsWebAutoConfiguration {
 	@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 			"org.glassfish.jersey.servlet.ServletContainer" })
 	@Configuration
-	protected static class WebFilterAutoConfiguration {
+	protected static class WebFluxAutoConfiguration {
 
 		/**
 		 * 暂无Flux的CacheRequestBody
@@ -197,9 +197,8 @@ public class CommonsWebAutoConfiguration {
 		 * 暂不实现 GatewayPreAuthenticatedAuthenticationWebFilter，因为webflux是异步的，身份信息跨线程不适合
 		 */
 
+		/**
+		 * 暂无Flux的ExceptionHandler
+		 */
 	}
-
-	/**
-	 * 暂无Flux的ExceptionHandler
-	 */
 }
