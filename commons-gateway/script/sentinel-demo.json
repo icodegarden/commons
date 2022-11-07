@@ -1,0 +1,75 @@
+{
+	"paramFlows": [{
+			"resource": "identityParamFlow",
+			"count": 30,
+			"paramIdx":0,
+			"grade":1,
+			"durationInSec":3,
+			"limitApp": "default",
+			"clusterMode":true,
+			"clusterConfig":{
+				"flowId":2010001,
+				"thresholdType":1,
+				"fallbackToLocalWhenFail":true
+			}			
+		}
+	],
+	"flows": [{
+			"resource": "admin_route",
+			"count": 20,
+			"grade": 1,
+			"limitApp": "default",
+			"clusterMode":true,
+			"clusterConfig":{
+				"flowId":2000001,
+				"thresholdType":1
+			}			
+		},
+		{
+			"resource": "manage_route",
+			"count": 20,
+			"grade": 1,
+			"limitApp": "default",
+			"clusterMode":true,
+			"clusterConfig":{
+				"flowId":2000002,
+				"thresholdType":1
+			}		
+		}
+	],
+	"degrades": [{
+			"resource": "admin_route",
+			"grade": 0,
+			"count": 400,
+			"timeWindow": 10,
+			"slowRatioThreshold": 0.5,
+			"minRequestAmount": 2,
+			"statIntervalMs": 30000
+		},
+		{
+			"resource": "admin_route",
+			"grade": 1,
+			"count": 0.5,
+			"timeWindow": 10,
+			"minRequestAmount": 4,
+			"statIntervalMs": 30000
+		},
+		{
+			"resource": "manage_route",
+			"grade": 0,
+			"count": 400,
+			"timeWindow": 10,
+			"slowRatioThreshold": 0.5,
+			"minRequestAmount": 2,
+			"statIntervalMs": 30000
+		},
+		{
+			"resource": "manage_route",
+			"grade": 1,
+			"count": 0.5,
+			"timeWindow": 10,
+			"minRequestAmount": 4,
+			"statIntervalMs": 30000
+		}
+	]
+}

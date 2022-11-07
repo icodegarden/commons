@@ -51,7 +51,7 @@
 		<module>commons-kafka</module>
 		<module>commons-nio</module>
 		<module>commons-springboot</module>
-		<module>commons-apigateway</module>
+		<module>commons-gateway</module>
 		<module>commons-redis</module>
 		<module>commons-shardingsphere</module>
 		<module>commons-hbase</module>

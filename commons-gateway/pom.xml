@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+	<parent>
+		<groupId>io.github.icodegarden</groupId>
+		<artifactId>commons</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+    <artifactId>commons-gateway</artifactId>
+	<name>${project.artifactId}</name>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <spring-cloud.version>2021.0.3</spring-cloud.version>
+        <spring-cloud-alibaba.version>2021.0.1.0</spring-cloud-alibaba.version>
+    </properties>
+
+    <dependencies>
+    	<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-springboot_2.5.5</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+		  	<groupId>com.alibaba.csp</groupId>
+		  	<artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
+		  	<version>1.8.5</version>
+		</dependency>
+		<!-- 不需要引入，试过引入也没异常，就像应用服务一样，但为了保持干净不用引入
+		<dependency>
+		  	<groupId>com.alibaba.cloud</groupId>
+		  	<artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+		  	<version>2021.0.1.0</version>
+		</dependency>-->
+		<dependency>
+			<groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+            <version>1.8.5</version>
+        </dependency>
+		<dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-transport-simple-http</artifactId>
+            <version>1.8.5</version>
+        </dependency>
+        <dependency>
+			<groupId>com.alibaba.csp</groupId>
+			<artifactId>sentinel-cluster-client-default</artifactId>
+			<version>1.8.5</version>
+		</dependency>	
+    
+        <dependency>
+      		<groupId>org.springframework.cloud</groupId>
+     	 	<artifactId>spring-cloud-starter-gateway</artifactId>
+    	</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-starter-bootstrap</artifactId>
+		</dependency>
+		<dependency>
+	        <groupId>org.springframework.cloud</groupId>
+	        <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+	    </dependency><!-- 必须的，否则503 -->
+	    <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency><!-- 网关需要管理认证授权 -->
+		
+		<dependency>
+			<groupId>com.alibaba.cloud</groupId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        
+        <dependency>
+		    <groupId>com.auth0</groupId>
+		    <artifactId>java-jwt</artifactId>
+		    <version>3.18.3</version>
+		</dependency>
+		
+        <dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+			<dependency>
+	            <groupId>org.springframework.boot</groupId>
+	            <artifactId>spring-boot-dependencies</artifactId>
+	            <version>2.7.3</version>
+	            <type>pom</type>
+	            <scope>import</scope>
+	        </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>5.7.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

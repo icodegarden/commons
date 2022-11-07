@@ -1,0 +1,102 @@
+spring:
+  cloud:
+    gateway:   
+      default-filters:   #不用修改，放在这里是因为api也有一个不同的配置
+      - RemoveRequestHeader=X-Internal-Rpc
+      - RemoveRequestHeader=Authorization        
+      - name: CacheRequestBody
+        args:
+          bodyClass: io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody
+      routes:
+#--------------------------------------------------------------------------------------      
+      - id: metadatas_system_route
+        uri: lb://gddc-admin
+        predicates:
+        - Path=/openapi/v1/biz/methods
+        - BodyMethod=consumer.metadata.system
+        filters: 
+        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/system
+      - id: metadatas_kafka_route
+        uri: lb://gddc-admin
+        predicates:
+        - Path=/openapi/v1/biz/methods
+        - BodyMethod=consumer.metadata.kafka
+        filters: 
+        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/kafka  
+      - id: metadatas_datafilters_route
+        uri: lb://gddc-admin
+        predicates:
+        - Path=/openapi/v1/biz/methods
+        - BodyMethod=consumer.metadata.datafilters
+        filters: 
+        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/datafilters  
+        
+      - id: vehicle_data_requestResend_route
+        uri: lb://gddc-esb
+        predicates:
+        - Path=/openapi/v1/biz/methods
+        - BodyMethod=vehicle.data.requestResend
+        filters: 
+        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/vehicleDatas/requestResend
+      - id: software_url_receive_route
+        uri: lb://gddc-ota
+        predicates:
+        - Path=/openapi/v1/biz/methods
+        - BodyMethod=software.url.receive
+        filters: 
+        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/updateSoftwareVbfUrl        
+#--------------------------------------------------------------------------------------
+      - id: route_tc
+        uri: lb://gddc-tc
+        predicates:  #这些是原OTA对接TC的，由于接口规范没有按照正式文档来，因此在gddc里网关只做转发，验签有gddc-tc自己处理
+        - Path=/openapi/v1/bss/sync,/openapi/v1/bss/state,/openapi/v1/softwareParts/sync           
+        
+    sentinel: #sentinel-springcloud的自动配置
+      transport:
+        port: 8719
+        dashboard: localhost:8858           
+
+commons:
+  sentinel: 
+    cluster:
+      enabled: true
+      serverAddr: localhost
+      serverPort: 11111
+    nacos:
+      dynamicRuleGroupId: Sentinel          
+  gateway:
+    security: #CommonsGatewaySecurityProperties.java
+      appKey:
+        headerAppKey: true
+        apps:
+        - appId: dev_sample_appid
+          appKey: dev_sample_appkey
+          appName: 演示消费者系统
+          methods:
+          - consumer.metadata.system
+          - consumer.metadata.kafka
+          - consumer.metadata.datafilters
+            
+        - appId: dev_ota_cn_appid
+          appKey: 100ota-cn001
+          appName: 开发环境OTA中国
+          methods:
+          - consumer.metadata.system
+          - consumer.metadata.kafka
+          - consumer.metadata.datafilters
+          - vehicle.data.requestResend
+          - software.url.receive    
+          
+        - appId: dev_ota_eu_appid
+          appKey: 200ota-eu002
+          appName: 开发环境OTA欧洲
+          methods:
+          - consumer.metadata.system
+          - consumer.metadata.kafka
+          - consumer.metadata.datafilters
+          - vehicle.data.requestResend
+          - software.url.receive    
+       
+                   
+
+
