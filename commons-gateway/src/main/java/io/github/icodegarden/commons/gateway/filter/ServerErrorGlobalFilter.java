@@ -27,6 +27,7 @@ import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCod
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
+import io.github.icodegarden.commons.lang.util.ExceptionUtils;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -42,19 +43,6 @@ public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
 	private static final Charset CHARSET = Charset.forName("utf-8");
 	
 	private static final String CLIENT_LIMITED_LOG_MODULE = "Client-Limited Sentinel";
-	
-	//TODO common
-	private @Nullable BlockException causeBlockException(Throwable t) {
-		int counter = 0;
-		Throwable cause = t;
-		while (cause != null && counter++ < 10) {
-			if (cause instanceof BlockException) {
-				return (BlockException) cause;
-			}
-			cause = cause.getCause();
-		}
-		return null;
-	}
 	
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -82,9 +70,8 @@ public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
 		});
 	}
 	
-	//TODO common
 	private ErrorCodeException toErrorCodeExceptionIfBlockException(Throwable t) {
-		BlockException e = causeBlockException(t);
+		BlockException e = ExceptionUtils.causeOf(t, BlockException.class);
 		if(e != null) {
 			ErrorCodeException ece = null;
 			/**

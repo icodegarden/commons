@@ -19,8 +19,9 @@
 * NioClientPool优化
 
 # 1.0.0
-* 增加dao系列接口（mybatis、hbase、elasticsearch）
+* 增加gateway模块
 * 增加elasticsearch模块
+* 增加dao系列接口（mybatis、hbase、elasticsearch）
 * 增加springboot模块支持sentinel
 * 增加FlowTagLoadBalancer负载均衡
 

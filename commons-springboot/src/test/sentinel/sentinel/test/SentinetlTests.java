@@ -50,7 +50,7 @@ class SentinetlTests {
 			} catch (FlowException e) {
 				System.out.println("3----" + e.getRule().getResource());
 			} catch (DegradeException e) {
-				// TODO 熔断降级 参考aop demo
+				// 熔断降级 参考aop demo
 				System.out.println("4----" + e.getRule().getResource());
 			} catch (Exception e) {
 				System.out.println(e);// biz ex
