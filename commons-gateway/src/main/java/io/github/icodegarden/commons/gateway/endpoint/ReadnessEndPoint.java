@@ -1,19 +1,16 @@
-package io.github.icodegarden.commons.gateway.controller;
+package io.github.icodegarden.commons.gateway.endpoint;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.cloud.gateway.route.RouteLocator;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewayPropertiesConstants;
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.CorePublisher;
-import reactor.core.publisher.Mono;
 
 /**
  * 单独设置一个readness的接口，网关一旦接收到shutdown命令或容器触发shutdown等，spring Lifecycle 就对
@@ -23,9 +20,9 @@ import reactor.core.publisher.Mono;
  * @author Fangfang.Xu
  *
  */
-@RestController
+@Endpoint(id = "readness", enableByDefault = true)
 @Slf4j
-public class ReadnessController implements GracefullyShutdown {
+public class ReadnessEndPoint implements GracefullyShutdown {
 
 	private volatile boolean closed;
 
@@ -39,15 +36,19 @@ public class ReadnessController implements GracefullyShutdown {
 		GracefullyShutdown.Registry.singleton().register(this);
 	}
 
-	@GetMapping("readness")
-	public ResponseEntity<CorePublisher<String>> readness() {
+	/**
+	 * FIXME 最好能响应403，目前没找到方法所以抛异常来响应500，这样有点不友好，日志平台会有一些ERROR日志
+	 */
+	@ReadOperation
+	public String readness() {
 		if (closed) {
-			return ResponseEntity.status(403).body(Mono.just("server closed"));
+			throw new IllegalStateException("Server Closed");
+//			return ResponseEntity.status(403).body(Mono.just("server closed"));
 		}
 
 		this.routeLocator.getRoutes().subscribe();
 
-		return ResponseEntity.ok(Mono.just(""));
+		return "";
 	}
 
 	@Override

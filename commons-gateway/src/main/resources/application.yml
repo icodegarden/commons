@@ -1,7 +1,7 @@
 ---
 #management.server.address: 127.0.0.1
 #management.endpoint.shutdown.enabled: true
-management.endpoints.web.exposure.include: health
+management.endpoints.web.exposure.include: health,readness
 
 commons.web.webfilter.processingRequestCount.enabled: false #网关不需要这个
 

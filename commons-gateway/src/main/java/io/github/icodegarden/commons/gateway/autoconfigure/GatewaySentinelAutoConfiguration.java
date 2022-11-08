@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.configuration;
+package io.github.icodegarden.commons.gateway.autoconfigure;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(value = "commons.gateway.sentinel.support.enabled", havingValue = "true", matchIfMissing = true)
 @Configuration
 @Slf4j
-public class GatewaySentinelConfiguration {
+public class GatewaySentinelAutoConfiguration {
 
 	/**
 	 * 只需这个，无需SentinelGatewayBlockExceptionHandler，由 ServerErrorGlobalFilter

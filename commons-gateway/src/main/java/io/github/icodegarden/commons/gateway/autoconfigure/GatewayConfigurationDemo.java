@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.configuration;
+package io.github.icodegarden.commons.gateway.autoconfigure;
 //package com.geely.gddc.apigateway.configuration;
 //
 //import java.util.Arrays;

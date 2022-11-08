@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.configuration;
+package io.github.icodegarden.commons.gateway.autoconfigure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 //@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Slf4j
-public class GatewaySecurityConfiguration {
+public class GatewaySecurityAutoConfiguration {
 	
     @Autowired
 	private CommonsGatewaySecurityProperties securityProperties;
@@ -67,19 +67,7 @@ public class GatewaySecurityConfiguration {
         	authorizeExchangeSpecConfigurer.config(authorizeExchangeSpec);
         }else {
         	log.info("gateway security AuthorizeExchangeSpecConfigurer not exist, do config default");
-        	authorizeExchangeSpec
-        	.pathMatchers("/*/openapi/**").authenticated()
-        	.pathMatchers("/*/api/**").authenticated()
-            .pathMatchers("/*/internalapi/**").authenticated()
-            .pathMatchers("/*/login/**").permitAll()
-            .pathMatchers("/*/authenticate/**").permitAll()
-            .pathMatchers("/anonymous/**").permitAll()
-            .pathMatchers("/*/anonymous/**").permitAll()
-            .pathMatchers("/swagger*/**").permitAll()
-            .pathMatchers("/*/swagger*/**").permitAll()
-            .pathMatchers("/*/v3/api-docs/**").permitAll()
-            .pathMatchers("/readness/**").permitAll()
-            .anyExchange().authenticated();
+        	AuthorizeExchangeSpecConfigurer.configDefault(authorizeExchangeSpec);
         }
         
 		WebFilter webFilter;
@@ -108,7 +96,42 @@ public class GatewaySecurityConfiguration {
     
     public static interface AuthorizeExchangeSpecConfigurer {
 
-    	void config(AuthorizeExchangeSpec spec);
+    	public static void configDefault(AuthorizeExchangeSpec authorizeExchangeSpec) {
+    		authorizeExchangeSpec
+    		/**
+    		 * api系列
+    		 */
+        	.pathMatchers("/openapi/**").authenticated()
+        	.pathMatchers("/*/api/**").authenticated()
+            .pathMatchers("/*/internalapi/**").authenticated()
+            /**
+             * 登录认证
+             */
+            .pathMatchers("/*/login/**").permitAll()
+            .pathMatchers("/*/authenticate/**").permitAll()
+            /**
+             * 匿名
+             */
+            .pathMatchers("/anonymous/**").permitAll()
+            .pathMatchers("/*/anonymous/**").permitAll()
+            /**
+             * swagger
+             */
+            .pathMatchers("/swagger*/**").permitAll()
+            .pathMatchers("/*/swagger*/**").permitAll()
+            .pathMatchers("/*/v3/api-docs/**").permitAll()
+            /**
+             * spring actuator endpoint<br>
+             * 包括自定义的/actuator/readness
+             */
+            .pathMatchers("/actuator/**").permitAll()
+            /**
+             * 其他
+             */
+            .anyExchange().authenticated();
+    	}
+    	
+    	void config(AuthorizeExchangeSpec authorizeExchangeSpec);
     }
     
     private class NoOpWebFilter implements WebFilter {
