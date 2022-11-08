@@ -145,6 +145,13 @@
 						</exclude>
 					</excludes>
 				</configuration>
+<!-- 				<executions> -->
+<!-- 					<execution> -->
+<!-- 						<goals> -->
+<!-- 							<goal>repackage</goal>使用springboot dependencyManagement时需要 -->
+<!-- 						</goals> -->
+<!-- 					</execution> -->
+<!-- 				</executions> -->
 			</plugin>
 		</plugins>
 	</build>
