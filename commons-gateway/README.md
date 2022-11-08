@@ -9,4 +9,5 @@
 * GatewaySecurityConfiguration.java 可配是否启用该类和配置参数
 * GatewaySentinelConfiguration.java 可配是否启用该类和配置参数
 
-
+# FQA
+* spring gateway中使用controller的并发线程受cpu线程数影响（例如2线程的cpu只能并发处理2个，未找到可配项），但使用endpoint则无此问题（效果跟请求下游服务一样）

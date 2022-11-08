@@ -9,7 +9,6 @@ import javax.validation.constraints.NotEmpty;
 import org.springframework.cloud.gateway.handler.predicate.AbstractRoutePredicateFactory;
 import org.springframework.cloud.gateway.handler.predicate.GatewayPredicate;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -20,7 +19,6 @@ import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
  * @author Fangfang.Xu
  *
  */
-@Component
 public class BodyMethodRoutePredicateFactory
 		extends AbstractRoutePredicateFactory<BodyMethodRoutePredicateFactory.Config> {
 
