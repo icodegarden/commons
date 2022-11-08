@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.springboot.configuration;
+package io.github.icodegarden.commons.springboot.autoconfigure;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.client.ServiceInstance;

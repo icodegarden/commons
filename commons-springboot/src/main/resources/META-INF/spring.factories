@@ -1,0 +1,10 @@
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsBeanAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsCacheAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsFeignAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsLoadBalancerAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsMybatisAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsRedisAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsSentinelAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsWebAutoConfiguration

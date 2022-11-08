@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.springboot.configuration;
+package io.github.icodegarden.commons.springboot.autoconfigure;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;

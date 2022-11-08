@@ -33,14 +33,6 @@ spring:
         port: 8719
         dashboard: localhost:8858    
         
-commons:
-  sentinel: 
-    cluster:
-      enabled: true
-      serverAddr: localhost
-      serverPort: 11111      
-
-
 feign:
   sentinel:
     enabled: true #默认false
@@ -50,8 +42,12 @@ feign:
         connectTimeout: 500
         readTimeout: 3000
 
-
 commons:
+  sentinel: 
+    cluster:
+      enabled: true
+      serverAddr: localhost
+      serverPort: 11111      
   mybatis:
     mapperScan:
       basePackages: io.github.icodegarden.commons.test.web
@@ -60,6 +56,7 @@ commons:
       host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com
       port: 6379
       password: Aa@653210000  
+
 
 
 

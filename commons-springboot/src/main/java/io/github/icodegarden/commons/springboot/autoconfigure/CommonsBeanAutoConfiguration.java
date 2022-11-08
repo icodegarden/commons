@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.springboot.configuration;
+package io.github.icodegarden.commons.springboot.autoconfigure;
 
 import java.sql.Connection;
 

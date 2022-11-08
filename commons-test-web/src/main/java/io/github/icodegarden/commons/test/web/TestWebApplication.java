@@ -8,8 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Fangfang.Xu
  *
  */
-@SpringBootApplication(scanBasePackages = { "io.github.icodegarden.commons.test.web",
-		"io.github.icodegarden.commons.springboot.configuration" })
+@SpringBootApplication
 public class TestWebApplication {
 
 	public static void main(String[] args) {

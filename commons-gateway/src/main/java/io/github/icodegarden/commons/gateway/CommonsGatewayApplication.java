@@ -12,8 +12,7 @@ import reactor.netty.ReactorNetty;
  * @author Fangfang.Xu
  *
  */
-@SpringBootApplication(scanBasePackages = { "io.github.icodegarden.commons.gateway",
-		"io.github.icodegarden.commons.springboot.configuration" })
+@SpringBootApplication
 @Slf4j
 public class CommonsGatewayApplication {
 
