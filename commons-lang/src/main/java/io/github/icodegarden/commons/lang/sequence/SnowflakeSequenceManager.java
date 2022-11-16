@@ -22,12 +22,12 @@ public class SnowflakeSequenceManager implements SequenceManager {
 	private final static long DATACENTER_LEFT = SEQUENCE_BIT + MACHINE_BIT;
 	private final static long TIMESTMP_LEFT = DATACENTER_LEFT + DATACENTER_BIT;
 
-	private long datacenterId;
-	private long machineId;
-	private long sequence = 0L;// 本时间戳的seq 例如0-4096
-	private long lastStmp = -1L;
+	private final long datacenterId;
+	private final long machineId;
+	private volatile long sequence = 0L;// 本时间戳的seq 例如0-4095
+	private volatile long lastStmp = -1L;
 
-	private long currentId = -1;
+	private volatile long currentId = -1;
 
 	public SnowflakeSequenceManager(long datacenterId, long machineId) {
 		if (datacenterId > MAX_DATACENTER_NUM || datacenterId < 0) {
@@ -65,9 +65,10 @@ public class SnowflakeSequenceManager implements SequenceManager {
 		}
 
 		lastStmp = currStmp;
-
-		return currentId = (currStmp - START_STMP) << TIMESTMP_LEFT | datacenterId << DATACENTER_LEFT
+		
+		currentId = (currStmp - START_STMP) << TIMESTMP_LEFT | datacenterId << DATACENTER_LEFT
 				| machineId << MACHINE_LEFT | sequence;
+		return currentId;
 	}
 
 	private long getNextMill() {

@@ -8,7 +8,7 @@ import java.util.List;
  * @author Fangfang.Xu
  *
  */
-public class ClientParameterMissingErrorCodeException extends ErrorCodeException {
+public class ClientParameterMissingErrorCodeException extends ClientErrorCodeException {
 	private static final long serialVersionUID = 1L;
 
 	public static final List<String> KEYWORDS = Arrays.asList("Missing");

@@ -5,7 +5,7 @@ package io.github.icodegarden.commons.lang.spec.response;
  * @author Fangfang.Xu
  *
  */
-public class ClientPermissionErrorCodeException extends ErrorCodeException {
+public class ClientPermissionErrorCodeException extends ClientErrorCodeException {
 	private static final long serialVersionUID = 1L;
 
 	public static final String CODE = "40006";
