@@ -41,4 +41,28 @@ public class CommonsKafkaAutoConfiguration {
 		return new ReliabilityProducer<>(props);
 	}
 
+	/**
+	 * 适用于单元测试，因为单元测试一般无需真实的生产消息
+	 */
+	@ConditionalOnClass(name = { "org.junit.jupiter.api.Test" })
+	@ConditionalOnProperty(value = "commons.kafka.reliability.producer.noOp.enabled", havingValue = "true", matchIfMissing = true)
+	@Bean
+	public ReliabilityProducer<String, String> reliabilityProducer4Test(CommonsKafkaProperties commonsKafkaProperties) {
+		log.info("commons init bean of reliabilityProducer4Test");
+
+		Producer producer = commonsKafkaProperties.getProducer();
+
+		Properties props = new Properties();
+		props.put("bootstrap.servers", commonsKafkaProperties.getBootstrapServers());
+		props.put("key.serializer", producer.getKeySerializer());
+		props.put("value.serializer", producer.getValueSerializer());
+		props.putAll(producer.getProps());
+
+		return new ReliabilityProducer<String, String>(props) {
+			public org.apache.kafka.clients.producer.RecordMetadata sendSync(
+					org.apache.kafka.clients.producer.ProducerRecord record) {
+				return null;
+			}
+		};
+	}
 }

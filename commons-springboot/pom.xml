@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-springboot_2.5.5</artifactId>
@@ -17,18 +17,19 @@
 		<java.version>1.8</java.version>
 		<spring-cloud.version>2020.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.1</spring-cloud-alibaba.version>
+        
 	</properties>
 	
 	<dependencies>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-mybatis</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
@@ -40,32 +41,38 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-redis</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-elasticsearch</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-hbase</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-kafka</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-zookeeper</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+		  	<groupId>io.github.icodegarden</groupId>
+		  	<artifactId>wing-core</artifactId>
+		  	<version>${wing-version}</version>
+		  	<optional>true</optional>
 		</dependency>
 		
 		<!-- 7和8 2选1 -->
