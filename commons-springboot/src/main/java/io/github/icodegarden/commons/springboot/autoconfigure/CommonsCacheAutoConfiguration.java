@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
+@AutoConfigureAfter(CommonsRedisAutoConfiguration.class)
 @Configuration
 @Slf4j
 public class CommonsCacheAutoConfiguration {
