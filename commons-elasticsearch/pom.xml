@@ -82,6 +82,7 @@
 		    <version>7.7.1</version>
 		    <optional>true</optional>
 		</dependency>
+		<!-- 7和8 2选1 -->
 		
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

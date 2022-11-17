@@ -17,8 +17,8 @@ import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer
  */
 public class CommonsLoadBalancerClientConfiguration {
 
-	@Bean
 	@ConditionalOnMissingBean
+	@Bean
 	public ReactorLoadBalancer<ServiceInstance> flowTagLoadBalancer(Environment environment,
 			LoadBalancerClientFactory loadBalancerClientFactory) {
 		String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);

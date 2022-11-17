@@ -21,6 +21,10 @@ import org.slf4j.LoggerFactory;
 import io.github.icodegarden.commons.zookeeper.exception.ConnectTimeoutZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ExceedExpectedZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ZooKeeperException;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * 
@@ -309,45 +313,30 @@ public class ZooKeeperHolder implements Closeable {
 		}
 	}
 
+	@Setter
+	@Getter
+	@ToString
 	public static class Config {
-		private final String connectString;
-		private final int sessionTimeout;
-		private final int connectTimeout;
+		@NonNull
+		private String connectString;//127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
+		@NonNull
+		private Integer sessionTimeout;
+		@NonNull
+		private Integer connectTimeout;
+
 		private String aclAuth;
 
-		public Config(String connectString, int sessionTimeout, int connectTimeout) {
+		public Config() {
+
+		}
+
+		public Config(String connectString, Integer sessionTimeout, Integer connectTimeout) {
 			if (connectString == null || connectString.isEmpty()) {
 				throw new IllegalArgumentException("connectString must not empty");
 			}
 			this.connectString = connectString;
 			this.sessionTimeout = sessionTimeout;
 			this.connectTimeout = connectTimeout;
-		}
-
-		public String getAclAuth() {
-			return aclAuth;
-		}
-
-		public void setAclAuth(String aclAuth) {
-			this.aclAuth = aclAuth;
-		}
-
-		public String getConnectString() {
-			return connectString;
-		}
-
-		public int getSessionTimeout() {
-			return sessionTimeout;
-		}
-
-		public int getConnectTimeout() {
-			return connectTimeout;
-		}
-
-		@Override
-		public String toString() {
-			return "Config [connectString=" + connectString + ", sessionTimeout=" + sessionTimeout + ", connectTimeout="
-					+ connectTimeout + ", aclAuth=" + aclAuth + "]";
 		}
 
 	}

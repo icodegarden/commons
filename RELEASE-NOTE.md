@@ -29,4 +29,6 @@
 * 优化ZooKeeperHolder重连保障
 * 优化AbstractExceptionHandler
 
+# 1.1.0
+* springboot模块增加elasticsearch、hbase、kafka、zookeeper的AutoConfiguration
 

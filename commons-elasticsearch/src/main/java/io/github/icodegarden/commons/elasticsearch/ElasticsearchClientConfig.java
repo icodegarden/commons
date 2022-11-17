@@ -60,7 +60,7 @@ import lombok.ToString;
 public class ElasticsearchClientConfig {
 
 	@NonNull
-	private final String httpHosts;// http://172.22.122.21:9200,http://172.22.122.?:9200
+	private String httpHosts;// http://172.22.122.21:9200,http://172.22.122.?:9200
 
 	private String username;
 	private String password;
@@ -74,6 +74,9 @@ public class ElasticsearchClientConfig {
 	private int maxConnTotal = 20;// default 20 , 总和,对一个HttpClient对象而言
 	private Sniffer sniffer = new Sniffer();
 
+	public ElasticsearchClientConfig() {
+	}
+	
 	public ElasticsearchClientConfig(String httpHosts) {
 		this.httpHosts = httpHosts;
 	}

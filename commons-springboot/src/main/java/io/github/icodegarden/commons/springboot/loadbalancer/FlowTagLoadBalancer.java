@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
  * 
  * 默认的metadataTagName是tag.flow<br>
  * 默认的flowTagProvider是从request中获取header=X-Flow-Tag的值<br>
- * 默认的l2LoadBalancer是轮询<br>
+ * 默认的L2 LoadBalancer是轮询<br>
  * 
  * @author Fangfang.Xu
  */

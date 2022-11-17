@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +31,9 @@ import redis.clients.jedis.JedisPool;
 @Configuration
 @Slf4j
 public class CommonsRedisAutoConfiguration {
-
+	
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
 	@Bean
 	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
 		log.info("commons init bean of RedisExecutor");

@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- *
+ * 可以直接使用该类，因此这里含With
  * @author Fangfang.Xu
  *
  */
@@ -24,6 +24,10 @@ public class HBaseQuery<W> extends BaseQuery {
 
 	public HBaseQuery() {
 		super(1, DEFAULT_PAGE_SIZE, null);
+	}
+	
+	public HBaseQuery(int page, int size, String orderBy) {
+		super(page, size, orderBy);
 	}
 	
 	public HBaseQuery(int page, int size, String orderBy, String searchAfter, String searchBefore, W with) {

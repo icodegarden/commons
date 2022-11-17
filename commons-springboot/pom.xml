@@ -43,6 +43,81 @@
 			<version>1.0.0</version>
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-elasticsearch</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-hbase</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-kafka</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-zookeeper</artifactId>
+			<version>1.0.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		
+		<!-- 7和8 2选1 -->
+		<!-- v8 -->
+		<dependency>
+	      	<groupId>co.elastic.clients</groupId>
+	      	<artifactId>elasticsearch-java</artifactId>
+	      	<version>8.4.2</version>
+	      	<optional>true</optional>
+   	 	</dependency>
+   	 	<dependency>
+	      	<groupId>org.elasticsearch.client</groupId>
+		  	<artifactId>elasticsearch-rest-client</artifactId>
+		  	<version>8.4.2</version><!-- 防止被spring版本覆盖 -->
+		  	<optional>true</optional>
+   	 	</dependency>
+		<dependency>
+		    <groupId>jakarta.json</groupId>
+		    <artifactId>jakarta.json-api</artifactId>
+		    <version>2.1.1</version>
+		    <optional>true</optional>
+		</dependency>
+		
+		<!-- v7 -->
+		<dependency>
+		    <groupId>org.elasticsearch</groupId>
+		    <artifactId>elasticsearch</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		<!--
+        <dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		上面同名的v8兼容v7 
+		-->
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client-sniffer</artifactId>
+		    <version>7.7.1</version>
+		    <optional>true</optional>
+		</dependency>
+		<!-- 7和8 2选1 -->
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

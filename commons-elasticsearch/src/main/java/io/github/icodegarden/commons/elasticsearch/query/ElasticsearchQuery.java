@@ -10,7 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- *
+ * 可以直接使用该类，因此这里含With
  * @author Fangfang.Xu
  *
  */
@@ -45,6 +45,10 @@ public class ElasticsearchQuery<W> extends BaseQuery {
 	
 	public ElasticsearchQuery() {
 		super(1, DEFAULT_PAGE_SIZE, null);
+	}
+	
+	public ElasticsearchQuery(int page, int size, String orderBy) {
+		super(page, size, orderBy);
 	}
 
 	public ElasticsearchQuery(int page, int size, String orderBy, Map<String, Object> terms,
