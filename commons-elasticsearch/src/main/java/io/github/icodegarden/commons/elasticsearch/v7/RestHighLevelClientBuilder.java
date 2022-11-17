@@ -29,10 +29,9 @@ import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
  * @author Fangfang.Xu
  *
  */
+class RestHighLevelClientBuilder {
 
-public class RestHighLevelClientBuilder {
-
-	public static RestHighLevelClient buildRestHighLevelClient(ElasticsearchClientConfig esProperties) {
+	static RestHighLevelClient buildRestHighLevelClient(ElasticsearchClientConfig esProperties) {
 		if (esProperties.getHttpHosts() == null) {
 			throw new IllegalArgumentException("es httpHosts must be not empty");
 		}

@@ -56,8 +56,18 @@ commons:
       host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com
       port: 6379
       password: Aa@653210000  
-
-
+  elasticsearch:
+    httpHosts: http://localhost:9200
+  hbase:
+    versionFrom: AliyunLindorm
+    hbaseZookeeperQuorum: ld-bp129w63278nrhys9-proxy-hbaseue.hbaseue.rds.aliyuncs.com:30020
+  kafka:
+    bootstrapServers: 127.0.0.1:9092
+    producer:
+      keySerializer: org.apache.kafka.common.serialization.StringSerializer
+      valueSerializer: org.apache.kafka.common.serialization.StringSerializer
+  zookeeper:
+    connectString: 127.0.0.1:2181      
 
 
 # 单个文件大小

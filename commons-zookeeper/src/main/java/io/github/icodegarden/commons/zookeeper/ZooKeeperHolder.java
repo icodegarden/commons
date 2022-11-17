@@ -17,7 +17,9 @@ import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
+import io.github.icodegarden.commons.lang.Validateable;
 import io.github.icodegarden.commons.zookeeper.exception.ConnectTimeoutZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ExceedExpectedZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ZooKeeperException;
@@ -316,13 +318,13 @@ public class ZooKeeperHolder implements Closeable {
 	@Setter
 	@Getter
 	@ToString
-	public static class Config {
+	public static class Config implements Validateable {
 		@NonNull
 		private String connectString;//127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
-		@NonNull
-		private Integer sessionTimeout;
-		@NonNull
-		private Integer connectTimeout;
+
+		private int sessionTimeout = 30000;
+		
+		private int connectTimeout = 3000;
 
 		private String aclAuth;
 
@@ -337,6 +339,11 @@ public class ZooKeeperHolder implements Closeable {
 			this.connectString = connectString;
 			this.sessionTimeout = sessionTimeout;
 			this.connectTimeout = connectTimeout;
+		}
+
+		@Override
+		public void validate() throws IllegalArgumentException {
+			Assert.hasText(connectString, "connectString must not empty");
 		}
 
 	}

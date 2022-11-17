@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientBuilder;
 import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
@@ -18,7 +19,7 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
  */
 public class DemoElasticsearchDaoTests {
 
-	ElasticsearchClient client = new ElasticsearchClientConfig("http://192.168.80.130:9200").buildElasticsearchClient();
+	ElasticsearchClient client = ElasticsearchClientBuilder.buildElasticsearchClient(new ElasticsearchClientConfig("http://192.168.80.130:9200"));
 	DemoElasticsearchDao dao = new DemoElasticsearchDao(client);
 
 	DemoPO newDemoPO() {

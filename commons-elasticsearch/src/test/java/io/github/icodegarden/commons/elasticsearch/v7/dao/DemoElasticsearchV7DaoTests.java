@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
 import io.github.icodegarden.commons.elasticsearch.dao.DemoPO;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
+import io.github.icodegarden.commons.elasticsearch.v7.ElasticsearchClientV7Builder;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 
 /**
@@ -19,7 +20,7 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
  */
 public class DemoElasticsearchV7DaoTests {
 
-	RestHighLevelClient client = new ElasticsearchClientConfig("http://172.22.122.21:9202").buildRestHighLevelClient();
+	RestHighLevelClient client = ElasticsearchClientV7Builder.buildRestHighLevelClient(new ElasticsearchClientConfig("http://172.22.122.21:9202"));
 	DemoElasticsearchV7Dao dao = new DemoElasticsearchV7Dao(client);
 
 	DemoPO newDemoPO() {

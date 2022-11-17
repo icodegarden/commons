@@ -28,6 +28,8 @@ public class CommonsZookeeperAutoConfiguration {
 	public ZooKeeperHolder zooKeeperHolder(CommonsZookeeperProperties commonsZookeeperProperties) {
 		log.info("commons init bean of ZooKeeperHolder");
 
+		commonsZookeeperProperties.validate();
+		
 		return new ZooKeeperHolder(commonsZookeeperProperties);
 	}
 

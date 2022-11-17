@@ -1,7 +1,10 @@
-package io.github.icodegarden.commons.elasticsearch.v7;
+package io.github.icodegarden.commons.elasticsearch;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -19,20 +22,34 @@ import org.elasticsearch.client.NodeSelector;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.sniff.SniffOnFailureListener;
 import org.springframework.util.StringUtils;
 
-import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-class SnifferRestHighLevelClientBuilder {
+public class ElasticsearchClientBuilder {
 
-	static RestHighLevelClient buildRestHighLevelClient(ElasticsearchClientConfig esProperties) {
+	public static ElasticsearchClient buildElasticsearchClient(ElasticsearchClientConfig esProperties) {
 		if (esProperties.getHttpHosts() == null) {
 			throw new IllegalArgumentException("es httpHosts must be not empty");
 		}
@@ -49,12 +66,12 @@ class SnifferRestHighLevelClientBuilder {
 			/**
 			 * 在使用云ES时，提供的是一个域名负载均衡地址（就像一个单节点地址），似乎应该把云ES的地址认为是一直可用
 			 */
-//		builder.setFailureListener(new RestClient.FailureListener() {
-//		    @Override
-//		    public void onFailure(Node node) {
-//		        log.error("node:{} was failed", node);
-//		    }
-//		});
+//			builder.setFailureListener(new RestClient.FailureListener() {
+//			    @Override
+//			    public void onFailure(Node node) {
+//			        log.error("node:{} was failed", node);
+//			    }
+//			});
 			builder.setNodeSelector(NodeSelector.ANY); // default
 			builder.setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
 				@Override
@@ -83,46 +100,58 @@ class SnifferRestHighLevelClientBuilder {
 							return keepAliveDuration;
 						}
 					});
-//				httpClientBuilder.setConnectionManager(connManager)
-//				httpClientBuilder.setConnectionReuseStrategy(reuseStrategy)
+//					httpClientBuilder.setConnectionManager(connManager)
+//					httpClientBuilder.setConnectionReuseStrategy(reuseStrategy)
 					httpClientBuilder.setMaxConnPerRoute(esProperties.getMaxConnPerRoute());
 					httpClientBuilder.setMaxConnTotal(esProperties.getMaxConnTotal());
-//				httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom().setIoThreadCount(1).build());
+//					httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom().setIoThreadCount(1).build());
 					return httpClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.custom()
 							.setIoThreadCount(Runtime.getRuntime().availableProcessors()/* default */).build());
 				}
 			});
 
-			ElasticsearchClientConfig.Sniffer snifferProps = esProperties.getSniffer();
-			if (snifferProps.isEnabled()) {
-				SniffOnFailureListener sniffOnFailureListener = new SniffOnFailureListener();
+			// Create the low-level client
+			RestClient restClient = builder.build();
 
-				builder.setFailureListener(sniffOnFailureListener);
+			// Create the transport with a Jackson mapper
+			ElasticsearchTransport transport = new RestClientTransport(restClient,
+					new JacksonJsonpMapper(newObjectMapper()));
+			// And create the API client
+			ElasticsearchClient client = new ElasticsearchClient(transport);
 
-				RestHighLevelClient client = new RestHighLevelClient(builder);
-				RestClient restClient = client.getLowLevelClient();
-
-//			ElasticsearchNodesSniffer nodesSniffer = new ElasticsearchNodesSniffer(restClient);
-//			NodesSniffer nodesSniffer = new NodesSniffer() {
-//				@Override
-//				public List<Node> sniff() throws IOException {
-//					return Arrays.asList(nodes);
-//				}
-//			};
-				org.elasticsearch.client.sniff.Sniffer sniffer = org.elasticsearch.client.sniff.Sniffer
-						.builder(restClient)
-						.setSniffIntervalMillis(snifferProps.getSniffIntervalMillis()/* by default every 5 minutes */)
-						.setSniffAfterFailureDelayMillis(snifferProps.getSniffAfterFailureDelayMillis())
-//					.setNodesSniffer(nodesSniffer)
-						.build();
-				sniffOnFailureListener.setSniffer(sniffer);
-				return client;
-			} else {
-				RestHighLevelClient client = new RestHighLevelClient(builder);
-				return client;
-			}
+			return client;
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+	private static ObjectMapper newObjectMapper() {
+		final DateTimeFormatter STANDARD_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		ObjectMapper om = new ObjectMapper();
+		om = new ObjectMapper();
+		om.setSerializationInclusion(Include.NON_NULL);
+		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		om.configure(SerializationFeature.FLUSH_AFTER_WRITE_VALUE, true);
+		om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+		JavaTimeModule timeModule = new JavaTimeModule();
+		timeModule.addSerializer(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+			@Override
+			public void serialize(LocalDateTime localDateTime, JsonGenerator jsonGenerator,
+					SerializerProvider serializerProvider) throws IOException {
+				jsonGenerator.writeString(STANDARD_DATETIME_FORMATTER.format(localDateTime));
+			}
+		});
+		timeModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+			@Override
+			public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+					throws IOException, JsonProcessingException {
+				String valueAsString = jsonParser.getValueAsString();
+				return LocalDateTime.parse(valueAsString, STANDARD_DATETIME_FORMATTER);
+			}
+		});
+		om.registerModule(timeModule);
+
+		return om;
 	}
 }

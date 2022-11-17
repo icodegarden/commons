@@ -1,8 +1,10 @@
 package io.github.icodegarden.commons.springboot.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.hbase.HBaseEnv;
+import io.github.icodegarden.commons.lang.Validateable;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -17,7 +19,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString(callSuper = true)
-public class CommonsHBaseProperties {
+public class CommonsHBaseProperties implements Validateable {
 
 	@NonNull
 	private HBaseEnv.VersionFrom versionFrom;
@@ -31,5 +33,11 @@ public class CommonsHBaseProperties {
 	 * 表名前缀
 	 */
 	private String namePrefix = "";
+	
+	@Override
+	public void validate() throws IllegalArgumentException {
+		Assert.notNull(versionFrom, "versionFrom must not null");
+		Assert.hasText(hbaseZookeeperQuorum, "hbaseZookeeperQuorum must not empty");
+	}
 
 }

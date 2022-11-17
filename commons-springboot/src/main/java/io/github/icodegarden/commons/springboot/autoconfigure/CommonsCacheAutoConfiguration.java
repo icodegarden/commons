@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
-@AutoConfigureAfter(CommonsRedisAutoConfiguration.class)
+@AutoConfigureAfter(CommonsRedisAutoConfiguration.class)//顺序依赖
 @Configuration
 @Slf4j
 public class CommonsCacheAutoConfiguration {

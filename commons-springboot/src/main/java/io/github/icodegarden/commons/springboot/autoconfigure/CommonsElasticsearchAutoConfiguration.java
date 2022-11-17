@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientBuilder;
 import io.github.icodegarden.commons.elasticsearch.ElasticsearchClientConfig;
+import io.github.icodegarden.commons.elasticsearch.v7.ElasticsearchClientV7Builder;
 import io.github.icodegarden.commons.springboot.properties.CommonsElasticsearchProperties;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +36,9 @@ public class CommonsElasticsearchAutoConfiguration {
 		public ElasticsearchClient elasticsearchClient(CommonsElasticsearchProperties commonsElasticsearchProperties) {
 			log.info("commons init bean of ElasticsearchClient");
 
-			return commonsElasticsearchProperties.buildElasticsearchClient();
+			commonsElasticsearchProperties.validate();
+			
+			return ElasticsearchClientBuilder.buildElasticsearchClient(commonsElasticsearchProperties);
 		}
 	}
 
@@ -47,8 +51,10 @@ public class CommonsElasticsearchAutoConfiguration {
 		@Bean
 		public RestHighLevelClient restHighLevelClient(CommonsElasticsearchProperties commonsElasticsearchProperties) {
 			log.info("commons init bean of RestHighLevelClient");
+			
+			commonsElasticsearchProperties.validate();
 
-			return commonsElasticsearchProperties.buildRestHighLevelClient();
+			return ElasticsearchClientV7Builder.buildRestHighLevelClient(commonsElasticsearchProperties);
 		}
 	}
 }

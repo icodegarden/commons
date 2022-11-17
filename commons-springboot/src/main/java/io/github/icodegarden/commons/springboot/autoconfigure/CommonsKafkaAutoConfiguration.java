@@ -28,8 +28,10 @@ public class CommonsKafkaAutoConfiguration {
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(value = "commons.kafka.reliability.producer.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
-	public ReliabilityProducer<String, String> reliabilityProducer(CommonsKafkaProperties commonsKafkaProperties) {
+	public ReliabilityProducer reliabilityProducer(CommonsKafkaProperties commonsKafkaProperties) {
 		log.info("commons init bean of ReliabilityProducer");
+		
+		commonsKafkaProperties.validate();
 
 		Producer producer = commonsKafkaProperties.getProducer();
 
@@ -47,7 +49,7 @@ public class CommonsKafkaAutoConfiguration {
 	@ConditionalOnClass(name = { "org.junit.jupiter.api.Test" })
 	@ConditionalOnProperty(value = "commons.kafka.reliability.producer.noOp.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
-	public ReliabilityProducer<String, String> reliabilityProducer4Test(CommonsKafkaProperties commonsKafkaProperties) {
+	public ReliabilityProducer reliabilityProducer4Test(CommonsKafkaProperties commonsKafkaProperties) {
 		log.info("commons init bean of reliabilityProducer4Test");
 
 		Producer producer = commonsKafkaProperties.getProducer();

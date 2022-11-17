@@ -24,6 +24,8 @@
 		<java.version>1.8</java.version>
 		<spring-cloud.version>2020.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.1</spring-cloud-alibaba.version>
+        <hbase.version>2.4.12</hbase.version>
+        
 		<maven.package.skip>true</maven.package.skip> 
 		<maven.install.skip>true</maven.install.skip>
 		<maven.deploy.skip>true</maven.deploy.skip> 
@@ -42,7 +44,27 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-elasticsearch</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-redis</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-hbase</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-kafka</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-zookeeper</artifactId>
 			<version>1.1.0</version>
 		</dependency>
 		<dependency>
@@ -59,7 +81,50 @@
             <artifactId>sentinel-datasource-nacos</artifactId>
             <version>1.8.5</version>
         </dependency>
-			
+        
+        <!-- 7和8 2选1 -->
+		<!-- v8 -->
+		<dependency>
+	      	<groupId>co.elastic.clients</groupId>
+	      	<artifactId>elasticsearch-java</artifactId>
+	      	<version>8.4.2</version>
+   	 	</dependency>
+   	 	<dependency>
+	      	<groupId>org.elasticsearch.client</groupId>
+		  	<artifactId>elasticsearch-rest-client</artifactId>
+		  	<version>8.4.2</version><!-- 防止被spring版本覆盖 -->
+   	 	</dependency>
+		<dependency>
+		    <groupId>jakarta.json</groupId>
+		    <artifactId>jakarta.json-api</artifactId>
+		    <version>2.1.1</version>
+		</dependency>
+		<!-- 7和8 2选1 -->
+		
+		
+		<!-- 原生hbase和alihabse存在个别的小冲突，需要2选1 -->
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-client</artifactId>
+			<version>${hbase.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.hbase</groupId>
+		    <artifactId>hbase-endpoint</artifactId>
+		    <version>${hbase.version}</version>
+		    <!-- 这会被hbase依赖的低版本覆盖，导致异常，不需要注释掉 -->
+			<exclusions>
+		    	<exclusion>
+		    		<groupId>javax.servlet</groupId>
+				  	<artifactId>servlet-api</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>com.zaxxer</groupId>
+   					<artifactId>HikariCP-java7</artifactId>
+		    	</exclusion>
+		    </exclusions>
+		</dependency>
+		
 		<dependency>
 		    <groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper-spring-boot-starter</artifactId>

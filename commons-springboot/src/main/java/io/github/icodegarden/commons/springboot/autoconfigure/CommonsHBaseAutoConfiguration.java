@@ -30,6 +30,8 @@ public class CommonsHBaseAutoConfiguration {
 	@Bean
 	public HBaseEnv hbaseEnv(CommonsHBaseProperties commonsHBaseProperties) {
 		log.info("commons init bean of HBaseEnv");
+		
+		commonsHBaseProperties.validate();
 
 		Properties properties = new Properties();
 		properties.setProperty("hbase.zookeeper.quorum", commonsHBaseProperties.getHbaseZookeeperQuorum());
