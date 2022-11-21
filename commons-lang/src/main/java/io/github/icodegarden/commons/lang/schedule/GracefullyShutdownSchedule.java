@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.lang.schedule;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public abstract class GracefullyShutdownSchedule implements GracefullyShutdown {
+public abstract class GracefullyShutdownSchedule implements GracefullyShutdown, Closeable {
 
 	private final ScheduledThreadPoolExecutor scheduleThreadPool = ThreadPoolUtils
 			.newSingleScheduledThreadPool(GracefullyShutdownSchedule.this.getClass().getSimpleName());
@@ -91,4 +93,8 @@ public abstract class GracefullyShutdownSchedule implements GracefullyShutdown {
 		}
 	}
 
+	@Override
+	public void close() throws IOException {
+		shutdown();
+	}
 }
