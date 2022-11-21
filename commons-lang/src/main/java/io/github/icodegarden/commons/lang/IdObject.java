@@ -7,4 +7,6 @@ package io.github.icodegarden.commons.lang;
 public interface IdObject<T> {
 
 	T getId();
+	
+	void setId(T id);
 }

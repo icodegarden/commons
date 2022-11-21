@@ -9,12 +9,14 @@ import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.search.SearchHit;
 
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.IdObject;
@@ -125,5 +127,25 @@ public abstract class GenericElasticsearchV7Dao<PO extends IdObject<String>, U e
 	@Override
 	protected String extractSearchAfter(DO obj) {
 		return obj.getId();
+	}
+	
+	@Override
+	protected DO extractResult(SearchHit hit) {
+		String json = hit.getSourceAsString();
+		DO one = JsonUtils.deserialize(json, getClassDO());
+		if(one.getId() == null) {
+			one.setId(hit.getId());
+		}
+		return one;
+	}
+	
+	@Override
+	protected DO extractResult(GetResponse getResponse) {
+		String json = getResponse.getSourceAsString();
+		DO one = JsonUtils.deserialize(json, getClassDO());
+		if(one.getId() == null) {
+			one.setId(getResponse.getId());
+		}
+		return one;
 	}
 }
