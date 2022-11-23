@@ -23,7 +23,7 @@ public abstract class LockSupportSchedule extends GracefullyShutdownSchedule {
 	}
 
 	@Override
-	protected void doSchedule() {
+	protected void doSchedule() throws Throwable {
 		if (lock.acquire(acquireLockTimeoutMillis)) {
 			try {
 				doScheduleAfterLocked();
@@ -37,7 +37,7 @@ public abstract class LockSupportSchedule extends GracefullyShutdownSchedule {
 		}
 	}
 
-	protected abstract void doScheduleAfterLocked();
+	protected abstract void doScheduleAfterLocked() throws Throwable;
 
 	@Override
 	public void shutdown() {

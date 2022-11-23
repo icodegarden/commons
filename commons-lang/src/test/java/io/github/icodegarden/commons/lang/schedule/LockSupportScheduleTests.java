@@ -24,7 +24,7 @@ public class LockSupportScheduleTests {
 		}
 
 		@Override
-		protected void doScheduleAfterLocked() {
+		protected void doScheduleAfterLocked() throws Throwable {
 			datas.clear();
 
 			synchronized (this) {

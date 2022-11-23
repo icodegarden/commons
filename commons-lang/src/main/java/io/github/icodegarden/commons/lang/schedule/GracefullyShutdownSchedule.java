@@ -61,7 +61,7 @@ public abstract class GracefullyShutdownSchedule implements GracefullyShutdown, 
 		return false;
 	}
 
-	protected abstract void doSchedule();
+	protected abstract void doSchedule() throws Throwable;
 
 	public void setLogmod(long logmod) {
 		this.logmod = logmod;
