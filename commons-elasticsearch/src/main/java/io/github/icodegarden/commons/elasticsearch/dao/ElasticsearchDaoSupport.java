@@ -2,6 +2,9 @@ package io.github.icodegarden.commons.elasticsearch.dao;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
+
+import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.Validateable;
@@ -58,6 +61,19 @@ public abstract class ElasticsearchDaoSupport<PO, U, Q extends ElasticsearchQuer
 		classU = (Class) actualTypeArguments[1];
 		classDO = (Class) actualTypeArguments[4];
 //		}
+	}
+	
+	/**
+	 * Foreach方式
+	 */
+	public int updateBatchForeach(Collection<U> updates) {
+		if (CollectionUtils.isEmpty(updates)) {
+			return 0;
+		}
+		for(U update:updates) {
+			update(update);
+		}
+		return updates.size();
 	}
 
 	public void setReadTimeoutMillis(int readTimeoutMillis) {

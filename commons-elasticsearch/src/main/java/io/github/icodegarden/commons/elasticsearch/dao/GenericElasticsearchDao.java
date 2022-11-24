@@ -58,6 +58,16 @@ public abstract class GenericElasticsearchDao<PO extends IdObject<String>, U ext
 	}
 
 	@Override
+	protected BulkRequest.Builder buildBulkRequestBuilderOnUpdateBatch(Collection<U> updates) {
+		List<BulkOperation> operations = updates.stream().map(update -> {
+			return new BulkOperation.Builder()
+					.update(b -> b.index(getIndex()).id(update.getId()).action(b2 -> b2.doc(update))).build();
+		}).collect(Collectors.toList());
+
+		return new BulkRequest.Builder().operations(operations);
+	}
+
+	@Override
 	protected SearchRequest.Builder buildSearchRequestBuilderOnFindAll(Q query) {
 		return new SearchRequest.Builder().index(getIndex());
 	}

@@ -40,7 +40,6 @@ public abstract class GracefullyShutdownSchedule implements GracefullyShutdown, 
 						if (log.isInfoEnabled() && allowLoopLog()) {
 							log.info("{} schedule run, loop:{}", this.getClass().getSimpleName(), loop);
 						}
-						loop++;
 
 						if (closed.get()) {
 							log.info("{} schedule was closed, stop", this.getClass().getSimpleName());
@@ -52,6 +51,8 @@ public abstract class GracefullyShutdownSchedule implements GracefullyShutdown, 
 						doSchedule();
 					} catch (Throwable e) {
 						log.warn("ex on {}", GracefullyShutdownSchedule.this.getClass().getSimpleName(), e);
+					} finally {
+						loop++;
 					}
 				}
 			}, initialDelayMillis, scheduleMillis, TimeUnit.MILLISECONDS);

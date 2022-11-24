@@ -127,6 +127,27 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 		}
 		return 1;
 	}
+	
+	/**
+	 * Bulk方式
+	 */
+	@Override
+	public int updateBatch(Collection<U> updates) {
+		if (CollectionUtils.isEmpty(updates)) {
+			return 0;
+		}
+
+		BulkRequest bulkRequest = buildBulkRequestOnUpdateBatch(updates);
+		try {
+			BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+			if (response.hasFailures()) {
+				throw new BulkResponseHasErrorV7Exception("updateBatch Bulk had errors", response);
+			}
+			return updates.size();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
 	private void doUpdate(String index, U update) throws ElasticsearchStatusException {
 		UpdateRequest updateRequest = buildUpdateRequestOnUpdate(update);
@@ -498,6 +519,8 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 	protected abstract BulkRequest buildBulkRequestOnAddBatch(Collection<PO> pos);
 
 	protected abstract UpdateRequest buildUpdateRequestOnUpdate(U update);
+	
+	protected abstract BulkRequest buildBulkRequestOnUpdateBatch(Collection<U> updates);
 
 	protected abstract SearchRequest buildSearchRequestOnFindAll(Q query);
 

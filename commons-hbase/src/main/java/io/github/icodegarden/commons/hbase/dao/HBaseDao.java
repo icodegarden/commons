@@ -109,6 +109,18 @@ public abstract class HBaseDao<PO, U, Q extends HBaseQuery<W>, W, DO> implements
 		}
 	}
 
+	@Override
+	public int updateBatch(Collection<U> updates) {
+		// Table 为非线程安全对象，每个线程在对Table操作时，都必须从Connection中获取相应的Table对象
+		try (Table table = connection.getTable(TableName.valueOf(tableNameBytes))) {
+			List<Put> puts = updates.stream().map(update -> buildPutOnUpdate(update)).collect(Collectors.toList());
+			table.put(puts);
+			return updates.size();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	protected abstract Put buildPutOnAdd(PO po);
 
 	protected abstract Put buildPutOnUpdate(U update);

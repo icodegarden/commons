@@ -124,7 +124,29 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 		}
 		return 1;
 	}
+	
+	/**
+	 * Bulk方式
+	 */
+	@Override
+	public int updateBatch(Collection<U> updates) {
+		if (CollectionUtils.isEmpty(updates)) {
+			return 0;
+		}
 
+		BulkRequest.Builder builder = buildBulkRequestBuilderOnUpdateBatch(updates);
+//		builder.index(index);
+		try {
+			BulkResponse response = client.bulk(builder.build());
+			if (response.errors()) {
+				throw new BulkResponseHasErrorException("updateBatch Bulk had errors", response);
+			}
+			return updates.size();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+	
 	private void doUpdate(String index, U update) throws ElasticsearchStatusException {
 		UpdateRequest.Builder<U, U> builder = buildUpdateRequestBuilderOnUpdate(update);
 		builder.index(index);
@@ -146,7 +168,7 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			throw new IllegalStateException(e);
 		}
 	}
-
+	
 	@Override
 	public NextQuerySupportPage<DO> findAll(Q query) {
 		SearchRequest.Builder builder = buildSearchRequestBuilderOnFindAll(query);
@@ -494,8 +516,10 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 	protected abstract IndexRequest.Builder<PO> buildIndexRequestBuilderOnAdd(PO po);
 
 	protected abstract BulkRequest.Builder buildBulkRequestBuilderOnAddBatch(Collection<PO> pos);
-
+	
 	protected abstract UpdateRequest.Builder<U, U> buildUpdateRequestBuilderOnUpdate(U update);
+	
+	protected abstract BulkRequest.Builder buildBulkRequestBuilderOnUpdateBatch(Collection<U> updates);
 
 	protected abstract SearchRequest.Builder buildSearchRequestBuilderOnFindAll(Q query);
 

@@ -70,6 +70,19 @@ public abstract class GenericElasticsearchV7Dao<PO extends IdObject<String>, U e
 		request.doc(toSource(update));
 		return request;
 	}
+	
+	@Override
+	protected BulkRequest buildBulkRequestOnUpdateBatch(Collection<U> updates) {
+		BulkRequest bulkRequest = new BulkRequest();
+
+		List<DocWriteRequest<?>> operations = updates.stream().map(update -> {
+			return buildUpdateRequestOnUpdate(update);
+		}).collect(Collectors.toList());
+
+		bulkRequest.add(operations);
+
+		return bulkRequest;
+	}
 
 	@Override
 	protected SearchRequest buildSearchRequestOnFindAll(Q query) {

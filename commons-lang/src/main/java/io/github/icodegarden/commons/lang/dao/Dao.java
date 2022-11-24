@@ -17,6 +17,8 @@ public interface Dao<PO, U, Q extends BaseQuery, W, DO, ID> {
 	void addBatch(Collection<PO> pos);
 
 	int update(U update);
+	
+	int updateBatch(Collection<U> updates);
 
 	List<DO> findAll(Q query);
 
