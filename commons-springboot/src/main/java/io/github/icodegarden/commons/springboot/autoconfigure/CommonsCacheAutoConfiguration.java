@@ -77,7 +77,7 @@ public class CommonsCacheAutoConfiguration {
 	 * 适用于单元测试，因为单元测试入口一般带有事务，无法使用@TransactionalEventListener
 	 */
 	@ConditionalOnClass(value = { Cacher.class }, name = { "org.junit.jupiter.api.Test" })
-	@ConditionalOnProperty(value = "commons.cacher.removeOnEvent.enabled", havingValue = "true", matchIfMissing = false)
+	@ConditionalOnProperty(value = "commons.cacher.removeOnEvent.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected class Remove4TestAutoConfiguration extends AutoConfigurationSupport {
 		{
