@@ -15,7 +15,7 @@ import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 
 /**
  * 适用于双方各有一对RSA公私钥<br>
@@ -27,15 +27,24 @@ import io.github.icodegarden.commons.lang.annotation.Nullable;
 public class RSASignUtils extends BaseSignUtils {
 	private static final Logger log = LoggerFactory.getLogger(RSASignUtils.class);
 
-	private static final String SIGN_TYPE_RSA = "RSA";
-
-	private static final String SIGN_TYPE_RSA2 = "RSA2";
-
 	private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
 
 	private static final String SIGN_SHA256RSA_ALGORITHMS = "SHA256WithRSA";
 
 //	private static final int DEFAULT_BUFFER_SIZE = 8192;
+
+	private static enum SignType {
+		RSA, RSA2
+	}
+
+	public static boolean supports(String signType) {
+		try {
+			SignType.valueOf(signType);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
 	public static String requestSign(OpenApiRequestBody body, String privateKey) {
 		String buildSignParams = buildRequestSignParams(body, null);
@@ -67,8 +76,14 @@ public class RSASignUtils extends BaseSignUtils {
 		}
 	}
 
-	public static String responseSign(OpenApiResponseBody body, String sign_type, @Nullable String charset,
-			String privateKey) {
+	/**
+	 * charset 使用 UTF-8
+	 */
+	public static String responseSign(OpenApiResponse body, String sign_type, String privateKey) {
+		return responseSign(body, sign_type, "UTF-8", privateKey);
+	}
+
+	public static String responseSign(OpenApiResponse body, String sign_type, String charset, String privateKey) {
 		String buildSignParams = buildResponseSignParams(body);
 		if (log.isDebugEnabled()) {
 			log.debug("response params to sign:{}", buildSignParams);
@@ -80,7 +95,7 @@ public class RSASignUtils extends BaseSignUtils {
 		}
 	}
 
-	public static boolean validateResponseSign(OpenApiResponseBody body, String sign_type, String charset,
+	public static boolean validateResponseSign(OpenApiResponse body, String sign_type, String charset,
 			String publicKey) {
 		String buildSignParams = buildResponseSignParams(body);
 
@@ -99,12 +114,12 @@ public class RSASignUtils extends BaseSignUtils {
 		PrivateKey priKey = null;
 		java.security.Signature signature = null;
 
-		if (SIGN_TYPE_RSA.equals(sign_type)) {
+		if (SignType.RSA.name().equals(sign_type)) {
 //            priKey = getPrivateKeyFromPKCS8(SIGN_TYPE_RSA, new ByteArrayInputStream(privateKey.getBytes()));
-			priKey = getPrivateKeyFromPKCS8(SIGN_TYPE_RSA, privateKey);
+			priKey = getPrivateKeyFromPKCS8(SignType.RSA.name(), privateKey);
 			signature = java.security.Signature.getInstance(SIGN_ALGORITHMS);
-		} else if (SIGN_TYPE_RSA2.equals(sign_type)) {
-			priKey = getPrivateKeyFromPKCS8(SIGN_TYPE_RSA, privateKey);
+		} else if (SignType.RSA2.name().equals(sign_type)) {
+			priKey = getPrivateKeyFromPKCS8(SignType.RSA.name(), privateKey);
 			signature = java.security.Signature.getInstance(SIGN_SHA256RSA_ALGORITHMS);
 		} else {
 			throw new IllegalArgumentException("不是支持的签名类型 : : signType=" + sign_type);
@@ -127,9 +142,9 @@ public class RSASignUtils extends BaseSignUtils {
 		java.security.Signature signature = null;
 //        PublicKey pubKey = getPublicKeyFromX509("RSA", new ByteArrayInputStream(publicKey.getBytes()));
 		PublicKey pubKey = getPublicKeyFromX509("RSA", publicKey);
-		if (SIGN_TYPE_RSA.equals(sign_type)) {
+		if (SignType.RSA.name().equals(sign_type)) {
 			signature = java.security.Signature.getInstance(SIGN_ALGORITHMS);
-		} else if (SIGN_TYPE_RSA2.equals(sign_type)) {
+		} else if (SignType.RSA2.name().equals(sign_type)) {
 			signature = java.security.Signature.getInstance(SIGN_SHA256RSA_ALGORITHMS);
 		} else {
 			throw new IllegalArgumentException("不是支持的签名类型 : signType=" + sign_type);
@@ -145,7 +160,7 @@ public class RSASignUtils extends BaseSignUtils {
 		return signature.verify(Base64.getDecoder().decode(sign.getBytes()));
 	}
 
-	private static String buildResponseSignParams(OpenApiResponseBody body) {
+	private static String buildResponseSignParams(OpenApiResponse body) {
 		StringBuilder sb = new StringBuilder("biz_content=").append(body.getBiz_content());
 		return sb.toString();
 	}

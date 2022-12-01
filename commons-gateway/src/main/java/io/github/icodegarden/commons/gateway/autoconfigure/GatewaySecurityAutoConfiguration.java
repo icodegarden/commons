@@ -14,11 +14,12 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import io.github.icodegarden.commons.gateway.core.security.AppKeyAuthenticationWebFilter;
+import io.github.icodegarden.commons.gateway.core.security.AppProvider;
 import io.github.icodegarden.commons.gateway.core.security.JWTAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.core.security.JWTConfig;
+import io.github.icodegarden.commons.gateway.core.security.OpenApiRequestValidator;
+import io.github.icodegarden.commons.gateway.core.security.SignAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
-import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.AppKey;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAccessDeniedHandler;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAuthenticationEntryPoint;
@@ -40,6 +41,10 @@ public class GatewaySecurityAutoConfiguration {
 	private CommonsGatewaySecurityProperties securityProperties;
     @Autowired(required = false)
     private AuthorizeExchangeSpecConfigurer authorizeExchangeSpecConfigurer;
+    @Autowired
+    private AppProvider appProvider;
+    @Autowired
+    private OpenApiRequestValidator openApiRequestValidator;
     
     /**
      * 配置方式要换成 WebFlux的方式
@@ -77,11 +82,11 @@ public class GatewaySecurityAutoConfiguration {
 
 			JWTConfig jwtConfig = new JWTConfig(jwt.getIssuer(), jwt.getSecretKey(), jwt.getTokenExpireSeconds());
 			webFilter = new JWTAuthenticationWebFilter(jwtConfig, serverAuthenticationEntryPoint);
-		} else if (securityProperties.getAppKey() != null) {
-			AppKey appKey = securityProperties.getAppKey();
-			log.info("gateway security config Authentication WebFilter by appKey:{}", appKey);
-			webFilter = new AppKeyAuthenticationWebFilter(appKey.getApps(), serverAuthenticationEntryPoint)
-					.setHeaderAppKey(appKey.getHeaderAppKey());
+		} else if (securityProperties.getSignature() != null) {
+			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
+			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
+			webFilter = new SignAuthenticationWebFilter(appProvider, openApiRequestValidator, serverAuthenticationEntryPoint)
+					.setHeaderAppKey(signature.getHeaderAppKey());
 		} else {
 			log.info("gateway security config Authentication WebFilter by NoOp");
 			webFilter = new NoOpWebFilter();

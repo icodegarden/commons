@@ -11,7 +11,6 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -22,17 +21,23 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 
+import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
+import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ClientLimitedErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
+import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.ExceptionUtils;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
+ * 下游服务发生异常是不会进到这里的，但网络异常、服务不在线、被Sentinel拒绝等，会到这里<br>
+ * 这个filter的顺序要在OpenapiResponseSignGlobalFilter之后<br>
  * 
  * @author Fangfang.Xu
  *
@@ -40,39 +45,53 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
+	
+	public static final int ORDER = OpenapiResponseSignGlobalFilter.ORDER + 1;
+	
 	private static final Charset CHARSET = Charset.forName("utf-8");
-	
+
 	private static final String CLIENT_LIMITED_LOG_MODULE = "Client-Limited Sentinel";
-	
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		return chain.filter(exchange).onErrorResume(e -> {
 			log.error("ex on do filter chain", e);
-			
+
 			/**
-			 * 无需SentinelGatewayBlockExceptionHandler
+			 * 无需com.alibaba.csp.sentinel.adapter.gateway.sc.exception.SentinelGatewayBlockExceptionHandler
 			 */
-			ErrorCodeException ece = toErrorCodeExceptionIfBlockException(e);			
-			if(ece == null) {
+			ErrorCodeException ece = toErrorCodeExceptionIfBlockException(e);
+			if (ece == null) {
 				ece = new ServerErrorCodeException("global.error", e.getMessage(), e);
 			}
-			
+
 			ServerHttpResponse response = exchange.getResponse();
 
 			response.setStatusCode(HttpStatus.OK);
 			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 			DataBufferFactory dataBufferFactory = response.bufferFactory();
 
-			InternalApiResponse<Object> apiResponse = InternalApiResponse.fail(ece);
+			ApiResponse apiResponse;
+
+			/**
+			 * 有openApiRequestBody说明是openapi请求
+			 */
+			OpenApiRequestBody openApiRequestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+			if (openApiRequestBody == null) {
+				apiResponse = InternalApiResponse.fail(ece);
+			} else {
+				String method = openApiRequestBody.getMethod();
+				apiResponse = OpenApiResponse.fail(method, ece);
+			}
 
 			DataBuffer buffer = dataBufferFactory.wrap(JsonUtils.serialize(apiResponse).getBytes(CHARSET));
 			return response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer));
 		});
 	}
-	
+
 	private ErrorCodeException toErrorCodeExceptionIfBlockException(Throwable t) {
 		BlockException e = ExceptionUtils.causeOf(t, BlockException.class);
-		if(e != null) {
+		if (e != null) {
 			ErrorCodeException ece = null;
 			/**
 			 * 以下一律是触发了但没有降级
@@ -101,15 +120,15 @@ public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
 			if (log.isWarnEnabled()) {
 				log.warn("{} {}", CLIENT_LIMITED_LOG_MODULE, ece.getMessage(), e);
 			}
-			
+
 			return ece;
 		}
-		
+
 		return null;
 	}
 
 	@Override
 	public int getOrder() {
-		return HIGHEST_PRECEDENCE;
+		return ORDER;
 	}
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
@@ -42,16 +43,13 @@ class AppKeySignUtilsTests {
 
 	@Test
 	void responseSign() {
-		OpenApiResponseBody openApiResponseBody = new OpenApiResponseBody();
-		openApiResponseBody.setCode("1000");
-		openApiResponseBody.setMsg("Success");
-		openApiResponseBody.setBiz_code(openApiBody.getMethod());
-		openApiResponseBody.setBiz_content("{\"partType\":\"A\"}");
-		String sign = AppKeySignUtils.responseSign(openApiResponseBody, openApiBody.getSign_type(), appKey);
+		OpenApiResponse openApiResponse = OpenApiResponse.success(openApiBody.getMethod(), "{\"partType\":\"A\"}");
+		
+		String sign = AppKeySignUtils.responseSign(openApiResponse, openApiBody.getSign_type(), appKey);
 		System.out.println(sign);
-		openApiResponseBody.setSign(sign);
+		openApiResponse.setSign(sign);
 
-		boolean validateResponseSign = AppKeySignUtils.validateResponseSign(openApiResponseBody,
+		boolean validateResponseSign = AppKeySignUtils.validateResponseSign(openApiResponse,
 				openApiBody.getSign_type(), appKey);
 		assertThat(validateResponseSign).isTrue();
 	}

@@ -8,10 +8,10 @@ import javax.validation.constraints.NotEmpty;
 
 import org.springframework.cloud.gateway.handler.predicate.AbstractRoutePredicateFactory;
 import org.springframework.cloud.gateway.handler.predicate.GatewayPredicate;
-import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ServerWebExchange;
 
+import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 
 /**
@@ -46,7 +46,7 @@ public class BodyMethodRoutePredicateFactory
 		return new GatewayPredicate() {
 			@Override
 			public boolean test(ServerWebExchange exchange) {
-				OpenApiRequestBody requestBody = exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
+				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
 				String method = requestBody.getMethod();
 
 				return config.getBodyMethod().equals(method);

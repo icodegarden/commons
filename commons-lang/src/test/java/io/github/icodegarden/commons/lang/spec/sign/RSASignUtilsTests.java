@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.lang.spec.response.ClientBizErrorCodeException;
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
@@ -43,22 +45,17 @@ class RSASignUtilsTests {
 
 	@Test
 	void responseSign() {
-		OpenApiResponseBody openApiResponseBody = new OpenApiResponseBody();
-		openApiResponseBody.setCode("1000");
-		openApiResponseBody.setMsg("Success");
-		openApiResponseBody.setBiz_code(openApiBody.getMethod());
-		openApiResponseBody.setBiz_content("{\"partType\":\"A\"}");
-		String sign = RSASignUtils.responseSign(openApiResponseBody, openApiBody.getSign_type(),
-				openApiBody.getCharset(),
+		OpenApiResponse openApiResponse = OpenApiResponse.success(openApiBody.getMethod(), "{\"partType\":\"A\"}");
+		String sign = RSASignUtils.responseSign(openApiResponse, openApiBody.getSign_type(), openApiBody.getCharset(),
 				"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj/KYt2WWsMGtAIej85s9b334OXu19kvygaFa3fnESKJovHvC8pXApJUJ20/1/GQZ14YyteNByqSmPHNPqoqTqDpwbsevjrp7J8HOB65tokMERtPG+h1kije6XCR+tNsrXRjuAW2tIIwLbGPnIXPO3BWX93QaDO0u7R2yZyMVZ/zjQo2HqGHYhAC+7FeN3izuiK6TZt+aPS0h+kkW3UzWMreLPJspe8AyIGJjq87wZtrRGgph0nVfB2JjH/jOTvHfWSAWXijBFKaapInoEpE73n7xt2WVqI9q9d/hCdGQZX5njwF7Hokwibl8stopc/GWXbkl750MQE+DmaURdC6cdAgMBAAECggEAFpZfQWN3aK9Gpo/FKsiT+UCgeVRD/A758xJMF3w4ENs82Y62dBWJjHFQZVOv0AjfZe9KVD6W36RDUC4VVnVOp9qZUAtCxZqwznnrPxL31gBSR6EXxzmXYnYQTgd4sIAikmJfIb/11/rSkuEuzpVXEHeS49PE6OCK/uHIqKoJ3OpcmK7sUq8PfcbHVl2TV6VKXlFWyqEFUmo3+a8ZfmlEX0NQlChqjv5xTjYXXMSAr5kvNPoe8nNtSL8eV2iQEJ8LL5Awj3UyreUNqju18o8j8KJIEp9QBNpml8oBjzPnfqZC3LxGKFZF7PuoucjbFzX2v7nhazQVPbciFs3DCtig4QKBgQDtQZMp+2xlGaIyQNTbZPjAPRQpPeU9zI3YKiUXB/i+8m8UhjfuRjbd/WyKFXuiQRLfYQbQpZRZUPKNcOyg4kIG5qilJ6R48RijPQJfQD0WBx+p4gDH4gHiP0EZc00FXfJIqiEnXVf5BdOCVhRDdYW6mV7TWDB8c/cVU+s7Atr1iQKBgQCw8TqPED0epVl6T7eqw5LLJwy7RsAHTGjNqck7WN00w/FGmawcHtISpVjV1eX7C4x4Ela3iufDpan6BqTqNH7Xou2d35yaDxNhMttxABjhM7SotjuDv5d6r3xlyzofyXjJzygx+zHJTmpu4GbBEwzjfjoU3U/RlzIZQBWQozmT9QKBgQDjsQ35uVfigsI9NijRUMrFOxjRJ5yMPXZXYMLtonHfVqyx5slge7QGQULcFhfrtEXXaLdwn6eKO/w7L4d4Mwuosc5hiXT3uHGrn05aeTzmmfmSQNn8+fJS3d+s/BGLuAhgIh3lOFjIHQZKTC/wOaYYWT4+16DYnzYeGsZigK//+QKBgA2azqTXW8uybPnRjU6s8Ol73Ce+Hd+xyVEe3+EXSRLYigGiqTAUUpSqb/UpGCDAV5GX32EHZiCN6U7XGfEEDkioN1rvKYxS4muTzHmYx1Dxd8+NC3Bq18vQGGF/Sb3N8OKbcfy90qsmw1o5GM15mIEZYH/gMFXuKST133Kaij/NAoGAUbjW4wzwNRzP/r1GO3WTvefE7R7WpUOfyQ6b1rBB24/nZszfNwsDyV3usMXOS2w/tcvhEVJsXsSDIQ18MgtT7Q/yHNLll4f2sp2hd0OL14BXIarmAD7Hksj3AuV3E8nml5lOLE7iCGGv2n0qe+RNQ8R+so8K1BO+u/gbsSmRQ7w=");
 		System.out.println(sign);
 
-		openApiResponseBody.setSign(sign);
+		openApiResponse.setSign(sign);
 
-		System.out.println(JsonUtils.serialize(openApiResponseBody));
+		System.out.println(JsonUtils.serialize(openApiResponse));
 
-		boolean validateResponseSign = RSASignUtils.validateResponseSign(openApiResponseBody,
-				openApiBody.getSign_type(), openApiBody.getCharset(),
+		boolean validateResponseSign = RSASignUtils.validateResponseSign(openApiResponse, openApiBody.getSign_type(),
+				openApiBody.getCharset(),
 				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAo/ymLdllrDBrQCHo/ObPW99+Dl7tfZL8oGhWt35xEiiaLx7wvKVwKSVCdtP9fxkGdeGMrXjQcqkpjxzT6qKk6g6cG7Hr466eyfBzgeubaJDBEbTxvodZIo3ulwkfrTbK10Y7gFtrSCMC2xj5yFzztwVl/d0GgztLu0dsmcjFWf840KNh6hh2IQAvuxXjd4s7oiuk2bfmj0tIfpJFt1M1jK3izybKXvAMiBiY6vO8Gba0RoKYdJ1XwdiYx/4zk7x31kgFl4owRSmmqSJ6BKRO95+8bdllaiPavXf4QnRkGV+Z48Bex6JMIm5fLLaKXPxll25Je+dDEBPg5mlEXQunHQIDAQAB");
 		assertThat(validateResponseSign).isTrue();
 	}
@@ -68,20 +65,15 @@ class RSASignUtilsTests {
 		/**
 		 * 异常示例
 		 */
-		OpenApiResponseBody openApiResponseBody = new OpenApiResponseBody();
-		openApiResponseBody.setCode("40004");
-		openApiResponseBody.setMsg("业务处理失败");
-		openApiResponseBody.setSub_code("software.part.number.notexists");
-		openApiResponseBody.setSub_msg("软件号不存在");
-		openApiResponseBody.setBiz_code(openApiBody.getMethod());
-		openApiResponseBody.setBiz_content(null);
-		String sign = RSASignUtils.responseSign(openApiResponseBody, openApiBody.getSign_type(),
-				openApiBody.getCharset(),
+		ClientBizErrorCodeException e = new ClientBizErrorCodeException("software.part.number.notexists", "软件号不存在");
+		OpenApiResponse openApiResponse = OpenApiResponse.fail(openApiBody.getMethod(), e);
+
+		String sign = RSASignUtils.responseSign(openApiResponse, openApiBody.getSign_type(), openApiBody.getCharset(),
 				"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj/KYt2WWsMGtAIej85s9b334OXu19kvygaFa3fnESKJovHvC8pXApJUJ20/1/GQZ14YyteNByqSmPHNPqoqTqDpwbsevjrp7J8HOB65tokMERtPG+h1kije6XCR+tNsrXRjuAW2tIIwLbGPnIXPO3BWX93QaDO0u7R2yZyMVZ/zjQo2HqGHYhAC+7FeN3izuiK6TZt+aPS0h+kkW3UzWMreLPJspe8AyIGJjq87wZtrRGgph0nVfB2JjH/jOTvHfWSAWXijBFKaapInoEpE73n7xt2WVqI9q9d/hCdGQZX5njwF7Hokwibl8stopc/GWXbkl750MQE+DmaURdC6cdAgMBAAECggEAFpZfQWN3aK9Gpo/FKsiT+UCgeVRD/A758xJMF3w4ENs82Y62dBWJjHFQZVOv0AjfZe9KVD6W36RDUC4VVnVOp9qZUAtCxZqwznnrPxL31gBSR6EXxzmXYnYQTgd4sIAikmJfIb/11/rSkuEuzpVXEHeS49PE6OCK/uHIqKoJ3OpcmK7sUq8PfcbHVl2TV6VKXlFWyqEFUmo3+a8ZfmlEX0NQlChqjv5xTjYXXMSAr5kvNPoe8nNtSL8eV2iQEJ8LL5Awj3UyreUNqju18o8j8KJIEp9QBNpml8oBjzPnfqZC3LxGKFZF7PuoucjbFzX2v7nhazQVPbciFs3DCtig4QKBgQDtQZMp+2xlGaIyQNTbZPjAPRQpPeU9zI3YKiUXB/i+8m8UhjfuRjbd/WyKFXuiQRLfYQbQpZRZUPKNcOyg4kIG5qilJ6R48RijPQJfQD0WBx+p4gDH4gHiP0EZc00FXfJIqiEnXVf5BdOCVhRDdYW6mV7TWDB8c/cVU+s7Atr1iQKBgQCw8TqPED0epVl6T7eqw5LLJwy7RsAHTGjNqck7WN00w/FGmawcHtISpVjV1eX7C4x4Ela3iufDpan6BqTqNH7Xou2d35yaDxNhMttxABjhM7SotjuDv5d6r3xlyzofyXjJzygx+zHJTmpu4GbBEwzjfjoU3U/RlzIZQBWQozmT9QKBgQDjsQ35uVfigsI9NijRUMrFOxjRJ5yMPXZXYMLtonHfVqyx5slge7QGQULcFhfrtEXXaLdwn6eKO/w7L4d4Mwuosc5hiXT3uHGrn05aeTzmmfmSQNn8+fJS3d+s/BGLuAhgIh3lOFjIHQZKTC/wOaYYWT4+16DYnzYeGsZigK//+QKBgA2azqTXW8uybPnRjU6s8Ol73Ce+Hd+xyVEe3+EXSRLYigGiqTAUUpSqb/UpGCDAV5GX32EHZiCN6U7XGfEEDkioN1rvKYxS4muTzHmYx1Dxd8+NC3Bq18vQGGF/Sb3N8OKbcfy90qsmw1o5GM15mIEZYH/gMFXuKST133Kaij/NAoGAUbjW4wzwNRzP/r1GO3WTvefE7R7WpUOfyQ6b1rBB24/nZszfNwsDyV3usMXOS2w/tcvhEVJsXsSDIQ18MgtT7Q/yHNLll4f2sp2hd0OL14BXIarmAD7Hksj3AuV3E8nml5lOLE7iCGGv2n0qe+RNQ8R+so8K1BO+u/gbsSmRQ7w=");
 		System.out.println(sign);
 
-		openApiResponseBody.setSign(sign);
+		openApiResponse.setSign(sign);
 
-		System.out.println(JsonUtils.serialize(openApiResponseBody));
+		System.out.println(JsonUtils.serialize(openApiResponse));
 	}
 }

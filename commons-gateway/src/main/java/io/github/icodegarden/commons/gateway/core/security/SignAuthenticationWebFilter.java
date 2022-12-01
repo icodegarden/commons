@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -36,13 +35,12 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
+import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
-import io.github.icodegarden.commons.lang.spec.sign.AppKeySignUtils;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
-import io.github.icodegarden.commons.lang.spec.sign.RSASignUtils;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
 import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
@@ -58,22 +56,25 @@ import reactor.core.publisher.Mono;
  *
  */
 @Slf4j
-public class AppKeyAuthenticationWebFilter implements WebFilter {
-	
+public class SignAuthenticationWebFilter implements WebFilter {
+
 	private static final Charset CHARSET = Charset.forName("utf-8");
-	
+
 	private static final Pattern DATETIME_PATTERN = Pattern
 			.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
 
 	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
 	private final AuthenticationWebFilter authenticationWebFilter;
-	private final Map<String, App> appMap;
+	private final AppProvider appProvider;
+	private final OpenApiRequestValidator openApiRequestValidator;
 	private boolean headerAppKey;
 
-	public AppKeyAuthenticationWebFilter(List<App> apps, ServerAuthenticationEntryPoint authenticationEntryPoint) {
+	public SignAuthenticationWebFilter(AppProvider appProvider, OpenApiRequestValidator openApiRequestValidator,
+			ServerAuthenticationEntryPoint authenticationEntryPoint) {
+		this.appProvider = appProvider;
+		this.openApiRequestValidator = openApiRequestValidator;
 		authenticationWebFilter = new AuthenticationWebFilter(new NoOpReactiveAuthenticationManager());
-		appMap = apps.stream().collect(Collectors.toMap(App::getAppId, app -> app));
-		
+
 		authenticationWebFilter.setServerAuthenticationConverter(new SignResolveServerAuthenticationConverter());
 		authenticationWebFilter
 				.setAuthenticationSuccessHandler(new GatewayPreAuthenticatedServerAuthenticationSuccessHandler());
@@ -84,8 +85,8 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 		authenticationWebFilter.setAuthenticationFailureHandler(
 				new ApiResponseServerAuthenticationFailureHandler(authenticationEntryPoint));
 	}
-	
-	public AppKeyAuthenticationWebFilter setHeaderAppKey(boolean headerAppKey) {
+
+	public SignAuthenticationWebFilter setHeaderAppKey(boolean headerAppKey) {
 		this.headerAppKey = headerAppKey;
 		return this;
 	}
@@ -193,7 +194,7 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 		@Override
 		public Mono<Authentication> convert(ServerWebExchange exchange) {
 			return Mono.defer(() -> {
-				OpenApiRequestBody requestBody = exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
+				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
 
 				if (requestBody != null) {
 
@@ -202,7 +203,7 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 								ClientParameterMissingErrorCodeException.SubPair.MISSING_APP_ID));
 					}
 
-					App app = appMap.get(requestBody.getApp_id());
+					App app = appProvider.getApp(requestBody.getApp_id());
 
 					if (requestBody.getApp_id().length() > 32 || app == null) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
@@ -246,7 +247,7 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_FORMAT));
 					}
-					if (!"SHA256".equals(requestBody.getSign_type()) && !"RSA2".equals(requestBody.getSign_type())) {
+					if (!CommonsGatewayUtils.supportsSignType(requestBody.getSign_type())) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE_TYPE));
 					}
@@ -260,23 +261,11 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_CHARSET));
 					}
-					if (!StringUtils.hasText(requestBody.getRequest_id())
-							|| requestBody.getRequest_id().length() > 32) {
-						// FIXME request_id 重复性检查
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_REQUEST_ID));
-					}
 
-					boolean b;
-					if ("SHA256".equals(requestBody.getSign_type())) {
-						b = AppKeySignUtils.validateRequestSign(requestBody, app.getAppKey());
-					} else if ("RSA2".equals(requestBody.getSign_type())) {
-						b = RSASignUtils.validateRequestSign(requestBody, app.getAppKey());
-					} else {
-						// 不会进来，上面已校验
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE_TYPE));
-					}
+					boolean b = CommonsGatewayUtils.validateSign(requestBody, app.getAppKey());
+					/**
+					 * 验签不通过
+					 */
 					if (!b) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE));
@@ -290,18 +279,30 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 								ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS));
 					}
 
+					/**
+					 * 把request_id的校验放在签名校验之后，是因为校验防重放可能使用网络IO更耗时，以便前面的验证不通过直接拒绝
+					 */
+					if (!StringUtils.hasText(requestBody.getRequest_id()) || requestBody.getRequest_id().length() > 32
+							|| !openApiRequestValidator.validate(requestBody)) {
+						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
+								ClientParameterInvalidErrorCodeException.SubPair.INVALID_REQUEST_ID));
+					}
+
+					/**
+					 * 认证通过后
+					 */
 					SpringUser user = new SpringUser(requestBody.getApp_id(), app.getAppName(), "",
 							Collections.emptyList());
-					PreAuthenticatedAuthenticationToken authenticationToken = new PreAuthenticatedAuthenticationToken(user, "",
-							Collections.emptyList());
-					
+					PreAuthenticatedAuthenticationToken authenticationToken = new PreAuthenticatedAuthenticationToken(
+							user, "", Collections.emptyList());
+
 					String flowTag = app.getFlowTag();
 					if (StringUtils.hasText(flowTag)) {
 						Map<String, Object> details = new HashMap<String, Object>(1, 1);
 						details.put("flowTag", flowTag);
 						authenticationToken.setDetails(details);
 					}
-					
+
 					return Mono.just(authenticationToken);
 				}
 
@@ -342,15 +343,16 @@ public class AppKeyAuthenticationWebFilter implements WebFilter {
 
 				ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
 					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID, principal.getUserId());
-					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME, principal.getUsername());
+					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME,
+							principal.getUsername());
 					if (details != null) {
 						String flowTag = (String) details.get("flowTag");
 						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG, flowTag);
 					}
-					
-					if(headerAppKey) {
-						OpenApiRequestBody requestBody = exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
-						App app = appMap.get(requestBody.getApp_id());
+
+					if (headerAppKey) {
+						OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+						App app = appProvider.getApp(requestBody.getApp_id());
 						httpHeaders.add("X-Auth-AppKey", app.getAppKey());
 					}
 				}).build();

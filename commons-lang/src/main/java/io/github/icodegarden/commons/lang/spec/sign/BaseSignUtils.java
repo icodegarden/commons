@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.lang.spec.sign;
 
 import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 
 /**
  * 
@@ -54,7 +55,7 @@ abstract class BaseSignUtils {
 		return str != null && !str.isEmpty();
 	}
 
-	protected static String buildResponseSignParams(OpenApiResponseBody body, String appKey) {
+	protected static String buildResponseSignParams(OpenApiResponse body, String appKey) {
 		StringBuilder sb = new StringBuilder("biz_content=").append(body.getBiz_content());
 		sb.append("&key=").append(appKey);// key排最后
 		return sb.toString();

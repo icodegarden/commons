@@ -2,8 +2,6 @@ package io.github.icodegarden.commons.springboot.security;
 
 import java.nio.charset.Charset;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -16,6 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -23,8 +22,8 @@ import reactor.core.publisher.Mono;
  * @author Fangfang.Xu
  *
  */
+@Slf4j
 public class ApiResponseServerAccessDeniedHandler implements ServerAccessDeniedHandler {
-	private static final Logger log = LoggerFactory.getLogger(ApiResponseServerAuthenticationEntryPoint.class);
 
 	@Override
 	public Mono<Void> handle(ServerWebExchange exchange, AccessDeniedException denied) {

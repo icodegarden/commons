@@ -4,6 +4,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -12,6 +14,19 @@ import org.slf4j.LoggerFactory;
 public class AppKeySignUtils extends BaseSignUtils {
 
 	private static final Logger log = LoggerFactory.getLogger(AppKeySignUtils.class);
+
+	private static enum SignType {
+		SHA256, SHA1, MD5
+	}
+
+	public static boolean supports(String signType) {
+		try {
+			SignType.valueOf(signType);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
 	public static String requestSign(OpenApiRequestBody body, String appKey) {
 		String buildSignParams = buildRequestSignParams(body, appKey);
@@ -28,7 +43,7 @@ public class AppKeySignUtils extends BaseSignUtils {
 		return requestSign.equals(body.getSign());
 	}
 
-	public static String responseSign(OpenApiResponseBody body, String sign_type, String appKey) {
+	public static String responseSign(OpenApiResponse body, String sign_type, String appKey) {
 		String buildSignParams = buildResponseSignParams(body, appKey);
 		if (log.isDebugEnabled()) {
 			log.debug("response params to sign:{}", buildSignParams);
@@ -38,19 +53,18 @@ public class AppKeySignUtils extends BaseSignUtils {
 	}
 
 	private static String doSign(String buildSignParams, String sign_type) {
-		switch (sign_type) {
-		case "MD5":
+		if (SignType.MD5.name().equals(sign_type)) {
 			return DigestUtils.md5Hex(buildSignParams).toUpperCase();
-		case "SHA1":
+		} else if (SignType.SHA1.name().equals(sign_type)) {
 			return DigestUtils.sha1Hex(buildSignParams).toUpperCase();
-		case "SHA256":
+		} else if (SignType.SHA256.name().equals(sign_type)) {
 			return DigestUtils.sha256Hex(buildSignParams).toUpperCase();
-		default:
+		} else {
 			throw new IllegalArgumentException("NOT SUPPORT sign_type:" + sign_type);
 		}
 	}
 
-	public static boolean validateResponseSign(OpenApiResponseBody body, String sign_type, String appKey) {
+	public static boolean validateResponseSign(OpenApiResponse body, String sign_type, String appKey) {
 		return responseSign(body, sign_type, appKey).equals(body.getSign());
 	}
 

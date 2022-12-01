@@ -2,8 +2,6 @@ package io.github.icodegarden.commons.springboot.security;
 
 import java.nio.charset.Charset;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -20,6 +18,7 @@ import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -27,8 +26,8 @@ import reactor.core.publisher.Mono;
  * @author Fangfang.Xu
  *
  */
+@Slf4j
 public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
-	private static final Logger log = LoggerFactory.getLogger(ApiResponseServerAuthenticationEntryPoint.class);
 
 	private static final Charset CHARSET = Charset.forName("utf-8");
 

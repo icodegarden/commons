@@ -1,7 +1,6 @@
 package io.github.icodegarden.commons.lang.spec.response;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * 
@@ -15,42 +14,22 @@ public class OpenApiResponse extends ApiResponse {
 	private String sign;
 
 	public static OpenApiResponse success(String biz_code, String biz_content) {
-		return success(biz_code, biz_content, null);
-	}
-
-	public static OpenApiResponse fail(String biz_code, ErrorCodeException e) {
-		return fail(biz_code, e, null);
-	}
-
-	public static OpenApiResponse success(String biz_code, String biz_content,
-			Function<OpenApiResponse, String> signFunction) {
 		OpenApiResponse apiResponse = new OpenApiResponse();
 		apiResponse.setCode(ApiResponse.CODE_SUCCESS);
 		apiResponse.setMsg(ApiResponse.MSG_SUCCESS);
 		apiResponse.setBiz_code(biz_code);
 		apiResponse.setBiz_content(biz_content);
 
-		if (signFunction != null) {
-			String sign = signFunction.apply(apiResponse);
-			apiResponse.setSign(sign);
-		}
-
 		return apiResponse;
 	}
 
-	public static OpenApiResponse fail(String biz_code, ErrorCodeException e,
-			Function<OpenApiResponse, String> signFunction) {
+	public static OpenApiResponse fail(String biz_code, ErrorCodeException e) {
 		OpenApiResponse apiResponse = new OpenApiResponse();
 		apiResponse.setCode(e.getCode());
 		apiResponse.setMsg(e.getMsg());
 		apiResponse.setSub_code(e.getSub_code());
 		apiResponse.setSub_msg(e.getSub_msg());
 		apiResponse.setBiz_code(biz_code);
-
-		if (signFunction != null) {
-			String sign = signFunction.apply(apiResponse);
-			apiResponse.setSign(sign);
-		}
 
 		return apiResponse;
 	}
