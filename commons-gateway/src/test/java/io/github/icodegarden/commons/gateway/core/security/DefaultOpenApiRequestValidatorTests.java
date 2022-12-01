@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.gateway.core.security;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.assertj.core.api.Assertions;
@@ -96,11 +97,11 @@ public class DefaultOpenApiRequestValidatorTests {
 	@Test
 	void validate_loop() throws Exception {
 		/**
-		 * 用于验证确实设置了内存限制
+		 * 可用于验证确实设置了内存限制
 		 */
-		Assertions.assertThatExceptionOfType(OutOfMemoryError.class).isThrownBy(() -> {
-			byte[] bs = new byte[1024 * 1024 * 11];
-		});
+//		Assertions.assertThatExceptionOfType(OutOfMemoryError.class).isThrownBy(() -> {
+//			byte[] bs = new byte[1024 * 1024 * 11];
+//		});
 
 		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
 
@@ -112,8 +113,19 @@ public class DefaultOpenApiRequestValidatorTests {
 				public void run() {
 					OpenApiRequestBody requestBody = new OpenApiRequestBody();
 					requestBody.setApp_id("app_id" + num);
-					for (int i = 0; i < 150000; i++) {
-						requestBody.setRequest_id("request_id" + num);
+					/**
+					 * 无论多少次都不会导致OOM的，这里为了快速结束数量少
+					 */
+					for (int i = 0; i < 10000; i++) {
+						if (i % 1000 == 0) {
+							System.out.println("loop, num=" + num + ", i=" + i);
+						}
+
+						requestBody.setRequest_id(UUID.randomUUID().toString() + UUID.randomUUID().toString()
+								+ UUID.randomUUID().toString() + UUID.randomUUID().toString()
+								+ UUID.randomUUID().toString() + UUID.randomUUID().toString()
+								+ UUID.randomUUID().toString() + UUID.randomUUID().toString()
+								+ UUID.randomUUID().toString() + UUID.randomUUID().toString());
 						requestBody.setTimestamp(SystemUtils.STANDARD_DATETIME_FORMATTER.format(LocalDateTime.now()));
 
 						boolean validate = validator.validate(requestBody);
@@ -122,14 +134,16 @@ public class DefaultOpenApiRequestValidatorTests {
 							System.exit(-1);
 						}
 					}
+
+					int size = validator.getAppExistRequestIdSize(requestBody.getApp_id());
+					System.out.println("getAppExistRequestIdSize, num=" + num + ", size=" + size);
+
 					countDownLatch.countDown();
 				};
 			}.start();
 		}
 
 		countDownLatch.await();
-		
-		int size = validator.getAppExistRequestIdSize("app_id0");
 	}
-	
+
 }

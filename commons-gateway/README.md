@@ -20,7 +20,7 @@
 ## io.github.icodegarden.commons.gateway.core.security
 * AppProvider.java 支持自定义的App数据源
 * DefaultAppProvider.java 默认的使用配置中心的apps
-* OpenApiRequestValidator.java 默认防重放验证器
+* DefaultOpenApiRequestValidator.java 默认防重放验证器
 * JWTAuthenticationWebFilter.java jwt认证方式，选1
 * SignAuthenticationWebFilter.java 签名认证方式，选1
 
