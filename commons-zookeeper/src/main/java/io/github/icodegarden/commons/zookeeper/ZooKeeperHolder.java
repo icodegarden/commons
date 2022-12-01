@@ -36,9 +36,11 @@ import lombok.ToString;
 public class ZooKeeperHolder implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ZooKeeperHolder.class);
 
+	public static long MAX_WAIT_CONNECTED_FAILED_MS = 10000;
+
 	private volatile boolean closeCalled;
 
-	private int waitConnectedTimes;
+	private Long waitConnectedFailedTimestamp;
 
 	private final Config config;
 
@@ -105,10 +107,14 @@ public class ZooKeeperHolder implements Closeable {
 		if (zk.getState() != States.CONNECTED) {
 			synchronized (this) {
 				if (zk.getState() != States.CONNECTED) {
+					/**
+					 * 等待连上的notify
+					 */
 					try {
 						this.wait(config.getConnectTimeout());
 					} catch (InterruptedException ignore) {
 					}
+
 					if (zk.getState() != States.CONNECTED) {
 						/**
 						 * 因为zk client自动重连并不是万无一失的，可能出现下面场景:<br>
@@ -131,13 +137,28 @@ public class ZooKeeperHolder implements Closeable {
 						 * <br>
 						 * 
 						 * 以上场景zk client会一直重连，但server却一直拒绝<br>
-						 * 因此当检查到等待连接的次数大于100时，调用reconnect来重新new ZooKeeper保障成功建立新的连接<br>
+						 * 因此当检查到距离首次等待失败已过去xx时间还没自动连上，则调用reconnect来重新new ZooKeeper保障成功建立新的连接<br>
 						 */
-						if (waitConnectedTimes++ > 100) {
-							log.warn("waitConnectedTimes is exceed, start reconnect to ensure connect success");
+						
+						/**
+						 * 记录首次失败的时间
+						 */
+						if (waitConnectedFailedTimestamp == null) {
+							waitConnectedFailedTimestamp = System.currentTimeMillis();
+						}
+						/**
+						 * 已有过失败，且早于xx毫秒
+						 */
+						if (waitConnectedFailedTimestamp != null
+								&& waitConnectedFailedTimestamp <= (System.currentTimeMillis()
+										- MAX_WAIT_CONNECTED_FAILED_MS)) {
+							log.warn("waitConnectedFailedTimestamp is exceed, start reconnect to ensure connect success");
 							reconnect();
 						}
 
+						/**
+						 * 调用reconnect后，这次依然抛出异常
+						 */
 						throw new ConnectTimeoutZooKeeperException(
 								String.format("zookeeper connected timeout:%d, connectString:%s",
 										config.getConnectTimeout(), config.getConnectString()));
@@ -146,7 +167,10 @@ public class ZooKeeperHolder implements Closeable {
 			}
 		}
 
-		waitConnectedTimes = 0;
+		/**
+		 * 获取连接成功，则重置
+		 */
+		waitConnectedFailedTimestamp = null;
 
 		/**
 		 * 当有配置auth时，在获取zk前把authInfo加进去
@@ -320,10 +344,10 @@ public class ZooKeeperHolder implements Closeable {
 	@ToString
 	public static class Config implements Validateable {
 		@NonNull
-		private String connectString;//127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
+		private String connectString;// 127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
 
 		private int sessionTimeout = 30000;
-		
+
 		private int connectTimeout = 3000;
 
 		private String aclAuth;

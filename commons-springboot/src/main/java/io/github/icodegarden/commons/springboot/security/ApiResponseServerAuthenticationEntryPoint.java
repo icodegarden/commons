@@ -44,7 +44,7 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 			String message = (e.getMessage() != null ? e.getMessage() : "Not Authenticated.");
 
 			if (log.isInfoEnabled()) {
-				log.info("request {}", message);
+				log.info("request Authentication failed:{}", message);
 			}
 
 			ErrorCodeException ece;

@@ -18,7 +18,7 @@ import io.github.icodegarden.commons.gateway.core.security.AppProvider;
 import io.github.icodegarden.commons.gateway.core.security.JWTAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.core.security.JWTConfig;
 import io.github.icodegarden.commons.gateway.core.security.OpenApiRequestValidator;
-import io.github.icodegarden.commons.gateway.core.security.SignAuthenticationWebFilter;
+import io.github.icodegarden.commons.gateway.core.security.SignatureAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAccessDeniedHandler;
@@ -85,7 +85,7 @@ public class GatewaySecurityAutoConfiguration {
 		} else if (securityProperties.getSignature() != null) {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
-			webFilter = new SignAuthenticationWebFilter(appProvider, openApiRequestValidator, serverAuthenticationEntryPoint)
+			webFilter = new SignatureAuthenticationWebFilter(appProvider, openApiRequestValidator, serverAuthenticationEntryPoint)
 					.setHeaderAppKey(signature.getHeaderAppKey());
 		} else {
 			log.info("gateway security config Authentication WebFilter by NoOp");

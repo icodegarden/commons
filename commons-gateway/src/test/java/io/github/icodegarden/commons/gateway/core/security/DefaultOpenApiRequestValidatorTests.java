@@ -18,22 +18,6 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
 public class DefaultOpenApiRequestValidatorTests {
 
 	/**
-	 * 时间过早，false
-	 */
-	@Test
-	void validate_timestampBefore() throws Exception {
-		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
-
-		OpenApiRequestBody requestBody = new OpenApiRequestBody();
-		requestBody.setApp_id("app_id");
-		requestBody.setRequest_id("request_id");
-		requestBody.setTimestamp(SystemUtils.STANDARD_DATETIME_FORMATTER.format(LocalDateTime.now().minusMinutes(6)));
-
-		boolean validate = validator.validate(requestBody);
-		Assertions.assertThat(validate).isFalse();
-	}
-
-	/**
 	 * 不同2次请求，1true 2true
 	 */
 	@Test

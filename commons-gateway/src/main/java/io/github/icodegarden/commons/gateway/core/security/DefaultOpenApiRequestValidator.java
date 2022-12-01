@@ -2,7 +2,6 @@ package io.github.icodegarden.commons.gateway.core.security;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,21 +10,17 @@ import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.LogUtils;
-import io.github.icodegarden.commons.lang.util.SystemUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * 使用SoftReference（GC除SoftReference对象仍不够用才回收SoftReference）保存已使用的request_id<br>
+ * WeakReference由于每次GC即回收过于频繁，失去更多准确度
  * 
  * @author Fangfang.Xu
  *
  */
 @Slf4j
 public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
-
-	/**
-	 * 可配
-	 */
-	public static int REJECT_SECONDS_BEFORE = 5 * 60;
 
 	private ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
 
@@ -59,17 +54,8 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 
 	@Override
 	public boolean validate(OpenApiRequestBody requestBody) {
-		Assert.hasText(requestBody.getTimestamp(), "Missing:timestamp");
 		Assert.hasText(requestBody.getApp_id(), "Missing:app_id");
 		Assert.hasText(requestBody.getRequest_id(), "Missing:request_id");
-
-		/**
-		 * n分钟之前的直接拒绝
-		 */
-		LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(), SystemUtils.STANDARD_DATETIME_FORMATTER);
-		if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())) {
-			return false;
-		}
 
 		/**
 		 * appId隔离<br>

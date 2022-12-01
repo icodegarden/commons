@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.gateway.core.security;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCod
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
+import io.github.icodegarden.commons.lang.util.SystemUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
 import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
 import io.github.icodegarden.commons.springboot.security.SpringUser;
@@ -56,8 +58,13 @@ import reactor.core.publisher.Mono;
  *
  */
 @Slf4j
-public class SignAuthenticationWebFilter implements WebFilter {
+public class SignatureAuthenticationWebFilter implements WebFilter {
 
+	/**
+	 * 可配
+	 */
+	public static int REJECT_SECONDS_BEFORE = 5 * 60;
+	
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
 	private static final Pattern DATETIME_PATTERN = Pattern
@@ -69,7 +76,7 @@ public class SignAuthenticationWebFilter implements WebFilter {
 	private final OpenApiRequestValidator openApiRequestValidator;
 	private boolean headerAppKey;
 
-	public SignAuthenticationWebFilter(AppProvider appProvider, OpenApiRequestValidator openApiRequestValidator,
+	public SignatureAuthenticationWebFilter(AppProvider appProvider, OpenApiRequestValidator openApiRequestValidator,
 			ServerAuthenticationEntryPoint authenticationEntryPoint) {
 		this.appProvider = appProvider;
 		this.openApiRequestValidator = openApiRequestValidator;
@@ -86,7 +93,7 @@ public class SignAuthenticationWebFilter implements WebFilter {
 				new ApiResponseServerAuthenticationFailureHandler(authenticationEntryPoint));
 	}
 
-	public SignAuthenticationWebFilter setHeaderAppKey(boolean headerAppKey) {
+	public SignatureAuthenticationWebFilter setHeaderAppKey(boolean headerAppKey) {
 		this.headerAppKey = headerAppKey;
 		return this;
 	}
@@ -253,6 +260,14 @@ public class SignAuthenticationWebFilter implements WebFilter {
 					}
 					if (requestBody.getTimestamp().length() != 19
 							|| !DATETIME_PATTERN.matcher(requestBody.getTimestamp()).matches()) {
+						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
+								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
+					}
+					/**
+					 * n分钟之前的视为重放
+					 */
+					LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(), SystemUtils.STANDARD_DATETIME_FORMATTER);
+					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
 					}

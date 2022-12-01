@@ -24,6 +24,14 @@ spring:
     url: jdbc:mysql://192.168.80.130:3306/gddc_admin?setUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowMultiQueries=true
     username: root
     password: 123456
+    hikari:
+      minimum-idle: 10 #默认10
+      maximum-pool-size: 10 #默认10
+#      max-lifetime: 1800000 #默认30分钟，必须>=30000ms
+#      keepalive-time: 0 #默认0，必须>=30000ms，keepalive-time必须<=max-lifetime
+      connection-timeout: 100 #默认30000
+#      idle-timeout: 600000 #默认10分钟 
+#      connection-test-query: SELECT 1    
   cloud:
     loadbalancer: #LoadBalancerClientsProperties
       retry:
