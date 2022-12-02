@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.redis;
 
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -43,6 +44,11 @@ public class PoolRedisExecutor implements RedisExecutor {
 	@FunctionalInterface
 	private interface Command<T> {
 		T exec(Jedis jedis);
+	}
+	
+	@Override
+	public Set<byte[]> keys(byte[] pattern) {
+		return execCommand(jedis -> jedis.keys(pattern));
 	}
 
 	@Override

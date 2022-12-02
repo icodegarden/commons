@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.redis;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -11,6 +12,8 @@ import redis.clients.jedis.BinaryJedisPubSub;
  *
  */
 public interface RedisExecutor {
+	
+	Set<byte[]> keys(byte[] pattern);
 
 	byte[] get(final byte[] key);
 

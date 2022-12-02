@@ -31,6 +31,11 @@ public class ClusterRedisExecutor implements RedisExecutor {
 	public ClusterRedisExecutor(JedisCluster jc) {
 		this.jc = jc;
 	}
+	
+	@Override
+	public Set<byte[]> keys(byte[] pattern) {
+		return jc.keys(pattern);
+	}
 
 	@Override
 	public byte[] get(byte[] key) {
