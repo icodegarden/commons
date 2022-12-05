@@ -64,6 +64,7 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 	 * 可配
 	 */
 	public static int REJECT_SECONDS_BEFORE = 5 * 60;
+	public static int REJECT_SECONDS_AFTER = 10;
 
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
@@ -264,11 +265,12 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
 					}
 					/**
-					 * n分钟之前的视为重放
+					 * n秒（例如5分钟）之前的视为重放;比现在晚n秒（例如10秒）以上视为不符合
 					 */
 					LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(),
 							SystemUtils.STANDARD_DATETIME_FORMATTER);
-					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())) {
+					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())
+							|| ts.minusSeconds(REJECT_SECONDS_AFTER).isAfter(SystemUtils.now())) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
 					}

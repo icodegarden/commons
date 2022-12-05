@@ -29,7 +29,7 @@ spring:
       maximum-pool-size: 10 #默认10
 #      max-lifetime: 1800000 #默认30分钟，必须>=30000ms
 #      keepalive-time: 0 #默认0，必须>=30000ms，keepalive-time必须<=max-lifetime
-      connection-timeout: 100 #默认30000
+      connection-timeout: 250 #默认30000,包含了request timeout,不能小于250
 #      idle-timeout: 600000 #默认10分钟 
 #      connection-test-query: SELECT 1    
   cloud:
