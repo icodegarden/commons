@@ -1,11 +1,9 @@
 package io.github.icodegarden.commons.springboot.loadbalancer;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,19 +20,27 @@ import org.springframework.cloud.loadbalancer.core.NoopServiceInstanceListSuppli
 import org.springframework.cloud.loadbalancer.core.ReactorServiceInstanceLoadBalancer;
 import org.springframework.cloud.loadbalancer.core.SelectedInstanceCallback;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
+import io.github.icodegarden.commons.lang.util.JsonUtils;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import reactor.core.publisher.Mono;
 
 /**
  * 负载均衡算法：<br>
- * 流量没有grey_tag的，只选择tag null的服务; <br>
- * 流量有grey_tag的，则优先选择有此tag的服务，其次选择tag
- * null的服务（优先而不是必须找到匹配的原因是：部分服务可能不发版或不需要灰度）<br>
+ * 流量有X-FlowTag-Required的，必须完全匹配有此tag的实例<br>
+ * 流量有X-FlowTag-First的，优先选择有此tag的服务，其次选择没有任何tag的实例（优先而不是必须找到匹配的原因是：部分服务可能不发版或不需要灰度）<br>
+ * 流量没有任何tag的，只选择没有任何tag的实例<br>
+ * 
  * <br>
  * 
- * 默认的metadataTagName是tag.flow<br>
- * 默认的flowTagProvider是从request中获取header=X-Flow-Tag的值<br>
+ * 默认的instanceMetadataTagName是flow.tags, json array, ["a","b",...]<br>
+ * 默认的IdentityFlowTagExtractor是从request.header中获取X-FlowTag-Required、X-FlowTag-First的值<br>
  * 默认的L2 LoadBalancer是轮询<br>
  * 
  * @author Fangfang.Xu
@@ -43,11 +49,15 @@ public class FlowTagLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
 	private static final Logger log = LoggerFactory.getLogger(FlowTagLoadBalancer.class);
 
-	public static final String HTTPHEADER_FLOWTAG = "X-Flow-Tag";
+	public static final String HTTPHEADER_FLOWTAG_REQUIRED = "X-FlowTag-Required";
+	public static final String HTTPHEADER_FLOWTAG_FIRST = "X-FlowTag-First";
 
-	private String metadataTagName = "tag.flow";
+	/**
+	 * json array, ["a","b",...]
+	 */
+	private String instanceMetadataTagName = "flow.tags";
 
-	private Function<Request, String> flowTagProvider = new DefaultFlowTagProvider();
+	private IdentityFlowTagExtractor identityFlowTagExtractor = new DefaultIdentityFlowTagExtractor();
 
 	private L2LoadBalancer l2LoadBalancer = new RoundRobinLoadBalancer();
 
@@ -77,47 +87,84 @@ public class FlowTagLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 			return new EmptyResponse();
 		}
 
-		String flowTag = flowTagProvider.apply(request);
+		IdentityFlowTag identityFlowTag = identityFlowTagExtractor.extract(request);
 
 		List<ServiceInstance> instancesToChoose;
 
-		if (!StringUtils.hasText(flowTag)) {
+		if (StringUtils.hasText(identityFlowTag.getFlowTagRequired())) {
 			instancesToChoose = instances.stream().filter(instance -> {
-				String tagValue = instance.getMetadata().get(metadataTagName);
-				return !StringUtils.hasText(tagValue);
+				String tagValue = instance.getMetadata().get(instanceMetadataTagName);
+				if (!StringUtils.hasText(tagValue)) {
+					return false;
+				}
+				List<String> tags = JsonUtils.deserializeArray(tagValue, String.class);
+				return tags.contains(identityFlowTag.getFlowTagRequired());
 			}).collect(Collectors.toList());
-		} else {
+		} else if (StringUtils.hasText(identityFlowTag.getFlowTagFirst())) {
 			instancesToChoose = instances.stream().filter(instance -> {
-				String tagValue = instance.getMetadata().get(metadataTagName);
-				return Objects.equals(flowTag, tagValue);
+				String tagValue = instance.getMetadata().get(instanceMetadataTagName);
+				if (!StringUtils.hasText(tagValue)) {
+					return false;
+				}
+				List<String> tags = JsonUtils.deserializeArray(tagValue, String.class);
+				return tags.contains(identityFlowTag.getFlowTagFirst());
 			}).collect(Collectors.toList());
 
 			if (instancesToChoose.isEmpty()) {
-				instancesToChoose = instances.stream().filter(instance -> {
-					String tagValue = instance.getMetadata().get(metadataTagName);
-					return !StringUtils.hasText(tagValue);
-				}).collect(Collectors.toList());
+				instancesToChoose = filteredInstancesNonFlowTags(instances);
 			}
+		} else {
+			instancesToChoose = filteredInstancesNonFlowTags(instances);
 		}
 
 		return l2LoadBalancer.processInstanceResponse(supplier, instancesToChoose);
 	}
 
-	public void setMetadataTagName(String metadataTagName) {
-		this.metadataTagName = metadataTagName;
+	/**
+	 * 没有tag的实例
+	 */
+	private List<ServiceInstance> filteredInstancesNonFlowTags(List<ServiceInstance> instances) {
+		return instances.stream().filter(instance -> {
+			String tagValue = instance.getMetadata().get(instanceMetadataTagName);
+			return !StringUtils.hasText(tagValue);
+		}).collect(Collectors.toList());
 	}
 
-	public void setFlowTagProvider(Function<Request, String> flowTagProvider) {
-		this.flowTagProvider = flowTagProvider;
+	public void setInstanceMetadataTagName(String instanceMetadataTagName) {
+		this.instanceMetadataTagName = instanceMetadataTagName;
+	}
+
+	public void setIdentityFlowTagExtractor(IdentityFlowTagExtractor identityFlowTagExtractor) {
+		this.identityFlowTagExtractor = identityFlowTagExtractor;
 	}
 
 	public void setL2LoadBalancer(L2LoadBalancer l2LoadBalancer) {
 		this.l2LoadBalancer = l2LoadBalancer;
 	}
 
-	private class DefaultFlowTagProvider implements Function<Request, String> {
+	public static interface IdentityFlowTagExtractor {
+
+		/**
+		 * @return 不为null
+		 */
+		IdentityFlowTag extract(Request request);
+	}
+
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Getter
+	@Setter
+	@ToString
+	public static class IdentityFlowTag {
+		@Nullable
+		private String flowTagRequired;
+		@Nullable
+		private String flowTagFirst;
+	}
+
+	private class DefaultIdentityFlowTagExtractor implements IdentityFlowTagExtractor {
 		@Override
-		public String apply(Request request) {
+		public IdentityFlowTag extract(Request request) {
 			Object ctx = request.getContext();
 			if (!(ctx instanceof DefaultRequestContext)) {
 				if (log.isWarnEnabled()) {
@@ -136,8 +183,9 @@ public class FlowTagLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 				return null;
 			}
 			RequestData clientRequest = (RequestData) cr;
-			String first = clientRequest.getHeaders().getFirst(HTTPHEADER_FLOWTAG);
-			return first;
+			String flowTagRequired = clientRequest.getHeaders().getFirst(HTTPHEADER_FLOWTAG_REQUIRED);
+			String flowTagFirst = clientRequest.getHeaders().getFirst(HTTPHEADER_FLOWTAG_FIRST);
+			return new IdentityFlowTag(flowTagRequired, flowTagFirst);
 		}
 	}
 

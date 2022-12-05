@@ -31,7 +31,9 @@ public class App {
 	@Nullable
 	private String privateKey;
 
-	private String flowTag;
+	private String flowTagRequired;
+	
+	private String flowTagFirst;
 
 	private Set<String> methods = new HashSet<>();
 }

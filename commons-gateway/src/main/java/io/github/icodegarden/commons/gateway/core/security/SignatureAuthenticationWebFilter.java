@@ -64,7 +64,7 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 	 * 可配
 	 */
 	public static int REJECT_SECONDS_BEFORE = 5 * 60;
-	
+
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
 	private static final Pattern DATETIME_PATTERN = Pattern
@@ -266,7 +266,8 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 					/**
 					 * n分钟之前的视为重放
 					 */
-					LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(), SystemUtils.STANDARD_DATETIME_FORMATTER);
+					LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(),
+							SystemUtils.STANDARD_DATETIME_FORMATTER);
 					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
@@ -311,10 +312,12 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 					PreAuthenticatedAuthenticationToken authenticationToken = new PreAuthenticatedAuthenticationToken(
 							user, "", Collections.emptyList());
 
-					String flowTag = app.getFlowTag();
-					if (StringUtils.hasText(flowTag)) {
+					String flowTagRequired = app.getFlowTagRequired();
+					String flowTagFirst = app.getFlowTagFirst();
+					if (StringUtils.hasText(flowTagRequired) || StringUtils.hasText(flowTagFirst)) {
 						Map<String, Object> details = new HashMap<String, Object>(1, 1);
-						details.put("flowTag", flowTag);
+						details.put("flowTagRequired", flowTagRequired);
+						details.put("flowTagFirst", flowTagFirst);
 						authenticationToken.setDetails(details);
 					}
 
@@ -361,8 +364,10 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME,
 							principal.getUsername());
 					if (details != null) {
-						String flowTag = (String) details.get("flowTag");
-						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG, flowTag);
+						String flowTagRequired = (String) details.get("flowTagRequired");
+						String flowTagFirst = (String) details.get("flowTagFirst");
+						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_REQUIRED, flowTagRequired);
+						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST, flowTagFirst);
 					}
 
 					if (headerAppKey) {

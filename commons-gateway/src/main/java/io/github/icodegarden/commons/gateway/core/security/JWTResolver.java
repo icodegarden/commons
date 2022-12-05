@@ -51,7 +51,8 @@ public class JWTResolver {
 		Long id = decodedJWT.getClaim("id").asLong();
 		String username = decodedJWT.getClaim("username").asString();
 		String platformRole = decodedJWT.getClaim("platformRole").asString();
-		String flowTag = decodedJWT.getClaim("flowTag").asString();
+		String flowTagRequired = decodedJWT.getClaim("flowTagRequired").asString();
+		String flowTagFirst = decodedJWT.getClaim("flowTagFirst").asString();
 
 		Collection<GrantedAuthority> authoritys;
 		if (platformRole != null && !platformRole.isEmpty()) {
@@ -63,9 +64,10 @@ public class JWTResolver {
 		SpringUser userDetails = new SpringUser(id.toString(), username, "", authoritys);
 		PreAuthenticatedAuthenticationToken authenticationToken = new PreAuthenticatedAuthenticationToken(userDetails,
 				"", authoritys);
-		if (StringUtils.hasText(flowTag)) {
+		if (StringUtils.hasText(flowTagRequired) || StringUtils.hasText(flowTagFirst)) {
 			Map<String, Object> details = new HashMap<String, Object>(1, 1);
-			details.put("flowTag", flowTag);
+			details.put("flowTagRequired", flowTagRequired);
+			details.put("flowTagFirst", flowTagFirst);
 			authenticationToken.setDetails(details);
 		}
 

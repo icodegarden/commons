@@ -137,10 +137,13 @@ public class JWTAuthenticationWebFilter implements WebFilter {
 
 				ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
 					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERID, principal.getUserId());
-					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERNAME, principal.getUsername());
+					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERNAME,
+							principal.getUsername());
 					if (details != null) {
-						String flowTag = (String) details.get("flowTag");
-						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG, flowTag);
+						String flowTagRequired = (String) details.get("flowTagRequired");
+						String flowTagFirst = (String) details.get("flowTagFirst");
+						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_REQUIRED, flowTagRequired);
+						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST, flowTagFirst);
 					}
 				}).build();
 
