@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.boot.availability.ReadinessState;
 import org.springframework.cloud.gateway.route.RouteLocator;
 
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewayPropertiesConstants;
@@ -36,19 +37,15 @@ public class ReadnessEndPoint implements GracefullyShutdown {
 		GracefullyShutdown.Registry.singleton().register(this);
 	}
 
-	/**
-	 * FIXME 最好能响应403，目前没找到方法所以抛异常来响应500，这样有点不友好，日志平台会有一些ERROR日志
-	 */
 	@ReadOperation
-	public String readness() {
+	public String readness() throws IllegalStateException {
 		if (closed) {
 			throw new IllegalStateException("Server Closed");
-//			return ResponseEntity.status(403).body(Mono.just("server closed"));
 		}
 
 		this.routeLocator.getRoutes().subscribe();
 
-		return "";
+		return ReadinessState.ACCEPTING_TRAFFIC.name();
 	}
 
 	@Override
