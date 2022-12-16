@@ -14,23 +14,23 @@ import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 单独设置一个readness的接口，网关一旦接收到shutdown命令或容器触发shutdown等，spring Lifecycle 就对
- * readness接口就调整为响应非200，并阻塞等待超过readness探测次数的时间（之后新的请求便不再进来），最后等待剩余请求处理完毕就可以下线（spring
+ * 单独设置一个readiness的接口，网关一旦接收到shutdown命令或容器触发shutdown等，spring Lifecycle 就对
+ * readiness接口就调整为响应非200，并阻塞等待超过readiness探测次数的时间（之后新的请求便不再进来），最后等待剩余请求处理完毕就可以下线（spring
  * gateway支持server.shutdown: graceful，自动等待请求处理完）
  * 
  * @author Fangfang.Xu
  *
  */
-@Endpoint(id = "readness", enableByDefault = true)
+@Endpoint(id = "readiness", enableByDefault = true)
 @Slf4j
-public class ReadnessEndPoint implements GracefullyShutdown {
+public class ReadinessEndPoint implements GracefullyShutdown {
 
 	private volatile boolean closed;
 
 	@Autowired
 	private RouteLocator routeLocator;
-	@Value("${" + CommonsGatewayPropertiesConstants.READNESS_SHUTDOWN_BLOCKMS + ":30000}")
-	private int readnessShutdownBlockMs;
+	@Value("${" + CommonsGatewayPropertiesConstants.READINESS_SHUTDOWN_BLOCKMS + ":30000}")
+	private int readinessShutdownBlockMs;
 
 	@PostConstruct
 	void init() {
@@ -38,7 +38,7 @@ public class ReadnessEndPoint implements GracefullyShutdown {
 	}
 
 	@ReadOperation
-	public String readness() throws IllegalStateException {
+	public String readiness() throws IllegalStateException {
 		if (closed) {
 			throw new IllegalStateException("Server Closed");
 		}
@@ -50,15 +50,15 @@ public class ReadnessEndPoint implements GracefullyShutdown {
 
 	@Override
 	public String shutdownName() {
-		return "gateway-readness";
+		return "gateway-readiness";
 	}
 
 	@Override
 	public void shutdown() {
 		closed = true;
 		try {
-			log.info("readness shutdown block ms:{}", readnessShutdownBlockMs);
-			Thread.sleep(readnessShutdownBlockMs);
+			log.info("readiness shutdown block ms:{}", readinessShutdownBlockMs);
+			Thread.sleep(readinessShutdownBlockMs);
 		} catch (InterruptedException e) {
 		}
 	}

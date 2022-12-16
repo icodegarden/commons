@@ -127,7 +127,7 @@ public class GatewaySecurityAutoConfiguration {
             .pathMatchers("/*/v3/api-docs/**").permitAll()
             /**
              * spring actuator endpoint<br>
-             * 包括自定义的/actuator/readness
+             * 包括自定义的/actuator/readiness
              */
             .pathMatchers("/actuator/**").permitAll()
             /**

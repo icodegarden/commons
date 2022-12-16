@@ -14,7 +14,7 @@
 * GatewayBeanAutoConfiguration.java 通用bean配置
 * GatewaySecurityAutoConfiguration.java springsecurity配置，决定了使用什么认证方式
 * GatewaySentinelAutoConfiguration.java 配置网关sentinel支持
-* ReadnessEndpointAutoConfiguration.java 配置网关的readness接口，这同时需要配置management.endpoints.web.exposure.include: health,readness
+* ReadinessEndpointAutoConfiguration.java 配置网关的readiness接口，这同时需要配置management.endpoints.web.exposure.include: health,readiness
 * RoutePredicateFactoryAutoConfiguration.java 配置自定义的路由器
 
 ## io.github.icodegarden.commons.gateway.core.security

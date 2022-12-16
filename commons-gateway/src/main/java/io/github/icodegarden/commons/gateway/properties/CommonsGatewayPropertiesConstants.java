@@ -7,6 +7,6 @@ package io.github.icodegarden.commons.gateway.properties;
  */
 public class CommonsGatewayPropertiesConstants {
 
-	public static final String READNESS_SHUTDOWN_BLOCKMS = "commons.gateway.readness.shutdown.blockMs";
+	public static final String READINESS_SHUTDOWN_BLOCKMS = "commons.gateway.readiness.shutdown.blockMs";
 
 }
