@@ -3,6 +3,7 @@ package io.github.icodegarden.commons.springboot.autoconfigure;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,44 +34,61 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class CommonsSentinelAutoConfiguration {
+	
+	/**
+	 * 基础的要在SentinelNacosDynamicRuleAutoConfiguration前执行，否则当没有引入spring-cloud-starter-alibaba-sentinel时会导致不去连接dashboard
+	 */
+	@AutoConfigureBefore(SentinelNacosDynamicRuleAutoConfiguration.class)
+	@Configuration
+	protected static class SentinelEnvAutoConfiguration {
+		@Autowired
+		private Environment env;
+		@Autowired
+		private CommonsSentinelProperties sentinelProperties;
 
-	@Autowired
-	private Environment env;
-	@Autowired
-	private CommonsSentinelProperties sentinelProperties;
-
-	@PostConstruct
-	private void init() {
-		log.info("commons init bean of CommonsSentinelAutoConfiguration");
-		
-		if (!ClassUtils.isPresent("com.alibaba.cloud.sentinel.SentinelProperties", null)) {
+		@PostConstruct
+		private void init() {
+			log.info("commons init bean of CommonsSentinelAutoConfiguration");
+			
 			/**
-			 * 当没有依赖spring-cloud-starter-alibaba-sentinel，要在sentinel初始化前设置-D参数地址，而不能通过application.yml自动生效
+			 * 基础
 			 */
-			String dashboardAddr = env.getProperty("spring.cloud.sentinel.transport.dashboard");
-			log.info(
-					"this project maven dependency not contains spring-cloud-starter-alibaba-sentinel, will set sentinel dashboard:{}",
-					dashboardAddr);
-			Assert.hasText(dashboardAddr,
-					"dashboardAddr must not empty when dependency not contains spring-cloud-starter-alibaba-sentinel");
-			System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);//IMPT
-		}
+			if (!ClassUtils.isPresent("com.alibaba.cloud.sentinel.SentinelProperties", null)) {
+				/**
+				 * 当没有依赖spring-cloud-starter-alibaba-sentinel，要在sentinel初始化前设置-D参数地址，而不能通过application.yml自动生效
+				 */
+				String dashboardAddr = env.getProperty("spring.cloud.sentinel.transport.dashboard");
+				log.info(
+						"this project maven dependency not contains spring-cloud-starter-alibaba-sentinel, will set sentinel dashboard:{}",
+						dashboardAddr);
+				Assert.hasText(dashboardAddr,
+						"dashboardAddr must not empty when dependency not contains spring-cloud-starter-alibaba-sentinel");
+				System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);//IMPT
+				
+				String projectName = env.getRequiredProperty("spring.application.name");
+				System.setProperty("project.name", projectName);//IMPT
+			}
+			SentinelEventStarter.addDefaultLoggingObserver();
 
-		SentinelEventStarter.addDefaultLoggingObserver();
-
-		Cluster cluster = sentinelProperties.getCluster();
-		log.info("sentinel cluster is enbaled:{}", cluster.getEnabled());
-		if (cluster.getEnabled()) {
-			String projectName = env.getRequiredProperty("spring.application.name");
-			SentinelClusterClientStarter.start(cluster.getServerAddr(), cluster.getServerPort(), projectName);
+			/**
+			 * 集群
+			 */
+			Cluster cluster = sentinelProperties.getCluster();
+			log.info("sentinel cluster is enbaled:{}", cluster.getEnabled());
+			if (cluster.getEnabled()) {
+				String projectName = env.getRequiredProperty("spring.application.name");
+				SentinelClusterClientStarter.start(cluster.getServerAddr(), cluster.getServerPort(), projectName);
+			}
 		}
 	}
+
+	
 
 	@ConditionalOnBean(NacosConfigProperties.class)
 	@ConditionalOnClass({ SphU.class })
 	@ConditionalOnProperty(value = "commons.sentinel.nacos.rule.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
-	protected static class NacosDynamicRuleAutoConfiguration {
+	protected static class SentinelNacosDynamicRuleAutoConfiguration {
 		@Autowired
 		private Environment env;
 		@Autowired
