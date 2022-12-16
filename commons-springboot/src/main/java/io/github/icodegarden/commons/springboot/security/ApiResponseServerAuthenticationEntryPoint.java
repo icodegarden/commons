@@ -44,7 +44,14 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 			String message = (e.getMessage() != null ? e.getMessage() : "Not Authenticated.");
 
 			if (log.isInfoEnabled()) {
-				log.info("request Authentication failed:{}", message);
+				String path = null;
+				try {
+					path = exchange.getRequest().getPath().toString();
+				}catch (Exception ex) {
+					log.error("ex on get request path", ex);
+				}
+				
+				log.info("path of {} request Authentication failed:{}", path, message);
 			}
 
 			ErrorCodeException ece;

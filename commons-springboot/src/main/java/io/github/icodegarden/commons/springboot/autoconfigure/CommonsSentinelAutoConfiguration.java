@@ -34,7 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class CommonsSentinelAutoConfiguration {
-	
+
+	{
+		log.info("commons init bean of CommonsSentinelAutoConfiguration");
+	}
+
 	/**
 	 * 基础的要在SentinelNacosDynamicRuleAutoConfiguration前执行，否则当没有引入spring-cloud-starter-alibaba-sentinel时会导致不去连接dashboard
 	 */
@@ -48,8 +52,8 @@ public class CommonsSentinelAutoConfiguration {
 
 		@PostConstruct
 		private void init() {
-			log.info("commons init bean of CommonsSentinelAutoConfiguration");
-			
+			log.info("commons init bean of SentinelEnvAutoConfiguration");
+
 			/**
 			 * 基础
 			 */
@@ -63,10 +67,10 @@ public class CommonsSentinelAutoConfiguration {
 						dashboardAddr);
 				Assert.hasText(dashboardAddr,
 						"dashboardAddr must not empty when dependency not contains spring-cloud-starter-alibaba-sentinel");
-				System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);//IMPT
-				
+				System.setProperty("csp.sentinel.dashboard.server", dashboardAddr);// IMPT
+
 				String projectName = env.getRequiredProperty("spring.application.name");
-				System.setProperty("project.name", projectName);//IMPT
+				System.setProperty("project.name", projectName);// IMPT
 			}
 			SentinelEventStarter.addDefaultLoggingObserver();
 
@@ -81,8 +85,6 @@ public class CommonsSentinelAutoConfiguration {
 			}
 		}
 	}
-
-	
 
 	@ConditionalOnBean(NacosConfigProperties.class)
 	@ConditionalOnClass({ SphU.class })
@@ -99,7 +101,7 @@ public class CommonsSentinelAutoConfiguration {
 		@PostConstruct
 		private void init() {
 			log.info("commons init bean of DynamicRuleAutoConfiguration");
-			
+
 			String dataId = env.getRequiredProperty("spring.application.name");
 			Nacos nacos = sentinelProperties.getNacos();
 
