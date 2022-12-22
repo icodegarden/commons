@@ -1,6 +1,6 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.github.icodegarden.commons.gateway.autoconfigure.GatewayBeanAutoConfiguration,\
+io.github.icodegarden.commons.gateway.autoconfigure.GatewayRoutePredicateFactoryAutoConfiguration,\
 io.github.icodegarden.commons.gateway.autoconfigure.GatewaySecurityAutoConfiguration,\
-io.github.icodegarden.commons.gateway.autoconfigure.GatewaySentinelAutoConfiguration,\
-io.github.icodegarden.commons.gateway.autoconfigure.ReadinessEndpointAutoConfiguration,\
-io.github.icodegarden.commons.gateway.autoconfigure.RoutePredicateFactoryAutoConfiguration
+io.github.icodegarden.commons.gateway.autoconfigure.GatewaySentinelAutoConfiguration

@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.icodegarden.commons.mybatis.interceptor.SqlPerformanceInterceptor;
+import io.github.icodegarden.commons.mybatis.interceptor.SqlInterceptor;
 import io.github.icodegarden.commons.springboot.properties.CommonsMybatisProperties;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
-@ConditionalOnClass(SqlPerformanceInterceptor.class)
+@ConditionalOnClass(SqlInterceptor.class)
 @EnableConfigurationProperties({ CommonsMybatisProperties.class })
 @Configuration
 @Slf4j
@@ -26,17 +26,17 @@ public class CommonsMybatisAutoConfiguration {
 	@Autowired
 	private CommonsMybatisProperties mybatisProperties;
 
-	@ConditionalOnProperty(value = "commons.mybatis.interceptor.sqlPerformance.enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(value = "commons.mybatis.interceptor.sql.enabled", havingValue = "true", matchIfMissing = true)
 	@Bean
-	public SqlPerformanceInterceptor sqlPerformanceInterceptor() {
-		log.info("commons init bean of SqlPerformanceInterceptor");
-		
-		SqlPerformanceInterceptor sqlPerformanceInterceptor = new SqlPerformanceInterceptor();
-		sqlPerformanceInterceptor.setSqlPerformanceConfig(mybatisProperties.getSql());
-		sqlPerformanceInterceptor.setUnhealthSqlConsumer(sql -> {
-			log.warn("unhealth sql : {}", sql);
+	public SqlInterceptor sqlInterceptor() {
+		log.info("commons init bean of SqlInterceptor");
+
+		SqlInterceptor sqlInterceptor = new SqlInterceptor();
+		sqlInterceptor.setSqlConfig(mybatisProperties.getSql());
+		sqlInterceptor.setSqlConsumer(sql -> {
+			log.warn("{}ms Threshold sql: {}", mybatisProperties.getSql(), sql);
 		});
-		return sqlPerformanceInterceptor;
+		return sqlInterceptor;
 	}
 
 	@ConditionalOnClass(MapperScan.class)

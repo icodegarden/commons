@@ -11,7 +11,7 @@ import io.github.icodegarden.commons.gateway.predicate.BodyMethodRoutePredicateF
  *
  */
 @Configuration
-public class RoutePredicateFactoryAutoConfiguration {
+public class GatewayRoutePredicateFactoryAutoConfiguration {
 
 	@Bean
 	public BodyMethodRoutePredicateFactory bodyMethodRoutePredicateFactory() {

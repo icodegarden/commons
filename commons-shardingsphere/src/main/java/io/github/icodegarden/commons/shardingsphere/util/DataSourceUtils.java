@@ -75,6 +75,13 @@ public abstract class DataSourceUtils {
 		return dataSources.keySet().stream().findFirst().get();
 	}
 
+	/**
+	 * @return name:DataSource
+	 */
+	public static Map<String, DataSource> dataSourceMap(ShardingSphereDataSource dataSource) {
+		return dataSources(dataSource);
+	}
+
 	private static LinkedHashMap<String, DataSource> dataSources(ShardingSphereDataSource dataSource) {
 		ShardingSphereMetaData shardingSphereMetaData = dataSource.getContextManager().getMetaDataContexts()
 				.getMetaDataMap().get("logic_db");

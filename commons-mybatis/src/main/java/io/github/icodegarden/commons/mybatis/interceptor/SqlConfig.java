@@ -12,11 +12,11 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class SqlPerformanceConfig {
+public class SqlConfig {
 	/**
-	 * 超过这个毫秒数的属于非健康sql
+	 * 超过这个毫秒数的输出sql
 	 */
-	private long unhealthMs = 100;
+	private long outputThresholdMs = 100;
 	/**
 	 * SQL 是否格式化
 	 */

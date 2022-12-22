@@ -29,9 +29,9 @@ import org.apache.ibatis.session.ResultHandler;
 		@Signature(type = StatementHandler.class, method = "query", args = { Statement.class, ResultHandler.class }),
 		@Signature(type = StatementHandler.class, method = "update", args = { Statement.class }),
 		@Signature(type = StatementHandler.class, method = "batch", args = { Statement.class }) })
-public class SqlPerformanceInterceptor implements Interceptor {
+public class SqlInterceptor implements Interceptor {
 
-	private static final Log log = LogFactory.getLog(SqlPerformanceInterceptor.class);
+	private static final Log log = LogFactory.getLog(SqlInterceptor.class);
 	private static String DruidPooledPreparedStatement = "com.alibaba.druid.pool.DruidPooledPreparedStatement";
 	private static String T4CPreparedStatement = "oracle.jdbc.driver.T4CPreparedStatement";
 	private static String OraclePreparedStatementWrapper = "oracle.jdbc.driver.OraclePreparedStatementWrapper";
@@ -41,12 +41,12 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	 */
 	private int estimatedSqlLength = 256;
 
-	private SqlPerformanceConfig sqlPerformanceConfig = new SqlPerformanceConfig();
+	private SqlConfig sqlConfig = new SqlConfig();
 	
 	/**
 	 * 非健康sql默认处理方式是打印err
 	 */
-	private Consumer<String> unhealthSqlConsumer = sql -> {
+	private Consumer<String> sqlConsumer = sql -> {
 		System.err.println(sql);
 	};
 	private Method oracleGetOriginalSqlMethod;
@@ -56,8 +56,8 @@ public class SqlPerformanceInterceptor implements Interceptor {
 	private Method shardingSphereGetParamtersMethod;
 	private Field shardingSphereSqlField;
 
-	public void setSqlPerformanceConfig(SqlPerformanceConfig sqlPerformanceConfig) {
-		this.sqlPerformanceConfig = sqlPerformanceConfig;
+	public void setSqlConfig(SqlConfig sqlConfig) {
+		this.sqlConfig = sqlConfig;
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class SqlPerformanceInterceptor implements Interceptor {
 		Object result = invocation.proceed();
 		long timing = System.currentTimeMillis() - start;
 
-		if (timing > sqlPerformanceConfig.getUnhealthMs()) {
+		if (timing > sqlConfig.getOutputThresholdMs()) {
 			StringBuilder formatSql;
 			try {
 				String originalSql = resolveOriginalSql(statement, paramters);
@@ -102,15 +102,15 @@ public class SqlPerformanceInterceptor implements Interceptor {
 				MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
 				formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
 						.append(ms.getId());
-				if (sqlPerformanceConfig.isFormat()) {
+				if (sqlConfig.isFormat()) {
 					formatSql.append(StringPool.NEWLINE).append("Execute SQL：")
-							.append(SqlUtils.sqlFormat(originalSql, sqlPerformanceConfig.isFormat())).append(StringPool.NEWLINE);
+							.append(SqlUtils.sqlFormat(originalSql, sqlConfig.isFormat())).append(StringPool.NEWLINE);
 				} else {
-					formatSql.append("Execute SQL：").append(SqlUtils.sqlFormat(originalSql, sqlPerformanceConfig.isFormat()));
+					formatSql.append("Execute SQL：").append(SqlUtils.sqlFormat(originalSql, sqlConfig.isFormat()));
 				}
 
 				try {
-					unhealthSqlConsumer.accept(formatSql.toString());
+					sqlConsumer.accept(formatSql.toString());
 				} catch (Exception e) {
 					log.error("WARN ex on consume unhealth sql", e);
 				}
@@ -296,24 +296,8 @@ public class SqlPerformanceInterceptor implements Interceptor {
 		this.estimatedSqlLength = estimatedSqlLength;
 	}
 
-	public long getUnhealthMillis() {
-		return sqlPerformanceConfig.getUnhealthMs();
-	}
-
-	public void setUnhealthMillis(long unhealthMillis) {
-		sqlPerformanceConfig.setUnhealthMs(unhealthMillis);
-	}
-
-	public boolean isFormat() {
-		return sqlPerformanceConfig.isFormat();
-	}
-
-	public void setFormat(boolean format) {
-		sqlPerformanceConfig.setFormat(format);
-	}
-
-	public void setUnhealthSqlConsumer(Consumer<String> unhealthSqlConsumer) {
-		this.unhealthSqlConsumer = unhealthSqlConsumer;
+	public void setSqlConsumer(Consumer<String> sqlConsumer) {
+		this.sqlConsumer = sqlConsumer;
 	}
 
 //	public boolean isFirstSqlOnSharding() {

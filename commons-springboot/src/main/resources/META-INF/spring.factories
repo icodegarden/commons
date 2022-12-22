@@ -3,6 +3,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsBeanAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsCacheAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsElasticsearchAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsEndpointAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsFeignAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsHBaseAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsKafkaAutoConfiguration,\

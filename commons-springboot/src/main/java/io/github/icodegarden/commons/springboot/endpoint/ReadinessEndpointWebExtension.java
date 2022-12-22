@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.endpoint;
+package io.github.icodegarden.commons.springboot.endpoint;
 
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.web.WebEndpointResponse;
@@ -9,13 +9,13 @@ import org.springframework.boot.actuate.endpoint.web.annotation.EndpointWebExten
  * @author Fangfang.Xu
  *
  */
-@EndpointWebExtension(endpoint = ReadinessEndPoint.class)
+@EndpointWebExtension(endpoint = ReadinessEndpoint.class)
 public class ReadinessEndpointWebExtension {
 
-	private final ReadinessEndPoint readinessEndPoint;
+	private final ReadinessEndpoint readinessEndpoint;
 
-	public ReadinessEndpointWebExtension(ReadinessEndPoint readinessEndPoint) {
-		this.readinessEndPoint = readinessEndPoint;
+	public ReadinessEndpointWebExtension(ReadinessEndpoint readinessEndpoint) {
+		this.readinessEndpoint = readinessEndpoint;
 	}
 
 	@ReadOperation
@@ -23,7 +23,7 @@ public class ReadinessEndpointWebExtension {
 		String msg;
 		int statusCode = 200;
 		try {
-			msg = readinessEndPoint.readiness();
+			msg = readinessEndpoint.readiness().name();
 		} catch (IllegalStateException e) {
 			msg = e.getMessage();
 			statusCode = 503;
