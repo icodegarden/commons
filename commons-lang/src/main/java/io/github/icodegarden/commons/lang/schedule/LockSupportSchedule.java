@@ -40,8 +40,9 @@ public abstract class LockSupportSchedule extends GracefullyShutdownSchedule {
 	protected abstract void doScheduleAfterLocked() throws Throwable;
 
 	@Override
-	public void shutdown() {
-		super.shutdown();
+	public void close() {
+		super.close();
+		
 		if (lock.isAcquired()) {
 			lock.release();
 		}

@@ -45,10 +45,9 @@ public class CommonsWebAutoConfiguration {
 	private static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
 	private static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
 			+ 1;
-	
+
 	/**
-	 * 公共的
-	 * 可能不是springcloud项目
+	 * 公共的 可能不是springcloud项目
 	 */
 	@ConditionalOnClass({ ServiceRegistry.class })
 	@Configuration
@@ -67,15 +66,20 @@ public class CommonsWebAutoConfiguration {
 			}
 		}
 	}
-	
+
 	/**
-	 * 公共的
+	 * 公共的 可能不是web项目
 	 */
+	@ConditionalOnClass({ MappingJackson2HttpMessageConverter.class })
 	@ConditionalOnProperty(value = "commons.web.converter.mappingJackson.enabled", havingValue = "true", matchIfMissing = true)
-	@Bean
-	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-		log.info("commons init bean of MappingJackson2HttpMessageConverter");
-		return MappingJackson2HttpMessageConverters.simple();
+	@Configuration
+	protected static class MappingJackson2HttpMessageConverterAutoConfiguration {
+
+		@Bean
+		public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+			log.info("commons init bean of MappingJackson2HttpMessageConverter");
+			return MappingJackson2HttpMessageConverters.simple();
+		}
 	}
 
 	// ----------------------------------------------------------------------------------------
@@ -131,9 +135,9 @@ public class CommonsWebAutoConfiguration {
 		 * 网关是webflux不会有这个
 		 */
 		/**
-		 * 只对没有spring-security依赖的起作用，有依赖的认为自己认证 
+		 * 只对没有spring-security依赖的起作用，有依赖的认为自己认证
 		 */
-		@ConditionalOnMissingClass({"org.springframework.security.core.Authentication"})
+		@ConditionalOnMissingClass({ "org.springframework.security.core.Authentication" })
 		@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
 		public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
