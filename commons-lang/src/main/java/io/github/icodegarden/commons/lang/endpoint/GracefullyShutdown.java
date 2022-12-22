@@ -1,8 +1,10 @@
 package io.github.icodegarden.commons.lang.endpoint;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,14 @@ public interface GracefullyShutdown {
 			gracefullyShutdownMap.put(gracefullyShutdown.shutdownName(), gracefullyShutdown);
 		}
 
+		public boolean contains(String name) {
+			return gracefullyShutdownMap.containsKey(name);
+		}
+
+		public Collection<String> names() {
+			return new HashSet<String>(gracefullyShutdownMap.keySet());
+		}
+
 		/**
 		 * 遇到失败的跳过
 		 */
@@ -74,7 +84,7 @@ public interface GracefullyShutdown {
 							gracefullyShutdown.getClass().getSimpleName(), e);
 				}
 			}
-			
+
 			log.info("gracefully shutdown completed.");
 		}
 	}

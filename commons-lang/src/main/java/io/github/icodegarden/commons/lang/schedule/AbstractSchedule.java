@@ -29,13 +29,14 @@ public abstract class AbstractSchedule implements Schedule {
 
 	private long logmod = 100;
 
-	private final AtomicBoolean closed = new AtomicBoolean(true);
+	private final AtomicBoolean started = new AtomicBoolean(false);
+	private final AtomicBoolean closed = new AtomicBoolean(false);
 
 	private ScheduledFuture<?> future;
 
 	@Override
 	public boolean scheduleWithFixedDelay(long initialDelayMillis, long scheduleMillis) {
-		if (closed.compareAndSet(true, false)) {
+		if (started.compareAndSet(false, true)) {
 			future = scheduleThreadPool.scheduleWithFixedDelay(() -> {
 				scheduling();
 			}, initialDelayMillis, scheduleMillis, TimeUnit.MILLISECONDS);
@@ -47,7 +48,7 @@ public abstract class AbstractSchedule implements Schedule {
 
 	@Override
 	public boolean scheduleAtFixedRate(long initialDelayMillis, long scheduleMillis) {
-		if (closed.compareAndSet(true, false)) {
+		if (started.compareAndSet(false, true)) {
 			future = scheduleThreadPool.scheduleAtFixedRate(() -> {
 				scheduling();
 			}, initialDelayMillis, scheduleMillis, TimeUnit.MILLISECONDS);
@@ -61,7 +62,7 @@ public abstract class AbstractSchedule implements Schedule {
 	public boolean scheduleWithCron(String cron) {
 		Assert.isTrue(CronUtils.isValid(cron), "Invalid:cron");
 		
-		if (closed.compareAndSet(true, false)) {
+		if (started.compareAndSet(false, true)) {
 
 			doCron(cron);
 
@@ -85,7 +86,7 @@ public abstract class AbstractSchedule implements Schedule {
 					log.info("{} schedule run, loop:{}", this.getClass().getSimpleName(), loop);
 				}
 
-				if (closed.get()) {
+				if (isClosed()) {
 					log.info("{} schedule was closed, stop", this.getClass().getSimpleName());
 					/**
 					 * 如果已关闭，终止执行
@@ -109,6 +110,11 @@ public abstract class AbstractSchedule implements Schedule {
 
 	protected boolean allowLoopLog() {
 		return loop % logmod == 0;
+	}
+	
+	@Override
+	public boolean isClosed() {
+		return closed.get();
 	}
 
 	/**

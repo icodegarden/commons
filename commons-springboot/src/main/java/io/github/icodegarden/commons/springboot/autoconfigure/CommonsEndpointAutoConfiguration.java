@@ -38,8 +38,6 @@ public class CommonsEndpointAutoConfiguration {
 		public ReadinessEndpoint readinessEndpoint() {
 			ReadinessEndpoint readinessEndpoint = new ReadinessEndpoint();
 
-			GracefullyShutdown.Registry.singleton().register(readinessEndpoint);
-
 			return readinessEndpoint;
 		}
 

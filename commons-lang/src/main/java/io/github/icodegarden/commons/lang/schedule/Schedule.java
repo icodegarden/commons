@@ -15,5 +15,7 @@ public interface Schedule extends Closeable {
 
 	boolean scheduleWithCron(String cron);
 
+	boolean isClosed();
+	
 	void close();
 }
