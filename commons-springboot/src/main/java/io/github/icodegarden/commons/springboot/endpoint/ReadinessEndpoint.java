@@ -1,7 +1,5 @@
 package io.github.icodegarden.commons.springboot.endpoint;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -37,11 +35,6 @@ public class ReadinessEndpoint implements GracefullyShutdown, ApplicationListene
 
 	private ApplicationReadyEvent event;
 
-	@PostConstruct
-	void init() {
-		GracefullyShutdown.Registry.singleton().register(this);
-	}
-
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		this.event = event;
@@ -66,7 +59,7 @@ public class ReadinessEndpoint implements GracefullyShutdown, ApplicationListene
 
 	@Override
 	public void shutdown() {
-		if (closed) {
+		if (isClosed()) {
 			return;
 		}
 		closed = true;
@@ -77,6 +70,10 @@ public class ReadinessEndpoint implements GracefullyShutdown, ApplicationListene
 		} catch (InterruptedException e) {
 		}
 		log.info("readiness shutdown wait end");
+	}
+	
+	public boolean isClosed() {
+		return closed;
 	}
 
 	/**

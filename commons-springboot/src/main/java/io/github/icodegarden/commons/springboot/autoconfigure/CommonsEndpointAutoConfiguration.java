@@ -6,11 +6,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import com.alibaba.cloud.nacos.endpoint.NacosConfigHealthIndicator;
-
+import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import io.github.icodegarden.commons.springboot.endpoint.ReadinessEndpoint;
+import io.github.icodegarden.commons.springboot.endpoint.ReadinessEndpointEnabledConditions;
 import io.github.icodegarden.commons.springboot.endpoint.ReadinessEndpointWebExtension;
 import io.github.icodegarden.commons.springboot.endpoint.ReadinessHealthIndicator;
 import io.github.icodegarden.commons.springboot.properties.CommonsEndpointProperties;
@@ -24,6 +25,10 @@ import io.github.icodegarden.commons.springboot.properties.CommonsEndpointProper
 @Configuration
 public class CommonsEndpointAutoConfiguration {
 
+	/**
+	 * 默认只针对网关
+	 */
+	@Conditional(ReadinessEndpointEnabledConditions.class)
 	@ConditionalOnProperty(value = "commons.endpoint.readiness.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	public class ReadinessEndpointAutoConfiguration {
@@ -31,7 +36,11 @@ public class CommonsEndpointAutoConfiguration {
 		@ConditionalOnMissingBean
 		@Bean
 		public ReadinessEndpoint readinessEndpoint() {
-			return new ReadinessEndpoint();
+			ReadinessEndpoint readinessEndpoint = new ReadinessEndpoint();
+
+			GracefullyShutdown.Registry.singleton().register(readinessEndpoint);
+
+			return readinessEndpoint;
 		}
 
 		@Bean
@@ -40,7 +49,7 @@ public class CommonsEndpointAutoConfiguration {
 		public ReadinessEndpointWebExtension readinessEndpointWebExtension(ReadinessEndpoint readinessEndpoint) {
 			return new ReadinessEndpointWebExtension(readinessEndpoint);
 		}
-		
+
 		@Bean
 		@ConditionalOnMissingBean
 		@ConditionalOnEnabledHealthIndicator("readiness")
