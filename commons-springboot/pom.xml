@@ -69,6 +69,26 @@
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-recipes</artifactId>
+			<version>5.2.0</version><!-- 再次声明版本，避免被spring覆盖 -->
+			<optional>true</optional><!-- 可选 -->
+			<!-- <type>bundle</type> -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-framework</artifactId>
+			<version>5.2.0</version><!-- 再次声明版本，避免被spring覆盖 -->
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-client</artifactId>
+			<version>5.2.0</version><!-- 再次声明版本，避免被spring覆盖 -->
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
+		
+		<dependency>
 		  	<groupId>io.github.icodegarden</groupId>
 		  	<artifactId>wing-core</artifactId>
 		  	<version>${wing-version}</version>
