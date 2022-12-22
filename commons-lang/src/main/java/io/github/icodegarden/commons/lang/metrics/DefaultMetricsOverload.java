@@ -48,7 +48,7 @@ public class DefaultMetricsOverload implements MetricsOverload {
 //		localVersion.set(0);
 	}
 
-	public void enableScheduleFlushMetrics(int scheduleMillis) {
+	public void enableScheduleFlushMetrics(long scheduleMillis) {
 		synchronized (this) {
 			if (!scheduleFlushMetrics) {
 				scheduleFlushMetricsThreadPool.scheduleWithFixedDelay(() -> {
@@ -130,7 +130,7 @@ public class DefaultMetricsOverload implements MetricsOverload {
 		lastFlushTimestamp = System.currentTimeMillis();
 	}
 
-	private void flushMetricsIfNecessary(int scheduleMillis) {
+	private void flushMetricsIfNecessary(long scheduleMillis) {
 		// 这种方式，单独cpu 内存变化时不会刷入
 //		if (localVersion.get() != flushedVersion.get()) {
 //			flushMetrics();

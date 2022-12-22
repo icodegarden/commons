@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.lang.query;
+package io.github.icodegarden.commons.lang.dao;
 
 import java.util.List;
 
@@ -12,21 +12,21 @@ import io.github.icodegarden.commons.lang.TestsDataSourceDependent;
  * @author Fangfang.Xu
  *
  */
-class MysqlTableCountCollectorTests {
+class MysqlDatabaseTests {
 
-	MysqlTableDataCountCollector collector = new MysqlTableDataCountCollector(TestsDataSourceDependent.DATASOURCE);
+	MysqlDatabase database = new MysqlDatabase(TestsDataSourceDependent.DATASOURCE);
 
 	@Test
 	void version() throws Exception {
-		String version = collector.version();
-
+		String version = database.version();
+		System.out.println(version);
 		Assertions.assertThat(version).isNotEmpty();
 	}
 
 	@Test
 	void listTables() throws Exception {
-		List<String> listTables = collector.listTables();
-
+		List<String> listTables = database.listTables();
+		System.out.println(listTables);
 		Assertions.assertThat(listTables).isNotEmpty();
 	}
 
@@ -35,8 +35,17 @@ class MysqlTableCountCollectorTests {
 		/**
 		 * 需要先人工建表
 		 */
-		long countTable = collector.countTable("table_data_count");
+		long countTable = database.countTable("table_data_count");
 		System.out.println(countTable);
 		Assertions.assertThat(countTable).isGreaterThanOrEqualTo(0);
+	}
+
+	@Test
+	void optimizeTable() throws Exception {
+		/**
+		 * 需要先人工建表
+		 */
+		List<String> desc = database.optimizeTable("table_data_count");
+		System.out.println(desc);
 	}
 }
