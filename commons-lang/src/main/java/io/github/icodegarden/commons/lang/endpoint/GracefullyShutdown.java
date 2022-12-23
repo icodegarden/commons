@@ -20,7 +20,7 @@ public interface GracefullyShutdown {
 
 	String shutdownName();
 
-	void shutdown();
+	void shutdown() throws Throwable;
 
 	/**
 	 * shutdown的顺序，越小越优先，可以为负数
@@ -79,7 +79,7 @@ public interface GracefullyShutdown {
 				}
 				try {
 					gracefullyShutdown.shutdown();
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					log.error("ex on gracefully shutdown name:[{}] of class:[{}]", gracefullyShutdown.shutdownName(),
 							gracefullyShutdown.getClass().getSimpleName(), e);
 				}
