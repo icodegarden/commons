@@ -5,7 +5,7 @@ package io.github.icodegarden.commons.shardingsphere.properties;
  * @author Fangfang.Xu
  *
  */
-public class Datasource {
+public class DataSourceProperties {
 	
 	private String name;
 	private String jdbcUrl;

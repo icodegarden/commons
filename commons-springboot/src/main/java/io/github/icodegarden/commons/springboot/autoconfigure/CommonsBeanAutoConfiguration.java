@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
@@ -34,7 +35,7 @@ public class CommonsBeanAutoConfiguration {
 	private List<GracefullyShutdown> gracefullyShutdowns;
 
 	@PostConstruct
-	private void init() {
+	private void init() throws Exception{
 		/**
 		 * 无损上线,利用getConnection促使连接池初始化完成
 		 */
@@ -44,6 +45,15 @@ public class CommonsBeanAutoConfiguration {
 				// do nothing
 			} catch (Exception e) {
 				log.warn("ex on init DataSource pool of getConnection", e);
+			}
+			
+			String shardingSphereDataSourceClassStr ="org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource";
+			if(ClassUtils.isPresent(shardingSphereDataSourceClassStr,null)) {
+				Class<?> shardingSphereDataSourceClass = ClassUtils.forName(shardingSphereDataSourceClassStr, null);
+				if( ClassUtils.isAssignableValue(shardingSphereDataSourceClass, dataSource)) {
+//					DataSourceUtils.
+					//TODO
+				}
 			}
 		}
 

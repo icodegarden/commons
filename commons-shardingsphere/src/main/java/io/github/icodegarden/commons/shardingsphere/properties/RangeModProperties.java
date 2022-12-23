@@ -13,7 +13,7 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
  * @author Fangfang.Xu
  *
  */
-public class Rangemod {
+public class RangeModProperties {
 	
 	private List<Group> groups;
 
@@ -34,12 +34,15 @@ public class Rangemod {
 		private String name;
 		private Long rangeGte;
 		private Long rangeLt;
+		/**
+		 * 取模时的因子，例如?%mod
+		 */
 		private Integer mod;
 		private String modLoadBalance;// {"ds0":[0,1],"ds1":[2],"ds2":[3,4]}
 		/**
 		 * 解析后
 		 */
-		private Map<String, List<Integer>> mlb;
+		private Map<String/*ds name 如ds0*/, List<Integer>/*mod 如[0,1]*/> mlb;
 
 		public String getName() {
 			return name;

@@ -14,6 +14,7 @@ import org.springframework.util.Assert;
 import io.github.icodegarden.commons.shardingsphere.util.DataSourceUtils;
 
 /**
+ * 始终路由到第一个ds
  * 
  * @author Fangfang.Xu
  *
@@ -34,7 +35,7 @@ public class FirstDataSourceShardingAlgorithm implements StandardShardingAlgorit
 	private static ShardingSphereDataSource staticShardingSphereDataSource;
 
 	public static void registerDataSource(ShardingSphereDataSource shardingSphereDataSource) {
-		FirstDataSourceShardingAlgorithm.staticShardingSphereDataSource = shardingSphereDataSource;
+		staticShardingSphereDataSource = shardingSphereDataSource;
 	}
 
 	@Override
