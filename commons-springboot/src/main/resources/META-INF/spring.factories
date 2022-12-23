@@ -11,5 +11,6 @@ io.github.icodegarden.commons.springboot.autoconfigure.CommonsLoadBalancerAutoCo
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsMybatisAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsRedisAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsSentinelAutoConfiguration,\
+io.github.icodegarden.commons.springboot.autoconfigure.CommonsShardingSphereAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsWebAutoConfiguration,\
 io.github.icodegarden.commons.springboot.autoconfigure.CommonsZookeeperAutoConfiguration

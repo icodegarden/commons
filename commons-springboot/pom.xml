@@ -87,6 +87,12 @@
 			<version>5.2.0</version><!-- 再次声明版本，避免被spring覆盖 -->
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
+		<dependency>
+			<groupId>io.github.icodegarden</groupId>
+			<artifactId>commons-shardingsphere</artifactId>
+			<version>1.1.0</version>
+			<optional>true</optional><!-- 可选 -->
+		</dependency>
 		
 		<dependency>
 		  	<groupId>io.github.icodegarden</groupId>

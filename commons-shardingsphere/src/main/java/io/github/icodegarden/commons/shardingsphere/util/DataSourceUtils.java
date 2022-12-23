@@ -11,7 +11,7 @@ import org.apache.shardingsphere.infra.metadata.ShardingSphereMetaData;
 
 import com.zaxxer.hikari.HikariDataSource;
 
-import io.github.icodegarden.commons.shardingsphere.properties.DataSourceProperties;
+import io.github.icodegarden.commons.shardingsphere.builder.DataSourceConfig;
 
 /**
  * 
@@ -20,13 +20,13 @@ import io.github.icodegarden.commons.shardingsphere.properties.DataSourcePropert
  */
 public abstract class DataSourceUtils {
 
-	public static LinkedHashMap<String, DataSource> createDataSourceMap(List<DataSourceProperties> datasources) {
+	public static LinkedHashMap<String, DataSource> createDataSourceMap(List<DataSourceConfig> datasources) {
 		/**
 		 * shardingsphere以springboot自动创建的ShardingSphereDataSource，其内部的Map<String,
 		 * DataSource>是LinkedHashMap，业务上获取第一个DataSource确实也需要他是有序的，因此这里强制使用LinkedHashMap
 		 */
 		LinkedHashMap<String, DataSource> dataSourceMap = new LinkedHashMap<>();
-		for (DataSourceProperties datasource : datasources) {
+		for (DataSourceConfig datasource : datasources) {
 			HikariDataSource ds = new HikariDataSource();
 			ds.setPoolName(datasource.getName());
 			ds.setDriverClassName("com.mysql.cj.jdbc.Driver");

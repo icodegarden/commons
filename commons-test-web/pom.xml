@@ -68,6 +68,22 @@
 			<version>1.1.0</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-recipes</artifactId>
+			<version>5.2.0</version><!-- 必须指定，springboot 2.5.5用的是5.1.0，构造方法有差异会报错 -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-framework</artifactId>
+			<version>5.2.0</version><!-- 必须指定，springboot 2.5.5用的是5.1.0，构造方法有差异会报错 -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-client</artifactId>
+			<version>5.2.0</version><!-- 必须指定，springboot 2.5.5用的是5.1.0，构造方法有差异会报错 -->
+		</dependency>
+		
+		<dependency>
 		  	<groupId>io.github.icodegarden</groupId>
 		  	<artifactId>wing-core</artifactId>
 		  	<version>${wing-version}</version>

@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.util.JsonUtils;
-import io.github.icodegarden.commons.shardingsphere.properties.RangeModProperties;
-import io.github.icodegarden.commons.shardingsphere.properties.RangeModProperties.Group;
+import io.github.icodegarden.commons.shardingsphere.builder.RangeModShardingAlgorithmConfig;
+import io.github.icodegarden.commons.shardingsphere.builder.RangeModShardingAlgorithmConfig.Group;
 
 //# 分片算法配置      坑: <sharding-algorithm-name> 名字必须小写并且不能带 下划线
 /**
@@ -29,20 +29,20 @@ public class RangeModShardingAlgorithm implements StandardShardingAlgorithm<Comp
 
 	private static final Logger log = LoggerFactory.getLogger(FirstDataSourceShardingAlgorithm.class);
 
-	public static final String NAME_KEY = "name";
+	public static final String ALGORITHM_NAME_KEY = "algorithmName";
 
 	private Properties props = new Properties();
 
-	private String name;
-	
-	private RangeModProperties rangeModProperties;
+	private String algorithmName;
 
-	private static Map<String, RangeModProperties> name_rangemod_map = new HashMap<>();
+	private RangeModShardingAlgorithmConfig config;
 
-	public static void registerRangeModProperties(String name, RangeModProperties rangeModProperties) {
-		name_rangemod_map.put(name, rangeModProperties);
+	private static Map<String, RangeModShardingAlgorithmConfig> algorithmName_rangemod_map = new HashMap<>();
+
+	public static void registerRangeModShardingAlgorithmConfig(String name, RangeModShardingAlgorithmConfig config) {
+		algorithmName_rangemod_map.put(name, config);
 	}
-	
+
 	@Override
 	public void setProps(Properties props) {
 		this.props = props;
@@ -50,8 +50,8 @@ public class RangeModShardingAlgorithm implements StandardShardingAlgorithm<Comp
 
 	@Override
 	public void init() {
-		Assert.notNull(props.get(NAME_KEY), NAME_KEY + " must not null");
-		name = props.getProperty(NAME_KEY);
+		Assert.notNull(props.get(ALGORITHM_NAME_KEY), ALGORITHM_NAME_KEY + " must not null");
+		algorithmName = props.getProperty(ALGORITHM_NAME_KEY);
 
 		prepareAlgorithmIfNecessary();
 	}
@@ -61,7 +61,7 @@ public class RangeModShardingAlgorithm implements StandardShardingAlgorithm<Comp
 			final PreciseShardingValue<Comparable<?>> shardingValue) {
 		long value = getLongValue(shardingValue.getValue());
 
-		List<Group> groups = rangeModProperties.getGroups();
+		List<Group> groups = config.getGroups();
 		for (Group group : groups) {
 			if (value >= group.getRangeGte() && value < group.getRangeLt()) {
 				if (log.isDebugEnabled()) {
@@ -93,15 +93,16 @@ public class RangeModShardingAlgorithm implements StandardShardingAlgorithm<Comp
 	}
 
 	private void prepareAlgorithmIfNecessary() {
-		if (rangeModProperties == null) {
+		if (config == null) {
 			synchronized (this) {
-				if (rangeModProperties == null) {
-					rangeModProperties = name_rangemod_map.get(name);
+				if (config == null) {
+					config = algorithmName_rangemod_map.get(algorithmName);
 
-					Assert.notNull(rangeModProperties, String
-							.format("rangemod of name:%s not found, must registerRangeModProperties() before", name));
+					Assert.notNull(config, String.format(
+							"rangemod of algorithmName:%s not found, must registerRangeModShardingAlgorithmConfig() before",
+							algorithmName));
 					try {
-						List<Group> groups = rangeModProperties.getGroups();
+						List<Group> groups = config.getGroups();
 						for (Group group : groups) {
 							String json = group.getModLoadBalance();
 							group.setMlb(JsonUtils.deserialize(json, Map.class));
