@@ -1,7 +1,7 @@
 package io.github.icodegarden.commons.springboot.event;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import org.springframework.context.ApplicationEvent;
 
@@ -18,14 +18,14 @@ import lombok.ToString;
 public class RemoveCacheEvent extends ApplicationEvent {
 	private static final long serialVersionUID = 1L;
 
-	private final List<String> cacheKeys;
+	private final Collection<String> cacheKeys;
 
 	public RemoveCacheEvent(String cacheKey) {
 		super(cacheKey);
 		this.cacheKeys = Arrays.asList(cacheKey);
 	}
 
-	public RemoveCacheEvent(List<String> cacheKeys) {
+	public RemoveCacheEvent(Collection<String> cacheKeys) {
 		super(cacheKeys);
 		this.cacheKeys = cacheKeys;
 	}
