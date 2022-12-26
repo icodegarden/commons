@@ -97,9 +97,21 @@
 		<dependency>
 		  	<groupId>io.github.icodegarden</groupId>
 		  	<artifactId>wing-core</artifactId>
-		  	<version>${wing-version}</version>
+		  	<version>${wing.version}</version>
 		  	<optional>true</optional>
 		</dependency>
+<!-- 		<dependency> -->
+<!--             <groupId>io.github.icodegarden</groupId> -->
+<!--             <artifactId>beecomb-executor</artifactId> -->
+<!--             <version>${beecomb.version}</version> -->
+<!--             <optional>true</optional> -->
+<!--         </dependency> -->
+<!--         <dependency> -->
+<!--             <groupId>io.github.icodegarden</groupId> -->
+<!--             <artifactId>beecomb-client-java</artifactId> -->
+<!--             <version>${beecomb.version}</version> -->
+<!--             <optional>true</optional> -->
+<!--         </dependency> -->
 		
 		<!-- 7和8 2选1 -->
 		<!-- v8 -->
