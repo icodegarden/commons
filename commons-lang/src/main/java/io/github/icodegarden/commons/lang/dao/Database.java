@@ -19,9 +19,5 @@ public interface Database {
 
 	long countTable(String tableName);
 
-	/**
-	 * @return 描述信息
-	 * @throws IllegalStateException 如果失败
-	 */
-	List<String> optimizeTable(String tableName) throws IllegalStateException;
+	OptimizeTableResults<OptimizeTableResults.Result> optimizeTable(String tableName);
 }

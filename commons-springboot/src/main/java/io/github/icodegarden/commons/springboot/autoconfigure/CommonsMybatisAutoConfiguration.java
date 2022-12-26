@@ -8,7 +8,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.github.icodegarden.commons.lang.endpoint.GracefullyStartup;
+import io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase;
 import io.github.icodegarden.commons.mybatis.interceptor.SqlInterceptor;
+import io.github.icodegarden.commons.springboot.MybatisGracefullyStartup;
 import io.github.icodegarden.commons.springboot.properties.CommonsMybatisProperties;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +42,19 @@ public class CommonsMybatisAutoConfiguration {
 		return sqlInterceptor;
 	}
 
+	@ConditionalOnClass(name = { "com.mysql.cj.MysqlConnection" })
+	@ConditionalOnProperty(value = "commons.mybatis.gracefullystartup.enabled", havingValue = "true", matchIfMissing = true)
+	@Bean
+	public GracefullyStartup mybatisGracefullyStartup(MysqlMybatisDatabase mysqlMybatisDatabase) {
+		log.info("commons init bean of MybatisGracefullyStartup");
+
+		return new MybatisGracefullyStartup(mysqlMybatisDatabase);
+	}
+
 	@ConditionalOnClass(MapperScan.class)
 	@ConditionalOnProperty(value = "commons.mybatis.mapperScan.enabled", havingValue = "true", matchIfMissing = true)
-	@MapperScan(basePackages = "${" + CommonsMybatisProperties.SCAN_BASE_PACKAGES + "}")
+	@MapperScan(basePackages = "${" + CommonsMybatisProperties.SCAN_BASE_PACKAGES
+			+ "}", basePackageClasses = io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase.class)
 	@Configuration
 	protected static class MapperScanAutoConfiguration {
 		{

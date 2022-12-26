@@ -2,7 +2,7 @@ package io.github.icodegarden.commons.mybatis.dao;
 
 import org.apache.ibatis.annotations.Param;
 
-import io.github.icodegarden.commons.mybatis.dao.MysqlDao;
+import io.github.icodegarden.commons.mybatis.dao.MybatisDao;
 
 /**
  * 
@@ -10,7 +10,7 @@ import io.github.icodegarden.commons.mybatis.dao.MysqlDao;
  *
  */
 public interface DemoMapper extends
-		MysqlDao<DemoPO, DemoPO.Update, DemoQuery, DemoQuery.With, DemoDO> {
+		MybatisDao<DemoPO, DemoPO.Update, DemoQuery, DemoQuery.With, DemoDO> {
 
 //	void add(ConsumerSystemPO po);
 

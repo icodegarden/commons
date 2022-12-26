@@ -9,16 +9,18 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import io.github.icodegarden.commons.lang.dao.OptimizeTableResults.Result;
+
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-public class MysqlDatabase implements Database {
+public class MysqlJdbcDatabase implements JdbcDatabase {
 
 	private final DataSource dataSource;
 
-	public MysqlDatabase(DataSource dataSource) {
+	public MysqlJdbcDatabase(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
 
@@ -78,39 +80,34 @@ public class MysqlDatabase implements Database {
 	}
 
 	@Override
-	public List<String> optimizeTable(String tableName) throws IllegalStateException {
+	public OptimizeTableResults<OptimizeTableResults.Result> optimizeTable(String tableName)
+			throws IllegalStateException {
 		/**
 		 * Table Op Msg_type Msg_text {scheme.table} optimize note Table does not
 		 * support optimize, doing recreate + analyze instead {scheme.table} optimize
 		 * status OK
 		 */
-
-		boolean ok = false;
-		List<String> msg_texts = new LinkedList<String>();
-
+		OptimizeTableResults<Result> optimizeTableResults = new OptimizeTableResults<OptimizeTableResults.Result>();
 		try (Connection connection = dataSource.getConnection();) {
 			String sql = "OPTIMIZE TABLE " + tableName;
 			try (PreparedStatement ptmt = connection.prepareStatement(sql);) {
 				try (ResultSet rs = ptmt.executeQuery();) {
 					while (rs.next()) {
-						String msg_type = rs.getString(3);
-						String msg_text = rs.getString(4);
+						String Table = rs.getString(1);
+						String Op = rs.getString(2);
+						String Msg_type = rs.getString(3);
+						String Msg_text = rs.getString(4);
 
-						msg_texts.add(msg_text);
-
-						if ("status".equalsIgnoreCase(msg_type)) {
-							if ("OK".equalsIgnoreCase(msg_text)) {
-								ok = true;
-								break;
-							}
-						}
+						OptimizeTableResults.Result result = new OptimizeTableResults.Result();
+						result.setTable(Table);
+						result.setOp(Op);
+						result.setMsg_type(Msg_type);
+						result.setMsg_text(Msg_text);
+						optimizeTableResults.add(result);
 					}
 				}
 			}
-			if (!ok) {
-				throw new IllegalStateException(msg_texts.toString());
-			}
-			return msg_texts;
+			return optimizeTableResults;
 		} catch (SQLException e) {
 			throw new IllegalStateException(String.format("OPTIMIZE table error, %s", tableName), e);
 		}

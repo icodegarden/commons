@@ -5,7 +5,7 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import io.github.icodegarden.commons.lang.dao.MysqlDatabase;
+import io.github.icodegarden.commons.lang.dao.MysqlJdbcDatabase;
 
 /**
  * 
@@ -14,7 +14,7 @@ import io.github.icodegarden.commons.lang.dao.MysqlDatabase;
  */
 public class MysqlTableDataCountCollector extends AbstractTableDataCountCollector {
 
-	private final MysqlDatabase database;
+	private final MysqlJdbcDatabase database;
 
 	public MysqlTableDataCountCollector(DataSource dataSource) {
 		this(dataSource, null);
@@ -22,7 +22,7 @@ public class MysqlTableDataCountCollector extends AbstractTableDataCountCollecto
 
 	public MysqlTableDataCountCollector(DataSource dataSource, Set<String> whiteListTables) {
 		super(whiteListTables);
-		this.database = new MysqlDatabase(dataSource);
+		this.database = new MysqlJdbcDatabase(dataSource);
 	}
 
 	@Override

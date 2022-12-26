@@ -6,15 +6,16 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import io.github.icodegarden.commons.lang.TestsDataSourceDependent;
+import io.github.icodegarden.commons.lang.dao.OptimizeTableResults.Result;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-class MysqlDatabaseTests {
+class MysqlJdbcDatabaseTests {
 
-	MysqlDatabase database = new MysqlDatabase(TestsDataSourceDependent.DATASOURCE);
+	MysqlJdbcDatabase database = new MysqlJdbcDatabase(TestsDataSourceDependent.DATASOURCE);
 
 	@Test
 	void version() throws Exception {
@@ -45,7 +46,8 @@ class MysqlDatabaseTests {
 		/**
 		 * 需要先人工建表
 		 */
-		List<String> desc = database.optimizeTable("table_data_count");
+		OptimizeTableResults<Result> optimizeTable = database.optimizeTable("table_data_count");
+		String desc = optimizeTable.getDesc();
 		System.out.println(desc);
 	}
 }
