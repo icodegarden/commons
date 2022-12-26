@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.icodegarden.wing.Cacher;
 
 @Service
-public class UserService {
+public class CacherService {
 
 	@Autowired
 	private Cacher cacher;

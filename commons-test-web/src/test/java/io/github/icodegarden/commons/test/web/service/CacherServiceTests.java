@@ -10,18 +10,18 @@ import org.springframework.boot.test.context.SpringBootTest;
  *
  */
 @SpringBootTest
-public class UserServiceTests {
+public class CacherServiceTests {
 
 	@Autowired
-	private UserService userService;
+	private CacherService cacherService;
 	
 	@Test
 	public void m1() throws Exception {
-		userService.m1();
+		cacherService.m1();
 	}
 	
 	@Test
 	public void m2() throws Exception {
-		userService.m2();
+		cacherService.m2();
 	}
 }
