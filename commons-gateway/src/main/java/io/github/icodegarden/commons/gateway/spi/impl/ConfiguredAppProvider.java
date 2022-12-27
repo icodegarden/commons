@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.spi.impl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,11 +7,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
+import io.github.icodegarden.commons.gateway.core.security.signature.App;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
+import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,17 +20,21 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class DefaultAppProvider implements AppProvider {
+public class ConfiguredAppProvider implements AppProvider {
 
-	@Autowired
-	private CommonsGatewaySecurityProperties securityProperties;
+	private final CommonsGatewaySecurityProperties securityProperties;
 
 	private Map<String/* appId */, App> appMap = new HashMap<String, App>();
 
-	@PostConstruct
+	public ConfiguredAppProvider(CommonsGatewaySecurityProperties securityProperties) {
+		this.securityProperties = securityProperties;
+
+		init();
+	}
+
 	private void init() {
 		ScheduledThreadPoolExecutor scheduledThreadPool = ThreadPoolUtils
-				.newSingleScheduledThreadPool("DefaultAppsProvider");
+				.newSingleScheduledThreadPool(this.getClass().getSimpleName());
 		scheduledThreadPool.scheduleWithFixedDelay(() -> {
 			try {
 				refreshApps();
@@ -51,8 +53,8 @@ public class DefaultAppProvider implements AppProvider {
 		CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 		if (signature != null) {
 			List<App> apps = signature.getApps();
-			if(apps != null) {
-				this.appMap = apps.stream().collect(Collectors.toMap(App::getAppId, app -> app));	
+			if (apps != null) {
+				this.appMap = apps.stream().collect(Collectors.toMap(App::getAppId, app -> app));
 			}
 		}
 	}

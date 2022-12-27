@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.spi.impl;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -58,7 +58,7 @@ public class DefaultOpenApiRequestValidatorTests {
 	 * 重复2次请求但不同的app，1true 2true
 	 */
 	@Test
-	void validate_DuplicateRequest_2app() throws Exception {
+	void validate_duplicateRequest_2app() throws Exception {
 		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
 
 		OpenApiRequestBody requestBody = new OpenApiRequestBody();

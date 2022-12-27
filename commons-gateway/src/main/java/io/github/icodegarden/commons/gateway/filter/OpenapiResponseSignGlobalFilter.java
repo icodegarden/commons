@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 
-import io.github.icodegarden.commons.gateway.core.security.App;
-import io.github.icodegarden.commons.gateway.core.security.AppProvider;
+import io.github.icodegarden.commons.gateway.core.security.signature.App;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
+import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;

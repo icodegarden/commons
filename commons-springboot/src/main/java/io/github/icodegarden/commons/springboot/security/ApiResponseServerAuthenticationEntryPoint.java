@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
+ * InternalApi/OpenApi认证失败时的统一响应
  * 
  * @author Fangfang.Xu
  *
@@ -67,6 +68,9 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 						ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE.getSub_code(), message);
 			}
 
+			/**
+			 * 因为是认证失败时触发的，所以openapi此时不用管biz_code，可以使用InternalApiResponse.fail(ece);来兼容响应
+			 */
 			InternalApiResponse<Object> apiResponse = InternalApiResponse.fail(ece);
 
 			DataBuffer buffer = dataBufferFactory.wrap(JsonUtils.serialize(apiResponse).getBytes(CHARSET));

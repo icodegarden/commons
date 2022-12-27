@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.spi;
 
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 

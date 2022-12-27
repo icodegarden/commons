@@ -8,7 +8,7 @@ import io.github.icodegarden.commons.lang.annotation.NotEmpty;
  *
  */
 public class OpenApiRequestBody {
-	
+
 	@NotEmpty
 	private String app_id;// 2014072300007148
 	@NotEmpty
@@ -108,6 +108,12 @@ public class OpenApiRequestBody {
 
 	public void setBiz_content(String biz_content) {
 		this.biz_content = biz_content;
+	}
+
+	public String toStringExcludeBizContent() {
+		return "OpenApiRequestBody [app_id=" + app_id + ", method=" + method + ", format=" + format + ", charset="
+				+ charset + ", sign_type=" + sign_type + ", sign=" + sign + ", timestamp=" + timestamp + ", version="
+				+ version + ", request_id=" + request_id + "]";
 	}
 
 	@Override

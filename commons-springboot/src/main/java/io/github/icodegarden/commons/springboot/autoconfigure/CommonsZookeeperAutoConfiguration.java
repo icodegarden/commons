@@ -23,25 +23,21 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
+@ConditionalOnClass(ZooKeeperHolder.class)
 @ConditionalOnProperty(value = "commons.zookeeper.client.enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({ CommonsZookeeperProperties.class })
 @Configuration
 @Slf4j
 public class CommonsZookeeperAutoConfiguration {
 
-	@ConditionalOnClass(ZooKeeperHolder.class)
-	@Configuration
-	public class ZooKeeperHolderAutoConfiguration {
+	@ConditionalOnMissingBean
+	@Bean
+	public ZooKeeperHolder zooKeeperHolder(CommonsZookeeperProperties commonsZookeeperProperties) {
+		log.info("commons init bean of ZooKeeperHolder");
 
-		@ConditionalOnMissingBean
-		@Bean
-		public ZooKeeperHolder zooKeeperHolder(CommonsZookeeperProperties commonsZookeeperProperties) {
-			log.info("commons init bean of ZooKeeperHolder");
+		commonsZookeeperProperties.validate();
 
-			commonsZookeeperProperties.validate();
-
-			return new ZooKeeperHolder(commonsZookeeperProperties);
-		}
+		return new ZooKeeperHolder(commonsZookeeperProperties);
 	}
 
 	@ConditionalOnClass(CuratorFramework.class)
@@ -58,7 +54,7 @@ public class CommonsZookeeperAutoConfiguration {
 		public CuratorFramework curatorFramework(CommonsZookeeperProperties commonsZookeeperProperties,
 				ACLsSupplier aclsSupplier) {
 			log.info("commons init bean of CuratorFramework");
-			
+
 			RetryPolicy retryPolicy = new RetryForever(3000);
 			ZKClientConfig zkClientConfig = new ZKClientConfig();
 			zkClientConfig.setProperty(ZKClientConfig.ZOOKEEPER_SERVER_PRINCIPAL,

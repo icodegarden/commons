@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.Nullable;
 
-import io.github.icodegarden.commons.gateway.core.security.App;
+import io.github.icodegarden.commons.gateway.core.security.signature.App;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

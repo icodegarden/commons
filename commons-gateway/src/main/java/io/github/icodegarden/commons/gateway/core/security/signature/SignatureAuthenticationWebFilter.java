@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.core.security.signature;
 
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -21,10 +21,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
-import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
@@ -33,9 +30,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
+import io.github.icodegarden.commons.gateway.spi.AppProvider;
+import io.github.icodegarden.commons.gateway.spi.AuthWebFilter;
+import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
 import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
@@ -45,10 +44,7 @@ import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
-import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
 import io.github.icodegarden.commons.springboot.security.SpringUser;
-import io.github.icodegarden.commons.springboot.security.User;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -58,7 +54,7 @@ import reactor.core.publisher.Mono;
  *
  */
 @Slf4j
-public class SignatureAuthenticationWebFilter implements WebFilter {
+public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 
 	/**
 	 * 可配
@@ -75,28 +71,22 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 	private final AuthenticationWebFilter authenticationWebFilter;
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
-	private boolean headerAppKey;
 
 	public SignatureAuthenticationWebFilter(AppProvider appProvider, OpenApiRequestValidator openApiRequestValidator,
-			ServerAuthenticationEntryPoint authenticationEntryPoint) {
+			ReactiveAuthenticationManager authenticationManager,
+			ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
+			ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
 		this.appProvider = appProvider;
 		this.openApiRequestValidator = openApiRequestValidator;
-		authenticationWebFilter = new AuthenticationWebFilter(new NoOpReactiveAuthenticationManager());
+		authenticationWebFilter = new AuthenticationWebFilter(authenticationManager);
 
 		authenticationWebFilter.setServerAuthenticationConverter(new SignResolveServerAuthenticationConverter());
-		authenticationWebFilter
-				.setAuthenticationSuccessHandler(new GatewayPreAuthenticatedServerAuthenticationSuccessHandler());
+		authenticationWebFilter.setAuthenticationSuccessHandler(serverAuthenticationSuccessHandler);
 
 		/**
 		 * 需要设置，默认使用的是HttpBasicServerAuthenticationEntryPoint
 		 */
-		authenticationWebFilter.setAuthenticationFailureHandler(
-				new ApiResponseServerAuthenticationFailureHandler(authenticationEntryPoint));
-	}
-
-	public SignatureAuthenticationWebFilter setHeaderAppKey(boolean headerAppKey) {
-		this.headerAppKey = headerAppKey;
-		return this;
+		authenticationWebFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
 	}
 
 	@Override
@@ -185,16 +175,6 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 //				return chain.filter(exchange.mutate().request(cachedRequest).build());
 //			}));
 		}).then(authenticationWebFilter.filter(exchange, chain));
-	}
-
-	private class NoOpReactiveAuthenticationManager implements ReactiveAuthenticationManager {
-		@Override
-		public Mono<Authentication> authenticate(Authentication authentication) {
-			/**
-			 * 不用校验，能生成就代表通过
-			 */
-			return Mono.just(authentication);
-		}
 	}
 
 	private class SignResolveServerAuthenticationConverter implements ServerAuthenticationConverter {
@@ -334,53 +314,4 @@ public class SignatureAuthenticationWebFilter implements WebFilter {
 		}
 	}
 
-	private class ApiResponseServerAuthenticationFailureHandler implements ServerAuthenticationFailureHandler {
-
-		private final ServerAuthenticationEntryPoint authenticationEntryPoint;
-
-		public ApiResponseServerAuthenticationFailureHandler(ServerAuthenticationEntryPoint authenticationEntryPoint) {
-			this.authenticationEntryPoint = authenticationEntryPoint;
-		}
-
-		@Override
-		public Mono<Void> onAuthenticationFailure(WebFilterExchange webFilterExchange,
-				AuthenticationException exception) {
-			return authenticationEntryPoint.commence(webFilterExchange.getExchange(), exception);
-		}
-	}
-
-	private class GatewayPreAuthenticatedServerAuthenticationSuccessHandler
-			implements ServerAuthenticationSuccessHandler {
-
-		@Override
-		public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
-			return Mono.defer(() -> {
-				WebFilterChain chain = webFilterExchange.getChain();
-				ServerWebExchange exchange = webFilterExchange.getExchange();
-
-				User principal = (User) authentication.getPrincipal();
-				Map<String, Object> details = (Map) authentication.getDetails();
-
-				ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
-					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID, principal.getUserId());
-					httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME,
-							principal.getUsername());
-					if (details != null) {
-						String flowTagRequired = (String) details.get("flowTagRequired");
-						String flowTagFirst = (String) details.get("flowTagFirst");
-						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_REQUIRED, flowTagRequired);
-						httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST, flowTagFirst);
-					}
-
-					if (headerAppKey) {
-						OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
-						App app = appProvider.getApp(requestBody.getApp_id());
-						httpHeaders.add("X-Auth-AppKey", app.getAppKey());
-					}
-				}).build();
-
-				return chain.filter(exchange.mutate().request(request).build());
-			});
-		}
-	}
 }

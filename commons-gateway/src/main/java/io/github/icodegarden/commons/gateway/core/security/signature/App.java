@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.core.security.signature;
 
 import java.util.HashSet;
 import java.util.Set;

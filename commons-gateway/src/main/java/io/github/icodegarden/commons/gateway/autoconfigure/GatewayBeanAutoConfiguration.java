@@ -4,10 +4,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.icodegarden.commons.gateway.core.security.AppProvider;
-import io.github.icodegarden.commons.gateway.core.security.DefaultAppProvider;
-import io.github.icodegarden.commons.gateway.core.security.DefaultOpenApiRequestValidator;
-import io.github.icodegarden.commons.gateway.core.security.OpenApiRequestValidator;
+import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
+import io.github.icodegarden.commons.gateway.spi.AppProvider;
+import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
+import io.github.icodegarden.commons.gateway.spi.impl.ConfiguredAppProvider;
+import io.github.icodegarden.commons.gateway.spi.impl.DefaultOpenApiRequestValidator;
 
 /**
  * 
@@ -19,13 +20,13 @@ public class GatewayBeanAutoConfiguration {
 
 	@ConditionalOnMissingBean
 	@Bean
-	public AppProvider appProvider() {
-		return new DefaultAppProvider();
+	public AppProvider configuredAppProvider(CommonsGatewaySecurityProperties securityProperties) {
+		return new ConfiguredAppProvider(securityProperties);
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public OpenApiRequestValidator openApiRequestValidator() {
+	public OpenApiRequestValidator defaultOpenApiRequestValidator() {
 		return new DefaultOpenApiRequestValidator();
 	}
 }

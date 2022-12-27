@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security;
+package io.github.icodegarden.commons.gateway.spi.impl;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.springframework.util.Assert;
 
+import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.LogUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +58,10 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 		Assert.hasText(requestBody.getApp_id(), "Missing:app_id");
 		Assert.hasText(requestBody.getRequest_id(), "Missing:request_id");
 
+		if(log.isInfoEnabled()) {
+			log.info("Validate OpenApi request body:{}", requestBody.toStringExcludeBizContent());
+		}
+		
 		/**
 		 * appId隔离<br>
 		 * 由于该方式不是集群的，不严格，因此所使用的Map也没必要使用支持并发的Map<br>

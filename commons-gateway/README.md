@@ -18,9 +18,6 @@
 * RoutePredicateFactoryAutoConfiguration.java 配置自定义的路由器
 
 ## io.github.icodegarden.commons.gateway.core.security
-* AppProvider.java 支持自定义的App数据源
-* DefaultAppProvider.java 默认的使用配置中心的apps
-* DefaultOpenApiRequestValidator.java 默认防重放验证器
 * JWTAuthenticationWebFilter.java jwt认证方式，选1
 * SignAuthenticationWebFilter.java 签名认证方式，选1
 
@@ -35,6 +32,13 @@
 ## io.github.icodegarden.commons.gateway.properties
 * CommonsGatewaySecurityProperties.java 安全配置，配置jwt还是signature方式决定了使用什么认证方式
 
+## io.github.icodegarden.commons.gateway.spi
+* AppProvider.java 支持自定义的App数据源
+* OpenApiRequestValidator.java 请求验证器
+
+## io.github.icodegarden.commons.gateway.spi.impl
+* ConfiguredAppProvider.java 使用配置中心的apps
+* DefaultOpenApiRequestValidator.java 默认防重放验证器
 
 # FQA
 * spring gateway中使用controller的并发线程受cpu线程数影响（例如2线程的cpu只能并发处理2个，未找到可配项），但使用endpoint则无此问题（效果跟请求下游服务一样）

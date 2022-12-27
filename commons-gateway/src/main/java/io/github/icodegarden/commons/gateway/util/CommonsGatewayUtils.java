@@ -4,7 +4,7 @@ import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-import io.github.icodegarden.commons.gateway.core.security.App;
+import io.github.icodegarden.commons.gateway.core.security.signature.App;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.AppKeySignUtils;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
