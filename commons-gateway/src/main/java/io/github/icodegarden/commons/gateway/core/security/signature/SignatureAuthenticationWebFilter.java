@@ -78,9 +78,11 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 			ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
 		this.appProvider = appProvider;
 		this.openApiRequestValidator = openApiRequestValidator;
+		
 		authenticationWebFilter = new AuthenticationWebFilter(authenticationManager);
 
 		authenticationWebFilter.setServerAuthenticationConverter(new SignResolveServerAuthenticationConverter());
+		
 		authenticationWebFilter.setAuthenticationSuccessHandler(serverAuthenticationSuccessHandler);
 
 		/**
