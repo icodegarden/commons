@@ -30,8 +30,8 @@ import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityPr
 import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.gateway.spi.AuthWebFilter;
 import io.github.icodegarden.commons.gateway.spi.JWTAuthenticationConverter;
+import io.github.icodegarden.commons.gateway.spi.JWTTokenExtractor;
 import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
-import io.github.icodegarden.commons.gateway.spi.impl.DefaultJWTAuthenticationConverter;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAccessDeniedHandler;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,9 @@ public class GatewaySecurityAutoConfiguration {
 	@Autowired(required = false)
 	private AuthWebFilter authWebFilter;
 
-	@Autowired(required = false)
+	@Autowired
+	private JWTTokenExtractor jwtTokenExtractor;
+	@Autowired
 	private JWTAuthenticationConverter jwtAuthenticationConverter;
 	@Autowired(required = false)
 	private ReactiveAuthenticationManager authenticationManager;
@@ -103,9 +105,8 @@ public class GatewaySecurityAutoConfiguration {
 			webFilter = new JWTAuthenticationWebFilter(
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationConverter != null ? serverAuthenticationConverter
-							: new JWTServerAuthenticationConverter(jwt.getSecretKey(),
-									jwtAuthenticationConverter != null ? jwtAuthenticationConverter
-											: new DefaultJWTAuthenticationConverter()),
+							: new JWTServerAuthenticationConverter(jwt.getSecretKey(), jwtTokenExtractor,
+									jwtAuthenticationConverter),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
 							: new UserServerAuthenticationSuccessHandler(),
 					authenticationFailureHandler != null ? authenticationFailureHandler

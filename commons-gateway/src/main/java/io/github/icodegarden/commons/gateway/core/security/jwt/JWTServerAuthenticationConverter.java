@@ -1,6 +1,5 @@
 package io.github.icodegarden.commons.gateway.core.security.jwt;
 
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
@@ -14,10 +13,9 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import io.github.icodegarden.commons.gateway.spi.JWTAuthenticationConverter;
-import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.gateway.spi.JWTTokenExtractor;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
-import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import reactor.core.publisher.Mono;
 
 /**
@@ -28,19 +26,20 @@ import reactor.core.publisher.Mono;
 public class JWTServerAuthenticationConverter implements ServerAuthenticationConverter {
 
 	private final String secretKey;
+	private final JWTTokenExtractor jwtTokenExtractor;
 	private final JWTAuthenticationConverter jwtAuthenticationConverter;
 
-	public JWTServerAuthenticationConverter(String secretKey, JWTAuthenticationConverter jwtAuthenticationConverter) {
+	public JWTServerAuthenticationConverter(String secretKey, JWTTokenExtractor jwtTokenExtractor,
+			JWTAuthenticationConverter jwtAuthenticationConverter) {
 		this.secretKey = secretKey;
+		this.jwtTokenExtractor = jwtTokenExtractor;
 		this.jwtAuthenticationConverter = jwtAuthenticationConverter;
 	}
 
 	@Override
 	public Mono<Authentication> convert(ServerWebExchange exchange) {
 		return Mono.defer(() -> {
-			ServerHttpRequest request = exchange.getRequest();
-
-			String jwt = getJWT(request);
+			String jwt = jwtTokenExtractor.extract(exchange);
 
 			if (StringUtils.hasText(jwt)) {
 				try {
@@ -62,24 +61,5 @@ public class JWTServerAuthenticationConverter implements ServerAuthenticationCon
 
 			return Mono.empty();
 		});
-	}
-
-	private String getJWT(ServerHttpRequest request) {
-		String bearerToken = request.getHeaders().getFirst(WebUtils.AUTHORIZATION_HEADER);
-		if (bearerToken != null) {
-			return resolveBearerToken(bearerToken, " ");
-		}
-		return null;
-	}
-
-	private String resolveBearerToken(String bearerToken, @Nullable String concat) {
-		if (concat == null) {
-			concat = " ";
-		}
-		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer" + concat)) {
-			String originToken = bearerToken.substring(7, bearerToken.length());
-			return originToken;
-		}
-		return null;
 	}
 }

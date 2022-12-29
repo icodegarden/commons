@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,16 @@ public class CommonsGatewayApplication {
 
 	public static void main(String[] args) throws Exception {
 		initServerConfig(args);
-		
+
 		SpringApplication.run(CommonsGatewayApplication.class, args);
 	}
-	
+
+	public static ConfigurableApplicationContext run(Class<?> primarySource, String[] args) {
+		initServerConfig(args);
+
+		return SpringApplication.run(primarySource, args);
+	}
+
 	public static void initServerConfig(String[] args) {
 		int availableProcessors = Runtime.getRuntime().availableProcessors();
 

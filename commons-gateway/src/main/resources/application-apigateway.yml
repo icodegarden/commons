@@ -5,6 +5,10 @@ spring:
       - StripPrefix=1      
       - RemoveRequestHeader=X-Internal-Rpc
       - RemoveRequestHeader=Authorization  
+#      - RequestHeaderSize=102400B      #不设置时默认不限制
+#      - name: RequestSize #不设置时默认5MB
+#        args:
+#          maxSize: 2048MB      
       routes:
       - id: admin_route
         uri: lb://gddc-admin
