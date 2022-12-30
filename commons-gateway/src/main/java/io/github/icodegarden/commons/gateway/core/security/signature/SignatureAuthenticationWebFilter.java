@@ -81,7 +81,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		
 		authenticationWebFilter = new AuthenticationWebFilter(authenticationManager);
 
-		authenticationWebFilter.setServerAuthenticationConverter(new SignResolveServerAuthenticationConverter());
+		authenticationWebFilter.setServerAuthenticationConverter(new AppServerAuthenticationConverter());
 		
 		authenticationWebFilter.setAuthenticationSuccessHandler(serverAuthenticationSuccessHandler);
 
@@ -179,7 +179,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		}).then(authenticationWebFilter.filter(exchange, chain));
 	}
 
-	private class SignResolveServerAuthenticationConverter implements ServerAuthenticationConverter {
+	private class AppServerAuthenticationConverter implements ServerAuthenticationConverter {
 
 		@Override
 		public Mono<Authentication> convert(ServerWebExchange exchange) {
