@@ -19,6 +19,10 @@ public class ParallelExchangeResult implements ExchangeResult {
 
 		this.shardExchangeResults = shardExchangeResults;
 	}
+	
+	public int getShardTotal() {
+		return shardExchangeResults.size();
+	}
 
 	/**
 	 * 并行任务返回体是null
