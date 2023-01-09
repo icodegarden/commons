@@ -157,11 +157,15 @@ public class ZooKeeperHolder implements Closeable {
 						}
 
 						/**
+						 * 调用reconnect后，这次fallback返回直接的zk
+						 */
+						return getZK();
+						/**
 						 * 调用reconnect后，这次依然抛出异常
 						 */
-						throw new ConnectTimeoutZooKeeperException(
-								String.format("zookeeper connected timeout:%d, connectString:%s",
-										config.getConnectTimeout(), config.getConnectString()));
+//						throw new ConnectTimeoutZooKeeperException(
+//								String.format("zookeeper connected timeout:%d, connectString:%s",
+//										config.getConnectTimeout(), config.getConnectString()));
 					}
 				}
 			}

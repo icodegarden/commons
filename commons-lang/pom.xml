@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>com.esotericsoftware</groupId>
 			<artifactId>kryo</artifactId>
-			<version>5.2.1</version>
+			<version>5.4.0</version>
 <!-- 			<optional>true</optional> kryo是必须的-->
 		</dependency>
 		<dependency>

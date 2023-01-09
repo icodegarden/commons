@@ -29,6 +29,7 @@ import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityPr
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
 import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.gateway.spi.AuthWebFilter;
+import io.github.icodegarden.commons.gateway.spi.AuthorizeExchangeSpecConfigurer;
 import io.github.icodegarden.commons.gateway.spi.JWTAuthenticationConverter;
 import io.github.icodegarden.commons.gateway.spi.JWTTokenExtractor;
 import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
@@ -129,42 +130,6 @@ public class GatewaySecurityAutoConfiguration {
 		authorizeExchangeSpec.and().addFilterBefore(webFilter, SecurityWebFiltersOrder.AUTHORIZATION);
 
 		return http.build();
-	}
-
-	public static interface AuthorizeExchangeSpecConfigurer {
-
-		public static void configDefault(AuthorizeExchangeSpec authorizeExchangeSpec) {
-			authorizeExchangeSpec
-					/**
-					 * api系列
-					 */
-					.pathMatchers("/openapi/**").authenticated().pathMatchers("/*/api/**").authenticated()
-					.pathMatchers("/*/internalapi/**").authenticated()
-					/**
-					 * 登录认证
-					 */
-					.pathMatchers("/*/login/**").permitAll().pathMatchers("/*/authenticate/**").permitAll()
-					/**
-					 * 匿名
-					 */
-					.pathMatchers("/anonymous/**").permitAll().pathMatchers("/*/anonymous/**").permitAll()
-					/**
-					 * swagger
-					 */
-					.pathMatchers("/swagger*/**").permitAll().pathMatchers("/*/swagger*/**").permitAll()
-					.pathMatchers("/*/v3/api-docs/**").permitAll()
-					/**
-					 * spring actuator endpoint<br>
-					 * 包括自定义的/actuator/readiness
-					 */
-					.pathMatchers("/actuator/**").permitAll()
-					/**
-					 * 其他
-					 */
-					.anyExchange().authenticated();
-		}
-
-		void config(AuthorizeExchangeSpec authorizeExchangeSpec);
 	}
 
 	private class NoOpWebFilter implements AuthWebFilter {
