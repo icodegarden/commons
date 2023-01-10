@@ -45,6 +45,7 @@ public abstract class MessageHandlerStrategy {
 				response.setRequest(false);
 				response.setTwoWay(false);
 				response.setEvent(false);
+				response.setSerializerType(message.getSerializerType());
 				response.setRequestId(message.getRequestId());
 				response.setBody(reply);
 //					this.response = response;

@@ -14,8 +14,9 @@ import org.slf4j.LoggerFactory;
 import io.github.icodegarden.commons.lang.metrics.Metrics;
 import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
 import io.github.icodegarden.commons.lang.serialization.Deserializer;
+import io.github.icodegarden.commons.lang.serialization.Hessian2Deserializer;
+import io.github.icodegarden.commons.lang.serialization.Hessian2Serializer;
 import io.github.icodegarden.commons.lang.serialization.KryoDeserializer;
-import io.github.icodegarden.commons.lang.serialization.KryoSerializer;
 import io.github.icodegarden.commons.lang.serialization.Serializer;
 import io.github.icodegarden.commons.zookeeper.ACLs;
 import io.github.icodegarden.commons.zookeeper.ZooKeeperHolder;
@@ -34,8 +35,13 @@ public class ZnodeDataZooKeeperInstanceMetrics implements ZooKeeperInstanceMetri
 	private ZooKeeperHolder zooKeeperHolder;
 	private final String root;
 
-	private Serializer<Object> serializer = new KryoSerializer();
-	private Deserializer<Object> deserializer = new KryoDeserializer();
+	private Serializer<Object> serializer = new Hessian2Serializer();
+	private Deserializer<Object> deserializer = new Hessian2Deserializer();
+
+	/**
+	 * TODO remove
+	 */
+	private Deserializer<Object> deserializerFallback = new KryoDeserializer();
 
 	/**
 	 * 
@@ -150,7 +156,12 @@ public class ZnodeDataZooKeeperInstanceMetrics implements ZooKeeperInstanceMetri
 	}
 
 	private Metrics buildMetrics(String instanceName, byte[] data) {
-		Metrics metrics = (Metrics) deserializer.deserialize(data);
+		Metrics metrics;
+		try {
+			metrics = (Metrics) deserializer.deserialize(data);
+		} catch (Exception e) {
+			metrics = (Metrics) deserializerFallback.deserialize(data);
+		}
 		metrics.setInstanceName(instanceName);
 		return metrics;
 	}

@@ -23,8 +23,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.lang.serialization.Deserializer;
-import io.github.icodegarden.commons.lang.serialization.KryoDeserializer;
-import io.github.icodegarden.commons.lang.serialization.KryoSerializer;
+import io.github.icodegarden.commons.lang.serialization.Hessian2Deserializer;
+import io.github.icodegarden.commons.lang.serialization.Hessian2Serializer;
 import io.github.icodegarden.commons.lang.serialization.Serializer;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.springboot.cache.SpringApplicationCacher;
@@ -55,8 +55,8 @@ public class CommonsCacheAutoConfiguration {
 				ApplicationEventPublisher applicationEventPublisher) {
 			log.info("commons init bean of SpringApplicationCacher");
 
-			Serializer<?> serializer = new KryoSerializer();
-			Deserializer<?> deserializer = new KryoDeserializer();
+			Serializer<?> serializer = new Hessian2Serializer();
+			Deserializer<?> deserializer = new Hessian2Deserializer();
 			RedisCacher cacher = new RedisCacher(redisExecutor, serializer, deserializer);
 
 			return new SpringApplicationCacher(cacher, applicationEventPublisher);

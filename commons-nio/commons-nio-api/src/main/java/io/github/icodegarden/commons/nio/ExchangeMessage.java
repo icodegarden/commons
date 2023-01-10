@@ -14,6 +14,7 @@ public class ExchangeMessage {
 	private boolean request;// 1 request 0 response
 	private boolean twoWay;// 1y 0n
 	private boolean event;// 1y 0n
+	private int serializerType;
 	private long requestId;
 
 	private Object body;
@@ -22,9 +23,14 @@ public class ExchangeMessage {
 	}
 
 	public ExchangeMessage(boolean request, boolean twoWay, boolean event, Object body) {
+		this(request, twoWay, event, SerializerType.Kryo.getValue(), body);
+	}
+
+	public ExchangeMessage(boolean request, boolean twoWay, boolean event, int serializerType, Object body) {
 		this.request = request;
 		this.twoWay = twoWay;
 		this.event = event;
+		this.serializerType = serializerType;
 		this.body = body;
 
 		initRequestId();
@@ -60,6 +66,14 @@ public class ExchangeMessage {
 
 	public void setEvent(boolean event) {
 		this.event = event;
+	}
+
+	public int getSerializerType() {
+		return serializerType;
+	}
+
+	public void setSerializerType(int serializerType) {
+		this.serializerType = serializerType;
 	}
 
 	public long getRequestId() {

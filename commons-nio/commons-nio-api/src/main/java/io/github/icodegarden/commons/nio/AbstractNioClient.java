@@ -27,6 +27,7 @@ public abstract class AbstractNioClient implements NioClient {
 
 	protected int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 	protected int requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+	private SerializerType serializerType = SerializerType.Hessian2;
 
 	public void setConnectTimeout(int connectTimeout) {
 		this.connectTimeout = connectTimeout;
@@ -38,10 +39,14 @@ public abstract class AbstractNioClient implements NioClient {
 	public void setRequestTimeout(int requestTimeout) {
 		this.requestTimeout = requestTimeout;
 	}
+	
+	public void setSerializerType(SerializerType serializerType) {
+		this.serializerType = serializerType;
+	}
 
 	@Override
 	public void send(Object body) throws RemoteException {
-		ExchangeMessage message = new ExchangeMessage(true, false, false, body);
+		ExchangeMessage message = new ExchangeMessage(true, false, false, serializerType.getValue(), body);
 		doSend(message);
 	}
 
@@ -52,7 +57,7 @@ public abstract class AbstractNioClient implements NioClient {
 
 	@Override
 	public <R> R request(Object body, int timeout) throws RemoteException {
-		ExchangeMessage message = new ExchangeMessage(true, true, false, body);
+		ExchangeMessage message = new ExchangeMessage(true, true, false, serializerType.getValue(), body);
 		long requestId = message.getRequestId();
 		Future future = new Future(requestId);
 		try {

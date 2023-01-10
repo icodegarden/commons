@@ -22,6 +22,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -47,7 +48,7 @@ import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer;
  */
 public class KryoSerializer implements Serializer<Object> {
 
-	private static AbstractKryoFactory kryoFactory = new ThreadLocalKryoFactory();
+	private static AbstractKryoFactory kryoFactory = new ThreadLocalKryoFactory();;
 
 	@Override
 	public byte[] serialize(Object obj) throws SerializationException {
@@ -64,7 +65,9 @@ public class KryoSerializer implements Serializer<Object> {
 		}
 	}
 
-	abstract static class AbstractKryoFactory {
+	public static abstract class AbstractKryoFactory {
+
+		private static Consumer<Kryo> kryoFactoryCustom;
 
 		private final Set<Class> registrations = new LinkedHashSet<Class>();
 
@@ -74,6 +77,10 @@ public class KryoSerializer implements Serializer<Object> {
 
 		public AbstractKryoFactory() {
 
+		}
+		
+		public static void configKryoFactoryCustom(Consumer<Kryo> kryoFactoryCustom) {
+			AbstractKryoFactory.kryoFactoryCustom = kryoFactoryCustom;
 		}
 
 		public void registerClass(Class clazz) {
@@ -135,6 +142,10 @@ public class KryoSerializer implements Serializer<Object> {
 
 			for (Class clazz : registrations) {// 外部的
 				kryo.register(clazz);
+			}
+
+			if (kryoFactoryCustom != null) {
+				kryoFactoryCustom.accept(kryo);
 			}
 
 //	        SerializableClassRegistry.getRegisteredClasses().forEach((clazz, ser) -> {
