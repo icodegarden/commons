@@ -19,9 +19,10 @@ public class Hessian2Deserializer implements Deserializer<Object> {
 	public Object deserialize(byte[] bytes) throws SerializationException {
 		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
 		Hessian2Input input = new Hessian2Input(is);
+		input.setSerializerFactory(Hessian2Serializer.serializerFactory);
 		try {
 			return input.readObject();
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			throw new SerializationException("Error when deserializing byte[] to object", e);
 		} finally {
 			try {

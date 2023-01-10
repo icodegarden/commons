@@ -16,7 +16,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * @author Fangfang.Xu
  *
  */
-class MessageEncoder extends MessageToByteEncoder {
+class MessageEncoder extends MessageToByteEncoder<Object> {
 	private static final Logger log = LoggerFactory.getLogger(MessageEncoder.class);
 
 	@Override
@@ -24,9 +24,14 @@ class MessageEncoder extends MessageToByteEncoder {
 		if (log.isDebugEnabled()) {
 			log.debug("encode nio msg from:{}", ctx.channel());
 		}
-		ByteBuffer byteBuffer = Codec.encode((ExchangeMessage) msg);
-
-		byteBuffer.flip();// 需要flip才能给out读
-		out.writeBytes(byteBuffer);
+		try{
+			ByteBuffer byteBuffer = Codec.encode((ExchangeMessage) msg);
+			byteBuffer.flip();// 需要flip才能给out读
+			out.writeBytes(byteBuffer);
+		}catch (Throwable e) {
+			log.error("ex on MessageEncoder", e);
+			throw e;
+		}
 	}
+	
 }

@@ -1,5 +1,4 @@
 package io.github.icodegarden.commons.lang.serialization;
-import org.junit.jupiter.api.Test;
 
 /**
  * 

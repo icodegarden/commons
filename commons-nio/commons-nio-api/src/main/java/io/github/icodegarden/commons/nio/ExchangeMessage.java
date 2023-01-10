@@ -1,5 +1,6 @@
 package io.github.icodegarden.commons.nio;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -7,7 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Fangfang.Xu
  *
  */
-public class ExchangeMessage {
+public class ExchangeMessage implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	private static final AtomicLong ID = new AtomicLong(0);
 

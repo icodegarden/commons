@@ -29,9 +29,11 @@ import io.github.icodegarden.commons.lang.tuple.Tuples;
  */
 public abstract class SystemUtils {
 
+	public static final DateTimeFormatter STANDARD_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	public static final DateTimeFormatter STANDARD_DATETIME_FORMATTER = DateTimeFormatter
 			.ofPattern("yyyy-MM-dd HH:mm:ss");
-	public static final DateTimeFormatter STANDARD_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	public static final DateTimeFormatter STANDARD_DATETIMEMS_FORMATTER = DateTimeFormatter
+			.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	public static final String OS_NAME = System.getProperty("os.name");
 
