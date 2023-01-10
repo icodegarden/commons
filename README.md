@@ -11,8 +11,8 @@ commons包含了算法、增强封装、工具、规范实现等
 * commons-kafka 可靠生产、可靠消费
 * commons-nio Java原生NIO、Netty NIO
 * commons-shardingsphere shardingsphere分库分表的分片路由等自定义实现
-* commons-springboot 规范实现
+* commons-springboot 微服务框架
 * commons-elasticsearch DAO
 * commons-hbase DAO
-* commons-gateway 网关规范实现
-
+* commons-springboot 微服务框架
+* commons-gateway 网关框架

@@ -32,3 +32,6 @@
 # 1.1.0
 * springboot模块增加elasticsearch、hbase、kafka、zookeeper、shardingsphere的AutoConfiguration
 
+# 1.2.0
+* 增加hessian2
+
