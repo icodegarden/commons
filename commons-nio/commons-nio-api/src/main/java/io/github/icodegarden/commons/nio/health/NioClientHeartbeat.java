@@ -31,7 +31,7 @@ public class NioClientHeartbeat implements Heartbeat {
 
 	@Override
 	public void send() throws IOException {
-		ExchangeMessage message = new ExchangeMessage(true, true, true, true);
+		ExchangeMessage message = ExchangeMessage.heartbeat(true, true);
 		if (log.isDebugEnabled()) {
 			log.debug("{} send beat...,message:{}", name, message);
 		}

@@ -674,7 +674,7 @@ public abstract class SystemUtils {
 				thread.setDaemon(true);
 				return thread;
 			});
-			scheduler.scheduleAtFixedRate(() -> {
+			scheduler.scheduleWithFixedDelay(() -> {
 				this.now = LocalDateTime.now();
 			}, period, period, TimeUnit.MILLISECONDS);
 		}

@@ -44,7 +44,7 @@ public class CommonsSentinelAutoConfiguration {
 	 */
 	@AutoConfigureBefore(SentinelNacosDynamicRuleAutoConfiguration.class)
 	@Configuration
-	protected static class SentinelEnvAutoConfiguration {
+	public static class SentinelEnvAutoConfiguration {
 		@Autowired
 		private Environment env;
 		@Autowired
@@ -90,7 +90,7 @@ public class CommonsSentinelAutoConfiguration {
 	@ConditionalOnClass({ SphU.class })
 	@ConditionalOnProperty(value = "commons.sentinel.nacos.rule.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
-	protected static class SentinelNacosDynamicRuleAutoConfiguration {
+	public static class SentinelNacosDynamicRuleAutoConfiguration {
 		@Autowired
 		private Environment env;
 		@Autowired

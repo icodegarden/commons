@@ -12,13 +12,14 @@ import io.github.icodegarden.commons.lang.serialization.Serializer;
  *
  */
 public class Codec {
-	
+
 	public static final int HEADER = 16;
 	private static final byte REQUEST = (byte) (1 << 7);
 	private static final byte TWOWAT = (byte) (1 << 6);
 	private static final byte EVENT = (byte) (1 << 5);
+	private static final byte SERIALIZER_TYPE = (byte) (127 >> 2);// 16-23 & 31 (00011111)
 	private static final byte HOLD = 0;
-	
+
 	public static ByteBuffer encode(ExchangeMessage message) throws IOException {
 		byte i3 = 0;
 		if (message.isRequest()) {
@@ -30,13 +31,13 @@ public class Codec {
 		if (message.isEvent()) {
 			i3 |= EVENT;
 		}
-		
-		int serializerType = message.getSerializerType();
-		
+
+		byte serializerType = message.getSerializerType();
+
 		i3 |= serializerType;
-		
+
 		Serializer<Object> serializer = SerializerType.get(serializerType).getSerializer();
-		
+
 		byte[] bytes = serializer.serialize(message.getBody());
 		ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER + bytes.length);
 
@@ -51,26 +52,22 @@ public class Codec {
 		byteBuffer.put(bytes);
 		return byteBuffer;
 	}
-	
+
 	public static ExchangeMessage decode(ByteBuffer headerBuffer, ByteBuffer bodyBuffer) {
 		byte i3 = headerBuffer.get(2);// 3
-		int serializerType = i3 & 31;//16-23 & 31（00011111）
-		
+		byte serializerType = (byte)(i3 & SERIALIZER_TYPE);
+
 		Deserializer<?> deserializer = SerializerType.get(serializerType).getDeserializer();
-		
+
 		byte[] bytes = bodyBuffer.array();// 不用flip；直接引用内部bytes，避免创建新bytes复制
 
 		Object object = deserializer.deserialize(bytes);
 
 		long requestId = headerBuffer.getLong(4);
 
-		ExchangeMessage message = new ExchangeMessage();
-		message.setRequest((i3 & REQUEST) == REQUEST);
-		message.setTwoWay((i3 & TWOWAT) == TWOWAT);
-		message.setEvent((i3 & EVENT) == EVENT);
-		message.setSerializerType(serializerType);
+		ExchangeMessage message = new ExchangeMessage((i3 & REQUEST) == REQUEST, (i3 & TWOWAT) == TWOWAT,
+				(i3 & EVENT) == EVENT, serializerType, object);
 		message.setRequestId(requestId);
-		message.setBody(object);
 
 		return message;
 	}

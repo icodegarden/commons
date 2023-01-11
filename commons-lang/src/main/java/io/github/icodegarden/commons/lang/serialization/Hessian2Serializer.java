@@ -38,6 +38,14 @@ public class Hessian2Serializer implements Serializer<Object> {
 
 		serializerFactory.addFactory(extSerializerFactory);
 	}
+	
+	/**
+	 * 自定义备用
+	 * @param serializerFactory
+	 */
+	public static void configSerializerFactory(SerializerFactory serializerFactory) {
+		Hessian2Serializer.serializerFactory = serializerFactory;
+	}
 
 	@Override
 	public byte[] serialize(Object obj) throws SerializationException {

@@ -41,13 +41,8 @@ public abstract class MessageHandlerStrategy {
 				resp = message;
 			} else {
 				Object reply = messageHandler.reply(message.getBody());
-				ExchangeMessage response = new ExchangeMessage();
-				response.setRequest(false);
-				response.setTwoWay(false);
-				response.setEvent(false);
-				response.setSerializerType(message.getSerializerType());
+				ExchangeMessage response = new ExchangeMessage(false, false, false, message.getSerializerType(), reply);
 				response.setRequestId(message.getRequestId());
-				response.setBody(reply);
 //					this.response = response;
 				resp = response;
 			}

@@ -48,7 +48,7 @@ public class ServerSideClientHeartbeat implements Heartbeat {
 
 	@Override
 	public void response() throws IOException {
-		ExchangeMessage message = new ExchangeMessage(false, false, true, true);
+		ExchangeMessage message = ExchangeMessage.heartbeat(false, false);
 		if (log.isDebugEnabled()) {
 			log.debug("{} response beat...,message:{}", name, message);
 		}

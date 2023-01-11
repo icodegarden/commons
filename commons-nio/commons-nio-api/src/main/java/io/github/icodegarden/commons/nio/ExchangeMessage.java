@@ -1,34 +1,33 @@
 package io.github.icodegarden.commons.nio;
 
-import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 该类不会直接用于tcp传输，传输的是body字段
  * 
  * @author Fangfang.Xu
  *
  */
-public class ExchangeMessage implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class ExchangeMessage {
 
 	private static final AtomicLong ID = new AtomicLong(0);
 
 	private boolean request;// 1 request 0 response
 	private boolean twoWay;// 1y 0n
 	private boolean event;// 1y 0n
-	private int serializerType;
+	private byte serializerType;
 	private long requestId;
 
 	private Object body;
 
-	public ExchangeMessage() {
+	public static ExchangeMessage heartbeat(boolean request, boolean twoWay) {
+		/**
+		 * heartbeat的body仅仅是个boolean，不会涉及变更兼容性，可以试用Kryo
+		 */
+		return new ExchangeMessage(request, twoWay, true, SerializerType.Kryo.getValue(), true);
 	}
 
-	public ExchangeMessage(boolean request, boolean twoWay, boolean event, Object body) {
-		this(request, twoWay, event, SerializerType.Kryo.getValue(), body);
-	}
-
-	public ExchangeMessage(boolean request, boolean twoWay, boolean event, int serializerType, Object body) {
+	public ExchangeMessage(boolean request, boolean twoWay, boolean event, byte serializerType, Object body) {
 		this.request = request;
 		this.twoWay = twoWay;
 		this.event = event;
@@ -70,11 +69,11 @@ public class ExchangeMessage implements Serializable {
 		this.event = event;
 	}
 
-	public int getSerializerType() {
+	public byte getSerializerType() {
 		return serializerType;
 	}
 
-	public void setSerializerType(int serializerType) {
+	public void setSerializerType(byte serializerType) {
 		this.serializerType = serializerType;
 	}
 

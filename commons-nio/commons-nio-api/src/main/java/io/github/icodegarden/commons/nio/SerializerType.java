@@ -18,23 +18,23 @@ import lombok.Getter;
 @Getter
 public enum SerializerType {
 
-	Kryo(0, new KryoSerializer(), new KryoDeserializer()), //
-	Jdk(1, new JavaSerializer(), new JavaDeserializer()),//
-	Hessian2(2, new Hessian2Serializer(), new Hessian2Deserializer()),//
-//	Json(3, new JsonSerializer(), new JsonDeserializer()), //
+	Kryo((byte)0, new KryoSerializer(), new KryoDeserializer()), //
+	Jdk((byte)1, new JavaSerializer(), new JavaDeserializer()),//
+	Hessian2((byte)2, new Hessian2Serializer(), new Hessian2Deserializer()),//
+//	Json((byte)3, new JsonSerializer(), new JsonDeserializer()), //
 	;
 
-	private final int value;
+	private final byte value;
 	private final Serializer<Object> serializer;
 	private final Deserializer<Object> deserializer;
 
-	private SerializerType(int value, Serializer<Object> serializer, Deserializer<Object> deserializer) {
+	private SerializerType(byte value, Serializer<Object> serializer, Deserializer<Object> deserializer) {
 		this.value = value;
 		this.serializer = serializer;
 		this.deserializer = deserializer;
 	}
 
-	public static SerializerType get(int value) {
+	public static SerializerType get(byte value) {
 		SerializerType[] serializerTypes = SerializerType.values();
 		for (SerializerType serializerType : serializerTypes) {
 			if (serializerType.getValue() == value) {
