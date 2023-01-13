@@ -90,16 +90,19 @@ public class ElasticsearchClientBuilder {
 								esProperties.getUsername(), esProperties.getPassword()));
 						httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
 					}
-					httpClientBuilder.setKeepAliveStrategy(new DefaultConnectionKeepAliveStrategy() {
-						@Override
-						public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
-							long keepAliveDuration = super.getKeepAliveDuration(response, context);
-							if (keepAliveDuration < 0) {// < 0 无限，会跟服务端不一致报SocketTimeout
-								return esProperties.getKeepAlive();
+					if(esProperties.isKeepAlive()) {
+						httpClientBuilder.setKeepAliveStrategy(new DefaultConnectionKeepAliveStrategy() {
+							@Override
+							public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+								long keepAliveDuration = super.getKeepAliveDuration(response, context);
+								if (keepAliveDuration < 0) {// < 0 无限，会跟服务端不一致报SocketTimeout
+									return esProperties.getKeepAliveSeconds();
+								}
+								return keepAliveDuration;
 							}
-							return keepAliveDuration;
-						}
-					});
+						});
+					}
+					
 //					httpClientBuilder.setConnectionManager(connManager)
 //					httpClientBuilder.setConnectionReuseStrategy(reuseStrategy)
 					httpClientBuilder.setMaxConnPerRoute(esProperties.getMaxConnPerRoute());
