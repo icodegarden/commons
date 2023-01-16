@@ -51,13 +51,16 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportArrayList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
+import io.github.icodegarden.commons.lang.util.LogUtils;
 import io.github.icodegarden.commons.lang.util.PageHelperUtils;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
+@Slf4j
 public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>, W, DO>
 		extends ElasticsearchDaoSupport<PO, U, Q, W, DO> {
 
@@ -115,6 +118,9 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 		try {
 			doUpdate(getIndex(), update);
 		} catch (ElasticsearchStatusException e) {
+			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch update status is {}, index:{}, update:{}",
+					e.status().getStatus(), getIndex(), update));
+
 			/**
 			 * 理用这个可以得到id
 			 */
@@ -127,7 +133,7 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 		}
 		return 1;
 	}
-	
+
 	/**
 	 * Bulk方式
 	 */
@@ -338,6 +344,9 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 			}
 			return extractResult(getResponse);
 		} catch (ElasticsearchStatusException e) {
+			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch findOne status is {}, index:{}, id:{}",
+					e.status().getStatus(), getIndex(), id));
+
 			/**
 			 * 404
 			 */
@@ -406,6 +415,8 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 	 */
 	private SearchHit findOneIfAliasOfMultiIndex(String id) {
 		if (isAliasOfMultiIndex()) {
+			LogUtils.infoIfEnabled(log, () -> log.info("findOneIfAliasOfMultiIndex index:{}, id:{}", getIndex(), id));
+
 			SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 			BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
 			boolQueryBuilder.must(QueryBuilders.termQuery(getIdFieldName(), id));
@@ -434,6 +445,9 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 		try {
 			doDelete(getIndex(), id);
 		} catch (ElasticsearchStatusException e) {
+			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch delete status is {}, index:{}, id:{}",
+					e.status().getStatus(), getIndex(), id));
+
 			doOnRealIndexIf404(getIndex(), id, e, realIndex -> doDelete(realIndex, id));
 		}
 		return 1;
@@ -519,7 +533,7 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 	protected abstract BulkRequest buildBulkRequestOnAddBatch(Collection<PO> pos);
 
 	protected abstract UpdateRequest buildUpdateRequestOnUpdate(U update);
-	
+
 	protected abstract BulkRequest buildBulkRequestOnUpdateBatch(Collection<U> updates);
 
 	protected abstract SearchRequest buildSearchRequestOnFindAll(Q query);
