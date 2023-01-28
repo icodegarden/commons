@@ -223,7 +223,7 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 	@Override
 	public void onNewZooKeeper() {
 		/**
-		 * 已经通过deregister删除
+		 * 已经通过deregister被外部删除，则不需要继续处理
 		 */
 		if (registered == null) {
 			return;
