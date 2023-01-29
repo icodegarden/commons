@@ -35,3 +35,7 @@
 # 1.2.0
 * 增加hessian2
 
+# 1.2.1
+* fix ZooKeeperHolder 锁
+
+
