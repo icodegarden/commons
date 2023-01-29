@@ -6,13 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.Validateable;
+import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
 import io.github.icodegarden.commons.zookeeper.exception.ConnectTimeoutZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ExceedExpectedZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ZooKeeperException;
@@ -36,17 +38,19 @@ import lombok.ToString;
 public class ZooKeeperHolder implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ZooKeeperHolder.class);
 
-	public static long MAX_WAIT_CONNECTED_FAILED_MS = 10000;
+	/**
+	 * 外部可配
+	 */
+	public static long MAX_WAIT_CONNECTED_MS = 10000;
+
+	private final ScheduledThreadPoolExecutor reconnectScheduledThreadPool = ThreadPoolUtils
+			.newSingleScheduledThreadPool("ZooKeeperReconnectTimerTask");
 
 	private volatile boolean closeCalled;
-
-	private Long waitConnectedFailedTimestamp;
 
 	private final Config config;
 
 	private volatile ZooKeeper zk;
-
-	private boolean authInfoAdded;
 
 	private List<NewZooKeeperListener> listeners = new CopyOnWriteArrayList<NewZooKeeperListener>();
 
@@ -59,10 +63,22 @@ public class ZooKeeperHolder implements Closeable {
 
 		this.config = config;
 		newZooKeeper();
+
+		ZooKeeperReconnectTimerTask reconnectTimerTask = new ZooKeeperReconnectTimerTask();
+		reconnectScheduledThreadPool.scheduleWithFixedDelay(reconnectTimerTask, config.getConnectTimeout(), 1000,
+				TimeUnit.MILLISECONDS);
+	}
+
+	public void addNewZooKeeperListener(NewZooKeeperListener listener) {
+		listeners.add(listener);
+		listeners.sort(Comparator.comparingInt(NewZooKeeperListener::order));
+	}
+
+	List<NewZooKeeperListener> listNewZooKeeperListeners() {
+		return listeners;
 	}
 
 	private void newZooKeeper() throws ZooKeeperException {
-		authInfoAdded = false;
 		try {
 			StateWatcher stateWatcher = new StateWatcher();
 
@@ -74,6 +90,10 @@ public class ZooKeeperHolder implements Closeable {
 			 * 不会阻塞；若server处于不可用，zk将一直自动重连
 			 */
 			zk = new ZooKeeper(config.getConnectString(), config.getSessionTimeout(), stateWatcher, zkClientConfig);
+			if (config.getAclAuth() != null) {
+				zk.addAuthInfo("digest", config.getAclAuth().getBytes());
+			}
+
 			if (log.isInfoEnabled()) {
 				log.info("success new ZooKeeper, connectString:{}, sessionTimeout:{}", config.getConnectString(),
 						config.getSessionTimeout());
@@ -81,16 +101,17 @@ public class ZooKeeperHolder implements Closeable {
 			stateWatcher.setZooKeeper(zk);
 
 			if (!listeners.isEmpty()) {
-				listeners.forEach(m -> {
-					m.onNewZooKeeper();
-				});
+				for (NewZooKeeperListener listener : listeners) {
+					log.info("trigger onNewZooKeeper listener:{}", listener.getClass().getName());
+					listener.onNewZooKeeper();
+				}
 			}
 		} catch (IOException e) {
 			throw new ExceedExpectedZooKeeperException("ex on new ZooKeeper", e);
 		}
 	}
 
-	public ZooKeeper getZK() throws IllegalStateException {
+	public ZooKeeper getZK() {
 		if (closeCalled) {
 			throw new IllegalStateException(ZooKeeperHolder.class.getSimpleName() + " was closed");
 		}
@@ -104,9 +125,9 @@ public class ZooKeeperHolder implements Closeable {
 		if (closeCalled) {
 			throw new IllegalStateException(ZooKeeperHolder.class.getSimpleName() + " was closed");
 		}
-		if (zk.getState() != States.CONNECTED) {
+		if (!zk.getState().isConnected()) {
 			synchronized (this) {
-				if (zk.getState() != States.CONNECTED) {
+				if (!zk.getState().isConnected()) {
 					/**
 					 * 等待连上的notify
 					 */
@@ -115,75 +136,14 @@ public class ZooKeeperHolder implements Closeable {
 					} catch (InterruptedException ignore) {
 					}
 
-					if (zk.getState() != States.CONNECTED) {
-						/**
-						 * 因为zk client自动重连并不是万无一失的，可能出现下面场景:<br>
-						 * zk server日志：<br>
-						 * Refusing session request for client /172.24.16.157:37402 as it has seen zxid
-						 * 0x83098a our last zxid is 0x3e6 client must try another server<br>
-						 * <br>
-						 * zk client日志：<br>
-						 * o.a.z.ClientCnxn[1290]:Session 0x10313cb829f3c49 for sever
-						 * zk37-svc/172.25.7.41:2181, Closing socket connection. Attempting reconnect
-						 * except it is a SessionExpiredException. <br>
-						 * org.apache.zookeeper.ClientCnxn$EndOfStreamException: Unable to read
-						 * additional data from server sessionid 0x10313cb829f3c49, likely server has
-						 * closed socket<br>
-						 * at
-						 * org.apache.zookeeper.ClientCnxnSocketNIO.doIO(ClientCnxnSocketNIO.java:77)<br>
-						 * at
-						 * org.apache.zookeeper.ClientCnxnSocketNIO.doTransport(ClientCnxnSocketNIO.java:350)<br>
-						 * at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1280)<br>
-						 * <br>
-						 * 
-						 * 以上场景zk client会一直重连，但server却一直拒绝<br>
-						 * 因此当检查到距离首次等待失败已过去xx时间还没自动连上，则调用reconnect来重新new ZooKeeper保障成功建立新的连接<br>
-						 */
-						
-						/**
-						 * 记录首次失败的时间
-						 */
-						if (waitConnectedFailedTimestamp == null) {
-							waitConnectedFailedTimestamp = System.currentTimeMillis();
-						}
-						/**
-						 * 已有过失败，且早于xx毫秒
-						 */
-						if (waitConnectedFailedTimestamp != null
-								&& waitConnectedFailedTimestamp <= (System.currentTimeMillis()
-										- MAX_WAIT_CONNECTED_FAILED_MS)) {
-							log.warn("waitConnectedFailedTimestamp is exceed, start reconnect to ensure connect success");
-							reconnect();
-						}
-
-						/**
-						 * 调用reconnect后，这次fallback返回直接的zk
-						 */
-						return getZK();
-						/**
-						 * 调用reconnect后，这次依然抛出异常
-						 */
-//						throw new ConnectTimeoutZooKeeperException(
-//								String.format("zookeeper connected timeout:%d, connectString:%s",
-//										config.getConnectTimeout(), config.getConnectString()));
+					/**
+					 * 如果还是未连接
+					 */
+					if (!zk.getState().isConnected()) {
+						throw new ConnectTimeoutZooKeeperException(
+								String.format("zookeeper wait connected timeout:%d, connectString:%s",
+										config.getConnectTimeout(), config.getConnectString()));
 					}
-				}
-			}
-		}
-
-		/**
-		 * 获取连接成功，则重置
-		 */
-		waitConnectedFailedTimestamp = null;
-
-		/**
-		 * 当有配置auth时，在获取zk前把authInfo加进去
-		 */
-		if (!authInfoAdded && config.getAclAuth() != null) {
-			synchronized (this) {
-				if (!authInfoAdded) {
-					zk.addAuthInfo("digest", config.getAclAuth().getBytes());
-					authInfoAdded = true;
 				}
 			}
 		}
@@ -191,13 +151,37 @@ public class ZooKeeperHolder implements Closeable {
 		return zk;
 	}
 
-	public void addNewZooKeeperListener(NewZooKeeperListener listener) {
-		listeners.add(listener);
-		listeners.sort(Comparator.comparingInt(NewZooKeeperListener::order));
-	}
+	/**
+	 * create if not exists
+	 * 
+	 * @param root
+	 * @throws ZooKeeperException
+	 */
+	public void ensureRootNode(String root) throws ZooKeeperException {
+		/**
+		 * /a/b/c -> a/b/c
+		 */
+		String substring = root.substring(1);
+		String[] nodes = substring.split("/");
 
-	List<NewZooKeeperListener> listNewZooKeeperListeners() {
-		return listeners;
+		String path = "";
+		for (String node : nodes) {
+			path += "/" + node;
+			try {
+				Stat exists = getConnectedZK().exists(path, false);
+				if (exists == null) {
+					try {
+						getConnectedZK().create(path, new byte[0], ACLs.AUTH_ALL_ACL, CreateMode.PERSISTENT);
+					} catch (InterruptedException ignore) {
+					} catch (KeeperException.NodeExistsException ignore) {
+					}
+				}
+			} catch (InterruptedException ignore) {
+			} catch (KeeperException e) {
+				throw new ExceedExpectedZooKeeperException(String.format("ex on ensure root node of exists [%s]", path),
+						e);
+			}
+		}
 	}
 
 	/**
@@ -205,7 +189,10 @@ public class ZooKeeperHolder implements Closeable {
 	 */
 	@Override
 	public void close() throws IOException {
-		internalClose();
+		reconnectScheduledThreadPool.shutdown();
+
+		closeInternal();
+
 		closeCalled = true;
 	}
 
@@ -214,7 +201,7 @@ public class ZooKeeperHolder implements Closeable {
 	 * 
 	 * @throws IOException
 	 */
-	private void internalClose() throws IOException {
+	private void closeInternal() throws IOException {
 		try {
 			zk.close();
 		} catch (Exception e) {
@@ -224,20 +211,84 @@ public class ZooKeeperHolder implements Closeable {
 
 	/**
 	 * 给内部使用
+	 * 
+	 * @throws IOException
 	 */
-	private void reconnect() {
+	private synchronized void reconnect() throws IOException {
 		log.warn("{} start reconnect, close and create a new ZooKeeper", this.getClass().getSimpleName());
-		try {
-			/**
-			 * IMPT 不可以直接使用close()方法，那是给外部调用使用的
-			 */
-			internalClose();
-		} catch (IOException ignore) {
-		}
+		/**
+		 * IMPT 不可以直接使用close()方法，那是给外部调用使用的
+		 */
+		closeInternal();
+
 		/**
 		 * 必须new新的
 		 */
 		newZooKeeper();
+	}
+
+	private class ZooKeeperReconnectTimerTask implements Runnable {
+		private Long lastNotConnectedTimestamp;
+
+		@Override
+		public void run() {
+			try {
+				/**
+				 * 如果状态不是已连接，且距离首次探测到不是已连接已过去N时间，则需要重连
+				 */
+				if (!zk.getState().isConnected()) {
+					/**
+					 * 因为zk client自动重连并不是万无一失的，可能出现下面场景:<br>
+					 * zk server日志：<br>
+					 * Refusing session request for client /172.24.16.157:37402 as it has seen zxid
+					 * 0x83098a our last zxid is 0x3e6 client must try another server<br>
+					 * <br>
+					 * zk client日志：<br>
+					 * o.a.z.ClientCnxn[1290]:Session 0x10313cb829f3c49 for sever
+					 * zk37-svc/172.25.7.41:2181, Closing socket connection. Attempting reconnect
+					 * except it is a SessionExpiredException. <br>
+					 * org.apache.zookeeper.ClientCnxn$EndOfStreamException: Unable to read
+					 * additional data from server sessionid 0x10313cb829f3c49, likely server has
+					 * closed socket<br>
+					 * at
+					 * org.apache.zookeeper.ClientCnxnSocketNIO.doIO(ClientCnxnSocketNIO.java:77)<br>
+					 * at
+					 * org.apache.zookeeper.ClientCnxnSocketNIO.doTransport(ClientCnxnSocketNIO.java:350)<br>
+					 * at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1280)<br>
+					 * <br>
+					 * 
+					 * 以上场景zk client会一直重连，但server却一直拒绝<br>
+					 * 因此当检查到距离首次等待失败已过去xx时间还没自动连上，则调用reconnect来重新new ZooKeeper保障成功建立新的连接<br>
+					 */
+
+					/**
+					 * 记录首次失败的时间
+					 */
+					if (lastNotConnectedTimestamp == null) {
+						lastNotConnectedTimestamp = System.currentTimeMillis();
+					}
+					/**
+					 * 已有过失败，且已过去N时间
+					 */
+					if (lastNotConnectedTimestamp <= (System.currentTimeMillis() - MAX_WAIT_CONNECTED_MS)) {
+						log.warn("lastNotConnectedTimestamp is exceed, start reconnect to ensure connect success");
+						reconnect();
+
+						/**
+						 * 重连成功后重置；若重连未成功则lastNotConnectedTimestamp不重置，下次任务触发时还会触发重连
+						 */
+						lastNotConnectedTimestamp = null;
+					}
+				} else {
+					/**
+					 * 已连接的重置
+					 */
+					lastNotConnectedTimestamp = null;
+				}
+			} catch (Throwable e) {
+				log.error("ex on ZooKeeperReconnectTimerTask", e);
+			}
+		}
 	}
 
 	private class StateWatcher implements Watcher {
@@ -258,7 +309,7 @@ public class ZooKeeperHolder implements Closeable {
 				}
 				switch (event.getState()) {
 				/**
-				 * Disconnected是不server发给client的，是client自己识别到的<br>
+				 * Disconnected不是server发给client的，是client自己识别到的<br>
 				 * 当网络不可用较长一段时间、zk server下线或不可用 就会触发，此时zk client会自动一直重连
 				 */
 				case Disconnected:
@@ -306,39 +357,6 @@ public class ZooKeeperHolder implements Closeable {
 				default:
 					break;
 				}
-			}
-		}
-	}
-
-	/**
-	 * create if not exists
-	 * 
-	 * @param root
-	 * @throws ZooKeeperException
-	 */
-	public void ensureRootNode(String root) throws ZooKeeperException {
-		/**
-		 * /a/b/c -> a/b/c
-		 */
-		String substring = root.substring(1);
-		String[] nodes = substring.split("/");
-
-		String path = "";
-		for (String node : nodes) {
-			path += "/" + node;
-			try {
-				Stat exists = getConnectedZK().exists(path, false);
-				if (exists == null) {
-					try {
-						getConnectedZK().create(path, new byte[0], ACLs.AUTH_ALL_ACL, CreateMode.PERSISTENT);
-					} catch (InterruptedException ignore) {
-					} catch (KeeperException.NodeExistsException ignore) {
-					}
-				}
-			} catch (InterruptedException ignore) {
-			} catch (KeeperException e) {
-				throw new ExceedExpectedZooKeeperException(String.format("ex on ensure root node of exists [%s]", path),
-						e);
 			}
 		}
 	}

@@ -37,7 +37,10 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 	private final int port;
 	private final String path;
 
-	private volatile ZooKeeperRegisteredInstance registered;
+	private boolean closed;
+
+	private volatile ZooKeeperRegisteredInstance instance;
+	private boolean deregistered;
 
 	/**
 	 * use default ip
@@ -113,8 +116,8 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 
 	@Override
 	public synchronized ZooKeeperRegisteredInstance registerIfNot() throws ZooKeeperException {
-		if (registered != null) {
-			return registered;
+		if (instance != null) {
+			return instance;
 //			throw new IllegalStateException(
 //					String.format("node was registered [%s]", registered.get().getInstanceName()));
 		}
@@ -139,7 +142,7 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 
 		ZooKeeperRegisteredInstance registerResult = new DefaultZooKeeperRegisteredInstance(nodeName, serviceName,
 				nodeName.substring(nodeName.lastIndexOf("/") + 1, nodeName.length()), bindIp, port);
-		registered = registerResult;
+		instance = registerResult;
 		return registerResult;
 	}
 
@@ -181,14 +184,23 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 
 	@Override
 	public void deregister() throws ZooKeeperException {
-		ZooKeeperRegisteredInstance registeredInstance = registered;
+		deregisterInternal();
+
+		deregistered = true;
+	}
+
+	private void deregisterInternal() throws ZooKeeperException {
+		ZooKeeperRegisteredInstance registeredInstance = instance;
 		if (registeredInstance != null) {// 防止重复调用deregister
-			deregister(registeredInstance.getZnode());
+			doDeregister(registeredInstance.getZnode());
 		}
 	}
 
-	private void deregister(String znode) throws ZooKeeperException {
+	private void doDeregister(String znode) throws ZooKeeperException {
 		try {
+			/**
+			 * 节点不存在，则忽略
+			 */
 			Stat stat = zooKeeperHolder.getConnectedZK().exists(znode, false);
 			if (stat != null) {
 				try {
@@ -200,12 +212,12 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 			throw new ExceedExpectedZooKeeperException(String.format("ex on deregister znode [%s]", znode), ignore);
 		}
 
-		registered = null;
+		instance = null;
 	}
 
 	@Override
 	public ZooKeeperRegisteredInstance getRegistered() {
-		return registered;
+		return instance;
 	}
 
 	@Override
@@ -218,33 +230,36 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
+
+		closed = true;
+	}
+
+	private boolean isActive() {
+		return !closed && !deregistered;
 	}
 
 	@Override
 	public void onNewZooKeeper() {
 		/**
-		 * 已经通过deregister被外部删除，则不需要继续处理
+		 * 已经被外部操作了，则不需要继续处理
 		 */
-		if (registered == null) {
+		if (!isActive()) {
 			return;
 		}
 		if (log.isInfoEnabled()) {
-			log.info("registered node:{} which session was expired, do re register", registered.getInstanceName());
+			log.info("registered node:{} after new ZooKeeper, do re register", instance.getInstanceName());
 		}
 		/**
 		 * 重新注册直到成功
 		 */
-		while (true) {
+		while (isActive()) {
 			try {
-				/**
-				 * 当出现NewZooKeeper时，zk中的临时节点一定没了，不需要进行deregister
-				 * deregister(registered.getZnode());
-				 */
-				registered = null;
+				deregisterInternal();
+
 				registerIfNot();
 				break;
 			} catch (Exception e) {
-				log.error("ex on re register after session re SyncConnected", e);
+				log.error("ex on re register after new ZooKeeper re SyncConnected", e);
 				try {
 					Thread.sleep(3000);
 				} catch (InterruptedException ignore) {
