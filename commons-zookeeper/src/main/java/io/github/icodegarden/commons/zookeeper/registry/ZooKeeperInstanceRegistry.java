@@ -250,7 +250,8 @@ public class ZooKeeperInstanceRegistry implements InstanceRegistry<ZooKeeperRegi
 			log.info("registered node:{} after new ZooKeeper, do re register", instance.getInstanceName());
 		}
 		/**
-		 * 重新注册直到成功
+		 * 重新注册直到成功<br>
+		 * FIXME 需要最大重试次数?否则可能会一直阻塞ZooKeeperReconnectTimerTask的运行
 		 */
 		while (isActive()) {
 			try {
