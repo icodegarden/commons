@@ -3,7 +3,11 @@ spring:
     gateway:   
       default-filters:   #不用修改，放在这里是因为api也有一个不同的配置
       - RemoveRequestHeader=X-Internal-Rpc
-      - RemoveRequestHeader=Authorization        
+      - RemoveRequestHeader=Authorization    
+#      - RequestHeaderSize=102400B      #不设置时默认不限制
+#      - name: RequestSize #不设置时默认5MB
+#        args:
+#          maxSize: 2048MB              
       - name: CacheRequestBody
         args:
           bodyClass: io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody
