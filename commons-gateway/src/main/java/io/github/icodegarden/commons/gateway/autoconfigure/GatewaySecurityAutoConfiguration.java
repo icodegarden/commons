@@ -116,7 +116,8 @@ public class GatewaySecurityAutoConfiguration {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
 
-			webFilter = new SignatureAuthenticationWebFilter(appProvider, openApiRequestValidator,
+			webFilter = new SignatureAuthenticationWebFilter(signature.getAuthPaths(), appProvider,
+					openApiRequestValidator,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
 							: new AppServerAuthenticationSuccessHandler(appProvider, signature.getHeaderAppKey()),

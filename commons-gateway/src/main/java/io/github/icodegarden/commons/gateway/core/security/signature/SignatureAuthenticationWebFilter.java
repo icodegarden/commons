@@ -3,10 +3,14 @@ package io.github.icodegarden.commons.gateway.core.security.signature;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
@@ -68,21 +72,23 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 			.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
 
 	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
+	private final Set<String> authPaths;
 	private final AuthenticationWebFilter authenticationWebFilter;
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
 
-	public SignatureAuthenticationWebFilter(AppProvider appProvider, OpenApiRequestValidator openApiRequestValidator,
-			ReactiveAuthenticationManager authenticationManager,
+	public SignatureAuthenticationWebFilter(Collection<String> authPaths, AppProvider appProvider,
+			OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
 			ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
 			ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
+		this.authPaths = new HashSet<String>(authPaths);
 		this.appProvider = appProvider;
 		this.openApiRequestValidator = openApiRequestValidator;
-		
+
 		authenticationWebFilter = new AuthenticationWebFilter(authenticationManager);
 
 		authenticationWebFilter.setServerAuthenticationConverter(new AppServerAuthenticationConverter());
-		
+
 		authenticationWebFilter.setAuthenticationSuccessHandler(serverAuthenticationSuccessHandler);
 
 		/**
@@ -97,7 +103,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		 * 该认证器只针对符合规范的openapi，其他的一律不做处理交给spring security识别是否需要认证<br>
 		 * 因为像早期对接TC的/openapi/v1/bss/sync,/openapi/v1/bss/state,/openapi/v1/softwareParts/sync，不是按规范来的，则交给下游服务自行处理
 		 */
-		if (!"/openapi/v1/biz/methods".equals(exchange.getRequest().getURI().getPath())) {
+		if (!authPaths.contains(exchange.getRequest().getURI().getPath())) {
 			return chain.filter(exchange);
 		}
 

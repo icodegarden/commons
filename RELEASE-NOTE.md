@@ -38,4 +38,5 @@
 # 1.2.1
 * fix ZooKeeperHolder 锁
 
-
+# 1.3.0
+* gateway Signature模式下哪些path需要认证可配

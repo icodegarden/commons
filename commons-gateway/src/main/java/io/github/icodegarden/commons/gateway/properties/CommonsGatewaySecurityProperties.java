@@ -1,6 +1,9 @@
 package io.github.icodegarden.commons.gateway.properties;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.Nullable;
@@ -39,11 +42,13 @@ public class CommonsGatewaySecurityProperties {
 	@ToString
 	public static class Signature {
 
+		private Set<String> authPaths = new HashSet<String>(Arrays.asList("/openapi/v1/biz/methods"));// 默认只需对此path进行认证
+
 		/**
 		 * 是否在认证后设置appKey的header
 		 */
 		private Boolean headerAppKey = false;
-		
+
 		@Nullable
 		private List<App> apps;
 	}
