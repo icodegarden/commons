@@ -216,6 +216,8 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		@Override
 		public Mono<Authentication> convert(ServerWebExchange exchange) {
 			return Mono.defer(() -> {
+				String requestPath = exchange.getRequest().getURI().getPath();
+
 				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
 
 				if (requestBody != null) {
@@ -266,15 +268,22 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 					// --------------------------------------
 
 					if (!"JSON".equalsIgnoreCase(requestBody.getFormat())) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_FORMAT:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getFormat()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_FORMAT));
 					}
 					if (!CommonsGatewayUtils.supportsSignType(requestBody.getSign_type())) {
+						LogUtils.infoIfEnabled(log,
+								() -> log.info("app:{}.{} of rquest path:{} INVALID_SIGNATURE_TYPE:{}",
+										app.getAppName(), app.getAppId(), requestPath, requestBody.getSign_type()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE_TYPE));
 					}
 					if (requestBody.getTimestamp().length() != 19
 							|| !DATETIME_PATTERN.matcher(requestBody.getTimestamp()).matches()) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_TIMESTAMP:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getTimestamp()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
 					}
@@ -285,11 +294,15 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 							SystemUtils.STANDARD_DATETIME_FORMATTER);
 					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())
 							|| ts.minusSeconds(REJECT_SECONDS_AFTER).isAfter(SystemUtils.now())) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_TIMESTAMP:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getTimestamp()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
 					}
 					if (!StringUtils.hasText(requestBody.getCharset())
 							|| !"UTF-8".equalsIgnoreCase(requestBody.getCharset())) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_CHARSET:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getCharset()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_CHARSET));
 					}
@@ -299,6 +312,8 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 					 * 验签不通过
 					 */
 					if (!b) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_SIGNATURE:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getSign()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE));
 					}
@@ -307,6 +322,9 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 					 * 接口权限，如果没有配置则表示拥有所有接口权限
 					 */
 					if (!app.getMethods().isEmpty() && !app.getMethods().contains(requestBody.getMethod())) {
+						LogUtils.infoIfEnabled(log,
+								() -> log.info("app:{}.{} of rquest path:{} INSUFFICIENT_PERMISSIONS:{}",
+										app.getAppName(), app.getAppId(), requestPath, requestBody.getMethod()));
 						throw new ErrorCodeAuthenticationException(new ClientPermissionErrorCodeException(
 								ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS));
 					}
@@ -316,6 +334,8 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 					 */
 					if (!StringUtils.hasText(requestBody.getRequest_id()) || requestBody.getRequest_id().length() > 32
 							|| !openApiRequestValidator.validate(requestBody)) {
+						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_REQUEST_ID:{}",
+								app.getAppName(), app.getAppId(), requestPath, requestBody.getRequest_id()));
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_REQUEST_ID));
 					}
