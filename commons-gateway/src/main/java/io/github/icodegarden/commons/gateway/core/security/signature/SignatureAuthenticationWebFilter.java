@@ -3,7 +3,6 @@ package io.github.icodegarden.commons.gateway.core.security.signature;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,6 +45,7 @@ import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCod
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
+import io.github.icodegarden.commons.lang.util.LogUtils;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
 import io.github.icodegarden.commons.springboot.security.SpringUser;
@@ -72,16 +72,16 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 			.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
 
 	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
-	private final Set<String> authPaths;
+	private final Set<String> requiredAuthPaths;
 	private final AuthenticationWebFilter authenticationWebFilter;
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
 
-	public SignatureAuthenticationWebFilter(Collection<String> authPaths, AppProvider appProvider,
+	public SignatureAuthenticationWebFilter(Collection<String> requiredAuthPaths, AppProvider appProvider,
 			OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
 			ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
 			ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
-		this.authPaths = new HashSet<String>(authPaths);
+		this.requiredAuthPaths = new HashSet<String>(requiredAuthPaths);
 		this.appProvider = appProvider;
 		this.openApiRequestValidator = openApiRequestValidator;
 
@@ -99,11 +99,27 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+		String requestPath = exchange.getRequest().getURI().getPath();
+
+		/**
+		 * 不需要，path如果不正确将无法匹配到访问的资源
+		 */
+//		if (!acceptPaths.contains(requestPath)) {
+//			ServerHttpResponse response = exchange.getResponse();
+//			response.setStatusCode(HttpStatus.FORBIDDEN);
+//			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+//			DataBufferFactory dataBufferFactory = response.bufferFactory();
+//			DataBuffer buffer = dataBufferFactory.wrap("Invalid Path".getBytes(CHARSET));
+//			return response.writeWith(Mono.just(buffer));
+//		}
+
 		/**
 		 * 该认证器只针对符合规范的openapi，其他的一律不做处理交给spring security识别是否需要认证<br>
-		 * 因为像早期对接TC的/openapi/v1/bss/sync,/openapi/v1/bss/state,/openapi/v1/softwareParts/sync，不是按规范来的，则交给下游服务自行处理
+		 * 因为历史开放接口可能不是按规范来的，则交给下游服务自行处理
 		 */
-		if (!authPaths.contains(exchange.getRequest().getURI().getPath())) {
+		if (!requiredAuthPaths.contains(requestPath)) {
+			LogUtils.infoIfEnabled(log,
+					() -> log.info("request path:{} not a RequiredAuthPath, ignore authentication", requestPath));
 			return chain.filter(exchange);
 		}
 
@@ -156,6 +172,15 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 			 * 转换检查json格式错误，缓存类型为OpenApiRequestBody提升性能
 			 */
 			return serverRequest.bodyToMono((OpenApiRequestBody.class)).doOnError(e -> {
+				try {
+					serverRequest.bodyToMono(String.class).doOnNext(objectValue -> {
+						LogUtils.debugIfEnabled(log, () -> log.debug("cache body failed, request path:{} body:{}",
+								requestPath, objectValue));
+					});
+				} catch (Exception e2) {
+					log.error("ex on log request body after cache body error", e2);
+				}
+
 				/**
 				 * json格式有问题，则响应错误码
 				 */
@@ -173,6 +198,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 				DataBuffer buffer = dataBufferFactory.wrap(JsonUtils.serialize(apiResponse).getBytes(CHARSET));
 				response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer)).subscribe();
 			}).doOnNext(objectValue -> {
+				LogUtils.debugIfEnabled(log, () -> log.debug("request path:{} body:{}", requestPath, objectValue));
 				exchange.getAttributes().put(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR, objectValue);
 			});
 //					.then(Mono.defer(() -> {

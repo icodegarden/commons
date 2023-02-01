@@ -37,6 +37,10 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 	 */
 	@Override
 	public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException e) {
+		if(exchange.getResponse().isCommitted()) {
+			return Mono.empty();
+		}
+		
 		return Mono.defer(() -> Mono.just(exchange.getResponse())).flatMap((response) -> {
 			response.setStatusCode(HttpStatus.OK);
 			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
