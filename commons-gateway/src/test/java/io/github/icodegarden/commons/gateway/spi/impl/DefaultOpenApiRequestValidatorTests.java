@@ -16,13 +16,13 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
  *
  */
 public class DefaultOpenApiRequestValidatorTests {
-
+	
 	/**
 	 * 不同2次请求，1true 2true
 	 */
 	@Test
 	void validate_notDuplicateRequest() throws Exception {
-		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
+		DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator validator = new DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator();
 
 		OpenApiRequestBody requestBody = new OpenApiRequestBody();
 		requestBody.setApp_id("app_id");
@@ -41,7 +41,7 @@ public class DefaultOpenApiRequestValidatorTests {
 	 */
 	@Test
 	void validate_duplicateRequest() throws Exception {
-		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
+		DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator validator = new DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator();
 
 		OpenApiRequestBody requestBody = new OpenApiRequestBody();
 		requestBody.setApp_id("app_id");
@@ -59,7 +59,7 @@ public class DefaultOpenApiRequestValidatorTests {
 	 */
 	@Test
 	void validate_duplicateRequest_2app() throws Exception {
-		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
+		DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator validator = new DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator();
 
 		OpenApiRequestBody requestBody = new OpenApiRequestBody();
 		requestBody.setApp_id("app_id");
@@ -87,7 +87,7 @@ public class DefaultOpenApiRequestValidatorTests {
 //			byte[] bs = new byte[1024 * 1024 * 11];
 //		});
 
-		DefaultOpenApiRequestValidator validator = new DefaultOpenApiRequestValidator();
+		DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator validator = new DefaultOpenApiRequestValidator.LocalDuplicateRequestIdValidator();
 
 		int max = 2;
 		CountDownLatch countDownLatch = new CountDownLatch(max);

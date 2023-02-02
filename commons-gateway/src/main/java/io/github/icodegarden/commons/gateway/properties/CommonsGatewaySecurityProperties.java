@@ -41,11 +41,17 @@ public class CommonsGatewaySecurityProperties {
 	@Setter
 	@ToString
 	public static class Signature {
-
-		private Set<String> authPaths = new HashSet<String>(Arrays.asList("/openapi/v1/biz/methods"));// 默认只需对此path进行认证
+		/**
+		 * 能够被网关接受的请求，不在此范围的将被直接拒绝；这有利于短路代码提升性能
+		 */
+//		private Set<String> acceptPathPatterns = new HashSet<String>(Arrays.asList("/openapi/v1/biz/methods"));// 默认只需对此path
+		/**
+		 * 需要被网关认证的请求，不在此范围的直接跳过认证，能不能pass则看springsecurity的配置规则
+		 */
+		private Set<String> authPathPatterns = new HashSet<String>(Arrays.asList("/openapi/v1/biz/methods"));// 默认只需对此path进行认证
 
 		/**
-		 * 是否在认证后设置appKey的header
+		 * 是否在认证后设置appKey到header
 		 */
 		private Boolean headerAppKey = false;
 

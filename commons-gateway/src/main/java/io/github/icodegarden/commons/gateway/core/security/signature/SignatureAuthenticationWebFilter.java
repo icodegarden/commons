@@ -2,15 +2,13 @@ package io.github.icodegarden.commons.gateway.core.security.signature;
 
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -29,6 +27,10 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher.MatchResult;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -41,16 +43,17 @@ import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;
 import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import io.github.icodegarden.commons.lang.util.LogUtils;
-import io.github.icodegarden.commons.lang.util.SystemUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
 import io.github.icodegarden.commons.springboot.security.SpringUser;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * 
@@ -60,66 +63,59 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 
-	/**
-	 * 可配
-	 */
-	public static int REJECT_SECONDS_BEFORE = 5 * 60;
-	public static int REJECT_SECONDS_AFTER = 10;
-
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
-	private static final Pattern DATETIME_PATTERN = Pattern
-			.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
-
 	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
-	private final Set<String> requiredAuthPaths;
 	private final AuthenticationWebFilter authenticationWebFilter;
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
+//	private final ServerWebExchangeMatcher acceptMatcher;
+	private final ServerWebExchangeMatcher authMatcher;
 
-	public SignatureAuthenticationWebFilter(Collection<String> requiredAuthPaths, AppProvider appProvider,
-			OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
-			ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
-			ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
-		this.requiredAuthPaths = new HashSet<String>(requiredAuthPaths);
-		this.appProvider = appProvider;
-		this.openApiRequestValidator = openApiRequestValidator;
+	public SignatureAuthenticationWebFilter(Config config) {
+//		List<ServerWebExchangeMatcher> matchers = config.getAcceptPathPatterns().stream().map(path -> {
+//			return new PathPatternParserServerWebExchangeMatcher(path/* ,HttpMethod.resolve("POST")不区分 */);
+//		}).collect(Collectors.toList());
+//		acceptMatcher = new OrServerWebExchangeMatcher(matchers);
 
-		authenticationWebFilter = new AuthenticationWebFilter(authenticationManager);
+		List<ServerWebExchangeMatcher> matchers = config.getAuthPathPatterns().stream().map(path -> {
+			return new PathPatternParserServerWebExchangeMatcher(path);
+		}).collect(Collectors.toList());
+		authMatcher = new OrServerWebExchangeMatcher(matchers);
+
+		this.appProvider = config.getAppProvider();
+		this.openApiRequestValidator = config.getOpenApiRequestValidator();
+
+		authenticationWebFilter = new AuthenticationWebFilter(config.getAuthenticationManager());
 
 		authenticationWebFilter.setServerAuthenticationConverter(new AppServerAuthenticationConverter());
 
-		authenticationWebFilter.setAuthenticationSuccessHandler(serverAuthenticationSuccessHandler);
+		authenticationWebFilter.setAuthenticationSuccessHandler(config.getServerAuthenticationSuccessHandler());
 
 		/**
 		 * 需要设置，默认使用的是HttpBasicServerAuthenticationEntryPoint
 		 */
-		authenticationWebFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
+		authenticationWebFilter.setAuthenticationFailureHandler(config.getServerAuthenticationFailureHandler());
 	}
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String requestPath = exchange.getRequest().getURI().getPath();
 
-		/**
-		 * 不需要，path如果不正确将无法匹配到访问的资源
-		 */
-//		if (!acceptPaths.contains(requestPath)) {
+//		if (!isAcceptPath(exchange)) {
+//			LogUtils.infoIfEnabled(log, () -> log.info("request path:{} Not Accept", requestPath));
+//
 //			ServerHttpResponse response = exchange.getResponse();
 //			response.setStatusCode(HttpStatus.FORBIDDEN);
 //			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 //			DataBufferFactory dataBufferFactory = response.bufferFactory();
-//			DataBuffer buffer = dataBufferFactory.wrap("Invalid Path".getBytes(CHARSET));
+//			DataBuffer buffer = dataBufferFactory.wrap("Path Not Accept".getBytes(CHARSET));
 //			return response.writeWith(Mono.just(buffer));
 //		}
 
-		/**
-		 * 该认证器只针对符合规范的openapi，其他的一律不做处理交给spring security识别是否需要认证<br>
-		 * 因为历史开放接口可能不是按规范来的，则交给下游服务自行处理
-		 */
-		if (!requiredAuthPaths.contains(requestPath)) {
+		if (!isAuthPath(exchange)) {
 			LogUtils.infoIfEnabled(log,
-					() -> log.info("request path:{} not a RequiredAuthPath, ignore authentication", requestPath));
+					() -> log.info("request path:{} not a AuthPath, ignore authentication", requestPath));
 			return chain.filter(exchange);
 		}
 
@@ -211,6 +207,57 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		}).then(authenticationWebFilter.filter(exchange, chain));
 	}
 
+	/**
+	 * 拒绝不支持的path
+	 */
+//	private boolean isAcceptPath(ServerWebExchange exchange) {
+//		AtomicReference<Boolean> match = new AtomicReference<Boolean>();
+//		Mono<MatchResult> mono = acceptMatcher.matches(exchange);
+//		mono.subscribeOn(Schedulers.immediate());
+//		mono.subscribe(next -> {
+//			match.set(next.isMatch());
+//		});
+//		return match.get();
+//	}
+
+	/**
+	 * 该认证只针对符合规范的openapi，其他的一律不做处理交给spring security识别是否需要认证<br>
+	 * 因为历史开放接口可能不是按规范来的，则交给下游服务自行处理
+	 */
+	private boolean isAuthPath(ServerWebExchange exchange) {
+		AtomicReference<Boolean> match = new AtomicReference<Boolean>();
+		Mono<MatchResult> mono = authMatcher.matches(exchange);
+		mono.subscribeOn(Schedulers.immediate());
+		mono.subscribe(next -> {
+			match.set(next.isMatch());
+		});
+		return match.get();
+	}
+
+	@Getter
+	@ToString
+	public static class Config {
+//		private Set<String> acceptPathPatterns;
+		private Set<String> authPathPatterns;
+		private AppProvider appProvider;
+		private OpenApiRequestValidator openApiRequestValidator;
+		private ReactiveAuthenticationManager authenticationManager;
+		private ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler;
+		private ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
+
+		public Config(Set<String> authPathPatterns, AppProvider appProvider,
+				OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
+				ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
+				ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
+			this.authPathPatterns = authPathPatterns;
+			this.appProvider = appProvider;
+			this.openApiRequestValidator = openApiRequestValidator;
+			this.authenticationManager = authenticationManager;
+			this.serverAuthenticationSuccessHandler = serverAuthenticationSuccessHandler;
+			this.serverAuthenticationFailureHandler = serverAuthenticationFailureHandler;
+		}
+	}
+
 	private class AppServerAuthenticationConverter implements ServerAuthenticationConverter {
 
 		@Override
@@ -228,117 +275,12 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 					}
 
 					App app = appProvider.getApp(requestBody.getApp_id());
-
-					if (requestBody.getApp_id().length() > 32 || app == null) {
+					if (app == null) {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_APP_ID));
 					}
 
-					// --------------------------------------------------
-
-					if (!StringUtils.hasText(requestBody.getMethod())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_METHOD));
-					}
-					if (!StringUtils.hasText(requestBody.getSign())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_SIGNATURE));
-					}
-					if (!StringUtils.hasText(requestBody.getSign_type())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_SIGNATURE_TYPE));
-					}
-					if (!StringUtils.hasText(requestBody.getApp_id())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_APP_ID));
-					}
-					if (!StringUtils.hasText(requestBody.getTimestamp())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_TIMESTAMP));
-					}
-					if (!StringUtils.hasText(requestBody.getVersion())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_VERSION));
-					}
-					if (!StringUtils.hasText(requestBody.getRequest_id())) {
-						throw new ErrorCodeAuthenticationException(new ClientParameterMissingErrorCodeException(
-								ClientParameterMissingErrorCodeException.SubPair.MISSING_REQUEST_ID));
-					}
-
-					// --------------------------------------
-
-					if (!"JSON".equalsIgnoreCase(requestBody.getFormat())) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_FORMAT:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getFormat()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_FORMAT));
-					}
-					if (!CommonsGatewayUtils.supportsSignType(requestBody.getSign_type())) {
-						LogUtils.infoIfEnabled(log,
-								() -> log.info("app:{}.{} of rquest path:{} INVALID_SIGNATURE_TYPE:{}",
-										app.getAppName(), app.getAppId(), requestPath, requestBody.getSign_type()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE_TYPE));
-					}
-					if (requestBody.getTimestamp().length() != 19
-							|| !DATETIME_PATTERN.matcher(requestBody.getTimestamp()).matches()) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_TIMESTAMP:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getTimestamp()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
-					}
-					/**
-					 * n秒（例如5分钟）之前的视为重放;比现在晚n秒（例如10秒）以上视为不符合
-					 */
-					LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(),
-							SystemUtils.STANDARD_DATETIME_FORMATTER);
-					if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())
-							|| ts.minusSeconds(REJECT_SECONDS_AFTER).isAfter(SystemUtils.now())) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_TIMESTAMP:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getTimestamp()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_TIMESTAMP));
-					}
-					if (!StringUtils.hasText(requestBody.getCharset())
-							|| !"UTF-8".equalsIgnoreCase(requestBody.getCharset())) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_CHARSET:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getCharset()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_CHARSET));
-					}
-
-					boolean b = CommonsGatewayUtils.validateSign(requestBody, app.getAppKey());
-					/**
-					 * 验签不通过
-					 */
-					if (!b) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_SIGNATURE:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getSign()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE));
-					}
-
-					/**
-					 * 接口权限，如果没有配置则表示拥有所有接口权限
-					 */
-					if (!app.getMethods().isEmpty() && !app.getMethods().contains(requestBody.getMethod())) {
-						LogUtils.infoIfEnabled(log,
-								() -> log.info("app:{}.{} of rquest path:{} INSUFFICIENT_PERMISSIONS:{}",
-										app.getAppName(), app.getAppId(), requestPath, requestBody.getMethod()));
-						throw new ErrorCodeAuthenticationException(new ClientPermissionErrorCodeException(
-								ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS));
-					}
-
-					/**
-					 * 把request_id的校验放在签名校验之后，是因为校验防重放可能使用网络IO更耗时，以便前面的验证不通过直接拒绝
-					 */
-					if (!StringUtils.hasText(requestBody.getRequest_id()) || requestBody.getRequest_id().length() > 32
-							|| !openApiRequestValidator.validate(requestBody)) {
-						LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_REQUEST_ID:{}",
-								app.getAppName(), app.getAppId(), requestPath, requestBody.getRequest_id()));
-						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
-								ClientParameterInvalidErrorCodeException.SubPair.INVALID_REQUEST_ID));
-					}
+					openApiRequestValidator.validate(requestPath, requestBody, app);
 
 					/**
 					 * 认证通过后

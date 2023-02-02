@@ -115,14 +115,14 @@ public class GatewaySecurityAutoConfiguration {
 		} else if (securityProperties.getSignature() != null) {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
-
-			webFilter = new SignatureAuthenticationWebFilter(signature.getAuthPaths(), appProvider,
-					openApiRequestValidator,
+			SignatureAuthenticationWebFilter.Config config = new SignatureAuthenticationWebFilter.Config(
+					signature.getAuthPathPatterns(), appProvider, openApiRequestValidator,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
 							: new AppServerAuthenticationSuccessHandler(appProvider, signature.getHeaderAppKey()),
 					authenticationFailureHandler != null ? authenticationFailureHandler
 							: new ApiResponseServerAuthenticationFailureHandler());
+			webFilter = new SignatureAuthenticationWebFilter(config);
 		} else {
 			log.info("gateway security config Authentication WebFilter by NoOp");
 			webFilter = new NoOpWebFilter();
