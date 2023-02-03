@@ -33,8 +33,8 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 	/**
 	 * 可配
 	 */
-	public static int REJECT_SECONDS_BEFORE = 5 * 60;
-	public static int REJECT_SECONDS_AFTER = 10;
+	public static long REJECT_SECONDS_BEFORE = 5 * 60;
+	public static long REJECT_SECONDS_AFTER = 10;
 	public static Pattern DATETIME_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
 
 	private GeneralValidator generalValidator = new GeneralValidator();
