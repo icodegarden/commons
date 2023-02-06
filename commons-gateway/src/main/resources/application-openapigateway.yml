@@ -8,9 +8,9 @@ spring:
 #      - name: RequestSize #不设置时默认5MB
 #        args:
 #          maxSize: 2048MB              
-      - name: CacheRequestBody
-        args:
-          bodyClass: io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody
+#      - name: CacheRequestBody #springboot3之前有OutOfDirectMemoryError
+#        args:
+#          bodyClass: io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody
       routes:
 #--------------------------------------------------------------------------------------      
       - id: metadatas_system_route

@@ -1,8 +1,11 @@
 package io.github.icodegarden.commons.gateway;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 
+import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 
@@ -30,17 +33,29 @@ public class OpenApiRequestTests {
 						+ "    \"sign\":\"54B1A9C38E86B58947DE201C74FB83994493D2DFEBB17F6A694FA01446119047\"\r\n" + "}",
 				OpenApiRequestBody.class);
 
-		int i = 0;
-		for (;;) {
-			try {
-				String postForObject = restTemplate.postForObject("http://localhost:8080/openapi/v1/biz/methods", body,
-						String.class);
-				System.out.println(postForObject);
-			} catch (Exception e) {
-				System.out.println(e);
-			}
+		AtomicLong atomicLong = new AtomicLong();
+		for(int a=0;a<32;a++) {
+			new Thread() {
+				public void run() {
+					for (;;) {
+						try {
+							OpenApiResponse response = restTemplate.postForObject("http://localhost:8080/openapi/v1/biz/methods", body,
+									OpenApiResponse.class);
+							if(!response.isSuccess()) {
+								System.out.println(response);
+								System.exit(-1);
+							}
+						} catch (Exception e) {
+							System.out.println(e);
+							System.exit(-1);
+						}
 
-			System.out.println(i++);
+						System.out.println(atomicLong.incrementAndGet());
+					}
+				};
+			}.start();
 		}
+		
+		System.in.read();
 	}
 }

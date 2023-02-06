@@ -63,6 +63,7 @@ import reactor.core.scheduler.Schedulers;
 @Slf4j
 public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 
+	static final String CACHED_ORIGINAL_REQUEST_BODY_BACKUP_ATTR = "cachedOriginalRequestBodyBackup";
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
 	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
@@ -195,7 +196,12 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 				response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer)).subscribe();
 			}).doOnNext(objectValue -> {
 				LogUtils.debugIfEnabled(log, () -> log.debug("request path:{} body:{}", requestPath, objectValue));
-				exchange.getAttributes().put(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR, objectValue);
+				Object previousCachedBody = exchange.getAttributes()
+						.put(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR, objectValue);
+				if (previousCachedBody != null) {
+					// store previous cached body
+					exchange.getAttributes().put(CACHED_ORIGINAL_REQUEST_BODY_BACKUP_ATTR, previousCachedBody);
+				}
 			});
 //					.then(Mono.defer(() -> {
 //				ServerHttpRequest cachedRequest = exchange
@@ -204,7 +210,14 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //				exchange.getAttributes().remove(CACHED_SERVER_HTTP_REQUEST_DECORATOR_ATTR);
 //				return chain.filter(exchange.mutate().request(cachedRequest).build());
 //			}));
-		}).then(authenticationWebFilter.filter(exchange, chain));
+		}).then(authenticationWebFilter.filter(exchange, chain))//
+				.doFinally(s -> {
+					Object backupCachedBody = exchange.getAttributes().get(CACHED_ORIGINAL_REQUEST_BODY_BACKUP_ATTR);
+					if (backupCachedBody instanceof DataBuffer) {
+						DataBuffer dataBuffer = (DataBuffer) backupCachedBody;
+						DataBufferUtils.release(dataBuffer);
+					}
+				});
 	}
 
 	/**
