@@ -18,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.HttpMessageReader;
+import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -32,7 +33,6 @@ import org.springframework.security.web.server.util.matcher.PathPatternParserSer
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher.MatchResult;
 import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
@@ -66,7 +66,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 	static final String CACHED_ORIGINAL_REQUEST_BODY_BACKUP_ATTR = "cachedOriginalRequestBodyBackup";
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
-	private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
+	private final List<HttpMessageReader<?>> messageReaders;
 	private final AuthenticationWebFilter authenticationWebFilter;
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
@@ -74,6 +74,8 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 	private final ServerWebExchangeMatcher authMatcher;
 
 	public SignatureAuthenticationWebFilter(Config config) {
+		ServerCodecConfigurer codecConfigurer = config.getCodecConfigurer();
+		this.messageReaders = codecConfigurer.getReaders();
 //		List<ServerWebExchangeMatcher> matchers = config.getAcceptPathPatterns().stream().map(path -> {
 //			return new PathPatternParserServerWebExchangeMatcher(path/* ,HttpMethod.resolve("POST")不区分 */);
 //		}).collect(Collectors.toList());
@@ -250,6 +252,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 	@Getter
 	@ToString
 	public static class Config {
+		private ServerCodecConfigurer codecConfigurer;
 //		private Set<String> acceptPathPatterns;
 		private Set<String> authPathPatterns;
 		private AppProvider appProvider;
@@ -258,10 +261,11 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 		private ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler;
 		private ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 
-		public Config(Set<String> authPathPatterns, AppProvider appProvider,
+		public Config(ServerCodecConfigurer codecConfigurer, Set<String> authPathPatterns, AppProvider appProvider,
 				OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
 				ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
 				ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
+			this.codecConfigurer = codecConfigurer;
 			this.authPathPatterns = authPathPatterns;
 			this.appProvider = appProvider;
 			this.openApiRequestValidator = openApiRequestValidator;

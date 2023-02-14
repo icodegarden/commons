@@ -1,7 +1,7 @@
 ---
 #management.server.address: 127.0.0.1
 #management.endpoint.shutdown.enabled: true
-management.endpoints.web.exposure.include: health
+management.endpoints.web.exposure.include: health,loggers
 
 mybatis.mapper-locations: classpath*:mapper/*Mapper.xml
 

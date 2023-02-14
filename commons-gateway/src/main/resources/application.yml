@@ -36,7 +36,8 @@ spring:
 #        proxy.port:    #Port for proxy configuration of Netty HttpClient.
 #        proxy.type:    #proxyType for proxy configuration of Netty HttpClient.
 #        max-header-size:   #The max response header size.
-
+  codec:
+    max-in-memory-size: 262144 #与能够接受的请求体大小有关，不足会报错，默认262144字节     
 
 
 

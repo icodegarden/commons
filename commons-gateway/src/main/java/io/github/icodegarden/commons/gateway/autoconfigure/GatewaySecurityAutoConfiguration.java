@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -51,6 +52,8 @@ public class GatewaySecurityAutoConfiguration {
 
 	@Autowired
 	private CommonsGatewaySecurityProperties securityProperties;
+	@Autowired
+	private ServerCodecConfigurer codecConfigurer;
 	@Autowired(required = false)
 	private AuthorizeExchangeSpecConfigurer authorizeExchangeSpecConfigurer;
 	@Autowired
@@ -116,7 +119,7 @@ public class GatewaySecurityAutoConfiguration {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
 			SignatureAuthenticationWebFilter.Config config = new SignatureAuthenticationWebFilter.Config(
-					signature.getAuthPathPatterns(), appProvider, openApiRequestValidator,
+					codecConfigurer, signature.getAuthPathPatterns(), appProvider, openApiRequestValidator,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
 							: new AppServerAuthenticationSuccessHandler(appProvider, signature.getHeaderAppKey()),
