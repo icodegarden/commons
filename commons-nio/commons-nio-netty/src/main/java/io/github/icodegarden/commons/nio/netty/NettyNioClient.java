@@ -72,9 +72,20 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 		ClientHandler nettyClientHandler = new ClientHandler(heartbeat);
 
 		bootstrap = new Bootstrap();
-		bootstrap.group(nioEventLoopGroup).option(ChannelOption.SO_KEEPALIVE, true)
-				.option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout).channel(NioSocketChannel.class);
+		bootstrap.group(nioEventLoopGroup)//
+				.option(ChannelOption.SO_KEEPALIVE, true)//
+				.option(ChannelOption.TCP_NODELAY, true)//
+				/**
+				 * ByteBuf是否池化，默认是<br>
+				 * io.netty.allocator.type=pooled<br>
+				 * io.netty.allocator.type=unpooled<br>
+				 * 
+				 * ByteBuf是否使用直接内存，默认是<br>
+				 * io.netty.noPreferDirect = true表示不使用直接内存<br>
+				 */
+//				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
+				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout)//
+				.channel(NioSocketChannel.class);
 
 		bootstrap.handler(new ChannelInitializer() {
 			@Override
@@ -167,7 +178,7 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 		if (isClosed()) {
 			throw new ClientClosedRemoteException("client closed");
 		}
-		try{
+		try {
 			channel.writeAndFlush(message);
 		} catch (Exception e) {
 			throw new ExceedExpectedRemoteException(e);

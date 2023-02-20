@@ -28,7 +28,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 public class NettyNioServer implements NioServer {
 
 	private int nettyWorkerThreads = 200;
-	
+
 	private volatile boolean closed = true;
 	private ServerBootstrap bootstrap;
 
@@ -57,11 +57,11 @@ public class NettyNioServer implements NioServer {
 	public void setNettyWorkerThreads(int nettyWorkerThreads) {
 		this.nettyWorkerThreads = nettyWorkerThreads;
 	}
-	
+
 	public void setClientHeartbeatIntervalMillis(long clientHeartbeatIntervalMillis) {
 		this.clientHeartbeatIntervalMillis = clientHeartbeatIntervalMillis;
 	}
-	
+
 	@Override
 	public void start() throws IOException {
 		doOpen();
@@ -80,12 +80,22 @@ public class NettyNioServer implements NioServer {
 	private void doOpen() {
 		bootstrap = new ServerBootstrap();
 		bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory(name + "-NettyServerBoss", true));
-		workerGroup = new NioEventLoopGroup(nettyWorkerThreads, new DefaultThreadFactory(name + "-NettyServerWorker", true));
+		workerGroup = new NioEventLoopGroup(nettyWorkerThreads,
+				new DefaultThreadFactory(name + "-NettyServerWorker", true));
 
-		bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-				.childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-				.childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
-				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+		bootstrap.group(bossGroup, workerGroup)//
+				.channel(NioServerSocketChannel.class)//
+				.childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)//
+				.childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)//
+				/**
+				 * ByteBuf是否池化，默认是<br>
+				 * io.netty.allocator.type=pooled<br>
+				 * io.netty.allocator.type=unpooled<br>
+				 * 
+				 * ByteBuf是否使用直接内存，默认是<br>
+				 * io.netty.noPreferDirect = true表示不使用直接内存<br>
+				 */
+//				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
 				.childHandler(new ChannelInitializer<NioSocketChannel>() {
 					@Override
 					protected void initChannel(NioSocketChannel ch) throws Exception {
