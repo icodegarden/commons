@@ -1,0 +1,16 @@
+{
+    "resource": "xxx",
+    "count": 5, //限流阈值
+    "grade": 1, //0 线程数量，1 QPS
+    "durationInSec": 5, //统计窗口时间长度（单位为秒）
+    "controlBehavior": 0, //流控效果（支持快速失败和匀速排队模式），1.6.0 版本开始支持	快速失败。 0. default(reject directly), 1. warm up, 2. rate limiter, 3. warm up + rate limiter
+    "warmUpPeriodSec": 10, //
+    "maxQueueingTimeMs": 1000, //Max queueing time in rate limiter behavior.
+    "clusterMode": true, //是否是集群参数流控规则	
+    "clusterConfig": {
+        "flowId": 1000002, //Global unique ID.
+        "thresholdType": 1, //FLOW_THRESHOLD_AVG_LOCAL = 0;FLOW_THRESHOLD_GLOBAL = 1;
+        "fallbackToLocalWhenFail": true, //集群失败时使用本地
+        "windowIntervalMs": 1000 //The time interval length of the statistic sliding window (in milliseconds)
+    }
+}

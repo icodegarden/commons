@@ -49,6 +49,11 @@ feign:
       default:
         connectTimeout: 500
         readTimeout: 3000
+  httpclient:
+    enabled: true #default true
+    connectionTimeout: 500 #default 2000
+    max-connections: 800 #default 200
+    max-connections-per-route: 100 #default 50        
 
 commons:
   sentinel: 

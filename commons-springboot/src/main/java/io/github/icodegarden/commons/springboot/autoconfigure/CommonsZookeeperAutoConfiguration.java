@@ -40,6 +40,7 @@ public class CommonsZookeeperAutoConfiguration {
 		return new ZooKeeperHolder(commonsZookeeperProperties);
 	}
 
+	@ConditionalOnProperty(value = "commons.zookeeper.client.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnClass(CuratorFramework.class)
 	@Configuration
 	public class CuratorFrameworkAutoConfiguration {
