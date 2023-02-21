@@ -44,7 +44,7 @@ public class CommonsWebAutoConfiguration {
 
 	private static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
 	private static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
-			+ 1;
+			+ 100;
 
 	/**
 	 * 公共的 可能不是springcloud项目
