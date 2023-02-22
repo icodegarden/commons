@@ -3,12 +3,12 @@ package io.github.icodegarden.commons.springboot.autoconfigure;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -40,9 +40,9 @@ public class CommonsSentinelAutoConfiguration {
 	}
 
 	/**
-	 * 基础的要在SentinelNacosDynamicRuleAutoConfiguration前执行，否则当没有引入spring-cloud-starter-alibaba-sentinel时会导致不去连接dashboard
+	 * @Order 作用基础的要在SentinelNacosDynamicRuleAutoConfiguration前执行，否则当没有引入spring-cloud-starter-alibaba-sentinel时会导致不去连接dashboard
 	 */
-	@AutoConfigureBefore(SentinelNacosDynamicRuleAutoConfiguration.class)
+	@Order(-1)
 	@Configuration
 	public static class SentinelEnvAutoConfiguration {
 		@Autowired
