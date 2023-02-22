@@ -81,6 +81,27 @@ commons:
       valueSerializer: org.apache.kafka.common.serialization.StringSerializer
   zookeeper:
     connectString: 127.0.0.1:2181      
+  beecomb:
+    client:
+      basicAuth:
+        username: beecomb
+        password: beecomb
+      zookeeper: 
+        connectString: 127.0.0.1:2181     
+#        root: /beecomb
+#        sessionTimeout: 3000
+#        connectTimeout: 3000
+#        aclAuth: beecomb:beecomb
+#      master:
+#        httpHosts: http://localhost:9898,http://127.0.0.1:9898  
+    executor: 
+      zookeeper: 
+        connectString: 127.0.0.1:2181     
+#        root: /beecomb
+#        sessionTimeout: 3000
+#        connectTimeout: 3000
+#        aclAuth: beecomb:beecomb
+      
 
 
 # 单个文件大小

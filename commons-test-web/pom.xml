@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>io.github.icodegarden</groupId>
 		<artifactId>commons</artifactId>
-		<version>1.2.1</version>
+		<version>1.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>commons-test-web</artifactId>
@@ -35,37 +35,37 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-springboot_2.5.5</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-mybatis</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-elasticsearch</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-redis</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-hbase</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-kafka</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-zookeeper</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
@@ -88,16 +88,16 @@
 		  	<artifactId>wing-core</artifactId>
 		  	<version>${wing.version}</version>
 		</dependency>
-<!-- 		<dependency> -->
-<!--             <groupId>io.github.icodegarden</groupId> -->
-<!--             <artifactId>beecomb-executor</artifactId> -->
-<!--             <version>${beecomb.version}</version> -->
-<!--         </dependency> -->
-<!--         <dependency> -->
-<!--             <groupId>io.github.icodegarden</groupId> -->
-<!--             <artifactId>beecomb-client-java</artifactId> -->
-<!--             <version>${beecomb.version}</version> -->
-<!--         </dependency> -->
+		<dependency>
+            <groupId>io.github.icodegarden</groupId>
+            <artifactId>beecomb-executor</artifactId>
+            <version>${beecomb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.icodegarden</groupId>
+            <artifactId>beecomb-client-java</artifactId>
+            <version>${beecomb.version}</version>
+        </dependency>
 		<dependency>
 		  	<groupId>com.alibaba.cloud</groupId>
 		  	<artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
