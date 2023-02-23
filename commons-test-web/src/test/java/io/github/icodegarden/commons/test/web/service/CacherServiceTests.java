@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.test.web.service;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,12 +18,12 @@ public class CacherServiceTests {
 	private CacherService cacherService;
 	
 	@Test
-	public void m1() throws Exception {
-		cacherService.m1();
+	public void remove1() throws Exception {
+		cacherService.remove1("abc");
 	}
 	
 	@Test
-	public void m2() throws Exception {
-		cacherService.m2();
+	public void remove2() throws Exception {
+		cacherService.remove2(Arrays.asList("a", "b"));
 	}
 }

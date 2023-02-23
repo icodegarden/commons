@@ -26,9 +26,9 @@ public class TokenBucketRateLimiter implements RateLimiter {
 
 	/**
 	 * 
-	 * @param tokenSize       令牌数量
-	 * @param inputSize       放入大小
-	 * @param outflowDuration 放入时间单位
+	 * @param tokenSize       桶中最大令牌数量
+	 * @param inputSize       令牌放入大小
+	 * @param outflowDuration 令牌放入时间单位
 	 */
 	public TokenBucketRateLimiter(int tokenSize, int inputSize, Duration inputDuration) {
 		this.token = new AtomicInteger(tokenSize);

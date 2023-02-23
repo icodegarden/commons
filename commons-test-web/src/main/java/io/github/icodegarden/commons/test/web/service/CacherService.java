@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.test.web.service;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,15 +16,15 @@ public class CacherService {
 	private Cacher cacher;
 	
 	@Transactional
-	public void m1() {
+	public void remove1(String key) {
 		System.out.println("m1");
 		
-		cacher.remove("abc");
+		cacher.remove(key);
 	}
 	
-	public void m2() {
+	public void remove2(List<String> keys) {
 		System.out.println("m2");
 		
-		cacher.remove(Arrays.asList("a","b"));
+		cacher.remove(keys);
 	}
 }

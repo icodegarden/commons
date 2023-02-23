@@ -43,3 +43,5 @@
 * 增加gateway Signature模式下哪些path需要认证可配
 * 修复gateway CacheRequestBody springboot3之前有OutOfDirectMemoryError
 * 修复gateway 连不上sentinel dashbaord，初始化顺序所致
+* Cacher的AutoConfiguration增加支持负载保护（防穿透等）
+

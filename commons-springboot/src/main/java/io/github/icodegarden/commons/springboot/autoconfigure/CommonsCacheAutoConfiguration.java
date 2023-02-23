@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.springboot.autoconfigure;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,9 @@ import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.springboot.cache.SpringApplicationCacher;
 import io.github.icodegarden.commons.springboot.event.RemoveCacheEvent;
 import io.github.icodegarden.wing.Cacher;
+import io.github.icodegarden.wing.protect.Filter;
+import io.github.icodegarden.wing.protect.OverloadProtectionCacher;
+import io.github.icodegarden.wing.protect.Protector;
 import io.github.icodegarden.wing.redis.RedisCacher;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,15 +55,18 @@ public class CommonsCacheAutoConfiguration {
 		@ConditionalOnMissingBean(Cacher.class)
 		@ConditionalOnBean(RedisExecutor.class) // 依赖项
 		@Bean
-		public Cacher springApplicationCacher(RedisExecutor redisExecutor,
-				ApplicationEventPublisher applicationEventPublisher) {
+		public Cacher springApplicationCacher(List<Filter> filters, List<Protector> protectors,
+				RedisExecutor redisExecutor, ApplicationEventPublisher applicationEventPublisher) {
 			log.info("commons init bean of SpringApplicationCacher");
 
 			Serializer<?> serializer = new Hessian2Serializer();
 			Deserializer<?> deserializer = new Hessian2Deserializer();
 			RedisCacher cacher = new RedisCacher(redisExecutor, serializer, deserializer);
 
-			return new SpringApplicationCacher(cacher, applicationEventPublisher);
+			OverloadProtectionCacher overloadProtectionCacher = new OverloadProtectionCacher(cacher, filters,
+					protectors);
+
+			return new SpringApplicationCacher(overloadProtectionCacher, applicationEventPublisher);
 		}
 	}
 

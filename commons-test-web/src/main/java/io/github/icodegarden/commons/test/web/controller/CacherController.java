@@ -1,45 +1,68 @@
 package io.github.icodegarden.commons.test.web.controller;
 
-import java.util.List;
+import java.time.Duration;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.icodegarden.commons.lang.dao.OptimizeTableResults;
-import io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase;
+import io.github.icodegarden.commons.lang.limiter.TokenBucketRateLimiter;
 import io.github.icodegarden.commons.test.web.service.CacherService;
+import io.github.icodegarden.wing.Cacher;
+import io.github.icodegarden.wing.protect.BloomFilter;
+import io.github.icodegarden.wing.protect.Filter;
+import io.github.icodegarden.wing.protect.Protector;
+import io.github.icodegarden.wing.protect.RateLimitProtector;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
+
 @RestController
 public class CacherController {
-	
-	@Autowired
-	CacherService cacherService;
-	@Autowired
-	MysqlMybatisDatabase mysqlMybatisDatabase;
 
-	@GetMapping("cacher/m1")
-	public ResponseEntity<?> m1() {
-		cacherService.m1();
+	@Configuration
+	public static class ProtectionConfig{
+		@Bean
+		public Filter bloomFilter() {
+			BloomFilter bloomFilter = new BloomFilter();
+			bloomFilter.add("abc");// 只允许key=abc
+			return bloomFilter;
+		}
 		
-		String version = mysqlMybatisDatabase.version();
-		List<String> listTables = mysqlMybatisDatabase.listTables();
-		long countTable = mysqlMybatisDatabase.countTable(listTables.get(0));
-		long countTable2 = mysqlMybatisDatabase.countTable(listTables.get(1));
-		OptimizeTableResults optimizeTable = mysqlMybatisDatabase.optimizeTable(listTables.get(0));
-		boolean errorInMysql = optimizeTable.isErrorInMysql();
-		return ResponseEntity.ok("ok");
+		@Bean
+		public Protector rateLimitProtector() {
+			/**
+			 * 3秒1次入桶。当缓存不存在需要加载数据时如果频率高了就被限流
+			 */
+			TokenBucketRateLimiter rateLimiter = new TokenBucketRateLimiter(1, 1, Duration.ofSeconds(3));
+			return new RateLimitProtector(rateLimiter);
+		}
 	}
 	
+	@Autowired
+	private Cacher cacher;
+	@Autowired
+	private CacherService cacherService;
+
+	@GetMapping("cacher/m1/{key}")
+	public ResponseEntity<?> m1(@PathVariable String key) {
+		Object object = cacher.getElseSupplier(key, () -> "xff1", 10);
+
+		cacherService.remove1(key);
+		return ResponseEntity.ok(object);
+	}
+
 	@GetMapping("cacher/m2")
 	public ResponseEntity<?> m2() {
-		cacherService.m2();
+		cacherService.remove2(Arrays.asList("a", "b"));
 		return ResponseEntity.ok("ok");
 	}
 }
