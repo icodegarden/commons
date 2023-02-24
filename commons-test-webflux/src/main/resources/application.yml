@@ -1,0 +1,122 @@
+---
+#management.server.address: 127.0.0.1
+#management.endpoint.shutdown.enabled: true
+management.endpoints.web.exposure.include: health,loggers
+
+mybatis.mapper-locations: classpath*:mapper/*Mapper.xml
+
+pagehelper.helperDialect: mysql
+pagehelper.reasonable: false
+pagehelper.supportMethodsArguments: true
+pagehelper.params=count: countSql
+
+springfox.documentation.enabled: true
+
+server:
+  port: 18080
+spring:
+  application:
+    name: commons-test-web
+  mvc.servlet.load-on-startup: 1
+  
+  r2dbc:
+    name: r2dbc
+    url: r2dbcs:mysql://192.168.80.130:3306/gddc_admin
+    username: root
+    password: 123456
+    pool:
+      enabled: true
+      max-size: 10
+      initial-size: 10
+      validation-query: select 1
+  
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://192.168.80.130:3306/gddc_admin?setUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowMultiQueries=true
+    username: root
+    password: 123456
+    hikari:
+      minimum-idle: 10 #默认10
+      maximum-pool-size: 10 #默认10
+#      max-lifetime: 1800000 #默认30分钟，必须>=30000ms
+#      keepalive-time: 0 #默认0，必须>=30000ms，keepalive-time必须<=max-lifetime
+      connection-timeout: 250 #默认30000,包含了request timeout,不能小于250
+#      idle-timeout: 600000 #默认10分钟 
+#      connection-test-query: SELECT 1    
+  cloud:
+    loadbalancer: #LoadBalancerClientsProperties
+      retry:
+        enabled: false #默认true  
+    sentinel:
+      transport:
+        port: 8719
+        dashboard: localhost:8858    
+        
+feign:
+  sentinel:
+    enabled: true #默认false
+  client:
+    config:
+      default:
+        connectTimeout: 500
+        readTimeout: 3000
+  httpclient:
+    enabled: true #default true
+    connectionTimeout: 500 #default 2000
+    max-connections: 800 #default 200
+    max-connections-per-route: 100 #default 50        
+
+commons:
+  sentinel: 
+    cluster:
+      enabled: true
+      serverAddr: localhost
+      serverPort: 11111      
+  mybatis:
+    mapperScan:
+      basePackages: io.github.icodegarden.commons.test.web
+  redis:
+    pool: 
+      host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com
+      port: 6379
+      password: Aa@653210000  
+  elasticsearch:
+    httpHosts: http://localhost:9200
+  hbase:
+    versionFrom: AliyunLindorm
+    hbaseZookeeperQuorum: ld-bp129w63278nrhys9-proxy-hbaseue.hbaseue.rds.aliyuncs.com:30020
+  kafka:
+    bootstrapServers: 127.0.0.1:9092
+    producer:
+      keySerializer: org.apache.kafka.common.serialization.StringSerializer
+      valueSerializer: org.apache.kafka.common.serialization.StringSerializer
+  zookeeper:
+    connectString: 127.0.0.1:2181      
+  beecomb:
+    client:
+      basicAuth:
+        username: beecomb
+        password: beecomb
+      zookeeper: 
+        connectString: 127.0.0.1:2181     
+#        root: /beecomb
+#        sessionTimeout: 3000
+#        connectTimeout: 3000
+#        aclAuth: beecomb:beecomb
+#      master:
+#        httpHosts: http://localhost:9898,http://127.0.0.1:9898  
+    executor: 
+      zookeeper: 
+        connectString: 127.0.0.1:2181     
+#        root: /beecomb
+#        sessionTimeout: 3000
+#        connectTimeout: 3000
+#        aclAuth: beecomb:beecomb
+      
+
+
+# 单个文件大小
+spring.servlet.multipart.max-file-size: 5000MB
+# 总上传的数据大小
+spring.servlet.multipart.max-request-size: 5000MB

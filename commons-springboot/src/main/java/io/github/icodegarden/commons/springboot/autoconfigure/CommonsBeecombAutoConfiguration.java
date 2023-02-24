@@ -36,11 +36,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Configuration
-@EnableConfigurationProperties({ CommonsBeeCombClientProperties.class, CommonsBeeCombExecutorProperties.class })
 @Slf4j
 public class CommonsBeecombAutoConfiguration {
 
 	@ConditionalOnClass(BeeCombClient.class)
+	@EnableConfigurationProperties({ CommonsBeeCombClientProperties.class})
 	@Configuration
 	protected class BeeCombClientAutoConfiguration {
 
@@ -79,6 +79,7 @@ public class CommonsBeecombAutoConfiguration {
 	}
 
 	@ConditionalOnClass(BeeCombExecutor.class)
+	@EnableConfigurationProperties({CommonsBeeCombExecutorProperties.class })
 	@Configuration
 	protected class BeecombExecutorAutoConfiguration {
 
