@@ -63,44 +63,42 @@ public class SqlInterceptor implements Interceptor {
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		long start = System.currentTimeMillis();
-
-		Statement statement;
-		Object firstArg = invocation.getArgs()[0];
-		if (Proxy.isProxyClass(firstArg.getClass())) {
-			statement = (Statement) SystemMetaObject.forObject(firstArg).getValue("h.statement");
-		} else {
-			statement = (Statement) firstArg;
-		}
-		MetaObject stmtMetaObj = SystemMetaObject.forObject(statement);
-		try {
-			statement = (Statement) stmtMetaObj.getValue("stmt.statement");
-		} catch (Exception e) {
-			// do nothing
-		}
-		if (stmtMetaObj.hasGetter("delegate")) {
-			// Hikari
-			try {
-				statement = (Statement) stmtMetaObj.getValue("delegate");
-			} catch (Exception ignored) {
-
-			}
-		}
-
-		List<Object> paramters = extractParamters(statement);
-
 		Object result = invocation.proceed();
 		long timing = System.currentTimeMillis() - start;
 
 		if (timing > sqlConfig.getOutputThresholdMs()) {
-			StringBuilder formatSql;
+			Statement statement;
+			Object firstArg = invocation.getArgs()[0];
+			if (Proxy.isProxyClass(firstArg.getClass())) {
+				statement = (Statement) SystemMetaObject.forObject(firstArg).getValue("h.statement");
+			} else {
+				statement = (Statement) firstArg;
+			}
+			MetaObject stmtMetaObj = SystemMetaObject.forObject(statement);
 			try {
+				statement = (Statement) stmtMetaObj.getValue("stmt.statement");
+			} catch (Exception e) {
+				// do nothing
+			}
+			if (stmtMetaObj.hasGetter("delegate")) {
+				// Hikari
+				try {
+					statement = (Statement) stmtMetaObj.getValue("delegate");
+				} catch (Exception ignored) {
+
+				}
+			}
+
+			try {
+				List<Object> paramters = extractParamters(statement);
+				
 				String originalSql = resolveOriginalSql(statement, paramters);
 
 				// 格式化 SQL 打印执行结果
 				Object target = PluginUtils.realTarget(invocation.getTarget());
 				MetaObject metaObject = SystemMetaObject.forObject(target);
 				MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
-				formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
+				StringBuilder formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
 						.append(ms.getId());
 				if (sqlConfig.isFormat()) {
 					formatSql.append(StringPool.NEWLINE).append("Execute SQL：")
@@ -112,10 +110,10 @@ public class SqlInterceptor implements Interceptor {
 				try {
 					sqlConsumer.accept(formatSql.toString());
 				} catch (Exception e) {
-					log.error("WARN ex on consume unhealth sql", e);
+					log.error("WARN ex on consume sql", e);
 				}
 			} catch (Exception e) {
-				log.error("WARN ex on handle unhealth sql", e);
+				log.error("WARN ex on output sql", e);
 			}
 		}
 		return result;

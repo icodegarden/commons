@@ -12,8 +12,23 @@ pagehelper.params=count: countSql
 
 springfox.documentation.enabled: true
 
+
 server:
   port: 18080
+#  max-http-header-size: 8192 #默认8k
+#  tomcat: 
+#    threads:
+#      max: 200 #默认200. 最大工作线程数
+#      minSpare: 10 #默认10. 最小工作线程数
+#    maxConnections: 8192 #默认8192. 同时可接受的最大连接数（即work处理中的 + 等待work处理的），当这里满了进入acceptCount，0表示不限制
+#    acceptCount: 100 #默认100. 额外可接受的部分，当maxConnections满了之后，开始进入这里，0表示不限制
+
+#验证各参数作用，代码中每次请求无限阻塞，观察请求是否继续被接受
+##maxConnections=1 acceptCount=1 treads.max=1 可接受2个请求（1个进入work线程，此时maxConnections就满了，1个进入acceptCount），然后开始拒绝
+##maxConnections=1 acceptCount=1 treads.max=2 可接受2个请求（1个进入work线程，此时maxConnections就满了，1个进入acceptCount），然后开始拒绝
+##maxConnections=2 acceptCount=1 treads.max=1 可接受3个请求（1个进入work线程，1个进入maxConnections，此时maxConnections就满了，1个进入等待acceptCount），然后开始拒绝
+##maxConnections=2 acceptCount=1 treads.max=2 可接受3个请求（2个进入work线程，此时maxConnections就满了，1个进入等待acceptCount），然后开始拒绝
+#实践5000个工作线程实时处理，处理不过来的请求就立刻拒绝如何配置 threads.max=5000 threads.minSpare=5000 maxConnections=5000 acceptCount=1
 spring:
   application:
     name: commons-test-web

@@ -174,7 +174,8 @@ public abstract class AbstractExceptionHandler<T> {
 	}
 
 	private ErrorCodeException causeErrorCodeException(Throwable e) {
-		while (e != null && !(e instanceof ErrorCodeException)) {
+		int counter = 0;
+		while (e != null && counter++ < 10 && !(e instanceof ErrorCodeException)) {
 			if (e instanceof UndeclaredThrowableException) {
 				e = ((UndeclaredThrowableException) e).getUndeclaredThrowable();
 			} else if (e instanceof org.springframework.cglib.proxy.UndeclaredThrowableException) {
