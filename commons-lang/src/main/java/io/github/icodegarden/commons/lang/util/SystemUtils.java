@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.lang.util;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -17,10 +18,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.core.env.Environment;
+import org.springframework.util.ClassUtils;
+
 import com.sun.management.OperatingSystemMXBean;
 
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.lang.tuple.Tuples;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
@@ -681,6 +686,67 @@ public abstract class SystemUtils {
 
 		private static class InstanceHolder {
 			public static final SystemClock INSTANCE = new SystemClock(10);
+		}
+	}
+
+	// ------------------------------------------------------------
+
+	@Slf4j
+	public static class Server {
+
+		private static final String DEFAULT_SERVER_NAME = "NotConfig";
+
+		private static String serverName = DEFAULT_SERVER_NAME;
+
+		static {
+			if (ClassUtils.isPresent("io.github.icodegarden.commons.springboot.SpringContext",
+					ClassUtils.getDefaultClassLoader())) {
+				new Thread() {
+					public void run() {
+						try {
+							Thread.sleep(30000);
+						} catch (InterruptedException e) {
+						}
+
+						long start = System.currentTimeMillis();
+						while (DEFAULT_SERVER_NAME.equals(Server.serverName)
+								&& (System.currentTimeMillis() - start < 1800 * 1000)) {
+							try {
+								Class<?> springContextClass = ClassUtils.forName(
+										"io.github.icodegarden.commons.springboot.SpringContext",
+										ClassUtils.getDefaultClassLoader());
+								Method getApplicationContextMethod = springContextClass
+										.getDeclaredMethod("getApplicationContext");
+								Object applicationContext = getApplicationContextMethod.invoke(null);
+								Class<?> applicationContextClass = ClassUtils.forName(
+										"org.springframework.context.ApplicationContext",
+										ClassUtils.getDefaultClassLoader());
+								Method getBeanMethod = applicationContextClass.getMethod("getBean", Class.class);
+								Environment env = (Environment) getBeanMethod.invoke(applicationContext,
+										Environment.class);
+								String applicationName = env.getRequiredProperty("spring.application.name");
+
+								Server.configServerName(applicationName);
+							} catch (Exception e) {
+								log.warn("failed on init configServerName");
+							}
+
+							try {
+								Thread.sleep(30000);
+							} catch (InterruptedException e) {
+							}
+						}
+					};
+				}.start();
+			}
+		}
+
+		public static void configServerName(String serverName) {
+			Server.serverName = serverName;
+		}
+
+		public static String getServerName() {
+			return serverName;
 		}
 	}
 

@@ -16,6 +16,7 @@ import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
 import io.github.icodegarden.commons.springboot.security.User;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
+import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import reactor.core.publisher.Mono;
 
 /**
@@ -25,14 +26,14 @@ import reactor.core.publisher.Mono;
  */
 public class AppServerAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
-	public static final String HEADER_APPKEY = "X-Auth-AppKey";
+	public static final String HTTPHEADER_APPKEY = "X-Auth-AppKey";
 
 	private final AppProvider appProvider;
-	private final boolean headerAppKey;
+	private final boolean passHeaderAppKey;
 
-	public AppServerAuthenticationSuccessHandler(AppProvider appProvider, boolean headerAppKey) {
+	public AppServerAuthenticationSuccessHandler(AppProvider appProvider, boolean passHeaderAppKey) {
 		this.appProvider = appProvider;
-		this.headerAppKey = headerAppKey;
+		this.passHeaderAppKey = passHeaderAppKey;
 	}
 
 	@Override
@@ -45,6 +46,9 @@ public class AppServerAuthenticationSuccessHandler implements ServerAuthenticati
 			Map<String, Object> details = (Map) authentication.getDetails();
 
 			ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
+				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+				httpHeaders.add(WebUtils.HTTPHEADER_REQUEST_ID, requestBody.getRequest_id());
+				
 				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID, principal.getUserId());
 				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME, principal.getUsername());
 				if (details != null) {
@@ -54,10 +58,9 @@ public class AppServerAuthenticationSuccessHandler implements ServerAuthenticati
 					httpHeaders.add(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST, flowTagFirst);
 				}
 
-				if (headerAppKey) {
-					OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+				if (passHeaderAppKey) {
 					App app = appProvider.getApp(requestBody.getApp_id());
-					httpHeaders.add(HEADER_APPKEY, app.getAppKey());
+					httpHeaders.add(HTTPHEADER_APPKEY, app.getAppKey());
 				}
 			}).build();
 

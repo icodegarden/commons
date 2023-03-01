@@ -71,6 +71,19 @@
 <!-- 		    <version>2.14.1</version> -->
 <!-- 		    <optional>true</optional>不是必须的，用于给spring-jcl copy包做依赖,spring-jcl自己也是这么做的 -->
 <!-- 		</dependency> -->
+
+		<dependency>
+		    <groupId>org.apache.skywalking</groupId>
+		    <artifactId>apm-toolkit-trace</artifactId>
+		    <version>${skywalking.version}</version>
+		    <scope>provided</scope><!-- 由agent提供 -->
+		</dependency>
+		<dependency>
+		    <groupId>com.alibaba.arms.apm</groupId>
+		    <artifactId>arms-sdk</artifactId>
+		    <version>${arms.version}</version>
+		    <scope>provided</scope><!-- 由agent提供 -->
+		</dependency>
 		
 		<dependency>
 			<groupId>org.projectlombok</groupId>

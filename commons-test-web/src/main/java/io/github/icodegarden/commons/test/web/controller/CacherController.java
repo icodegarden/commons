@@ -18,13 +18,14 @@ import io.github.icodegarden.wing.protect.BloomFilter;
 import io.github.icodegarden.wing.protect.Filter;
 import io.github.icodegarden.wing.protect.Protector;
 import io.github.icodegarden.wing.protect.RateLimitProtector;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-
+@Slf4j
 @RestController
 public class CacherController {
 
@@ -62,6 +63,8 @@ public class CacherController {
 
 	@GetMapping("cacher/m2")
 	public ResponseEntity<?> m2() {
+		log.info("request cacher/m2");
+		
 		cacherService.remove2(Arrays.asList("a", "b"));
 		return ResponseEntity.ok("ok");
 	}

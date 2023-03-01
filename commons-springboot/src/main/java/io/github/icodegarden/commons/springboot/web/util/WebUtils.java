@@ -48,6 +48,10 @@ public class WebUtils {
 	 * 是否内部服务间调用的标记
 	 */
 	public static final String HTTPHEADER_INTERNAL_RPC = "X-Internal-Rpc";
+	/**
+	 * 请求id，多用于openapi
+	 */
+	public static final String HTTPHEADER_REQUEST_ID = "X-Request-Id";
 
 	public static HttpHeaders pageHeaders(int totalPages, long totalCount) {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -155,6 +159,15 @@ public class WebUtils {
 
 		String header = request.getHeader(HTTPHEADER_INTERNAL_RPC);
 		return header != null && Boolean.valueOf(header);
+	}
+	
+	public static String getRequestId() {
+		HttpServletRequest request = getRequest();
+		if (request == null) {
+			return null;
+		}
+
+		return request.getHeader(HTTPHEADER_REQUEST_ID);
 	}
 
 	public static void responseJWT(String jwt, HttpServletResponse response) {

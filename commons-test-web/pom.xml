@@ -152,6 +152,13 @@
 		</dependency>
 		
 		<dependency>
+		    <groupId>com.alibaba.arms.apm</groupId>
+		    <artifactId>arms-sdk</artifactId>
+		    <version>${arms.version}</version>
+		    <scope>provided</scope><!-- 由agent提供 -->
+		</dependency>
+		
+		<dependency>
 		    <groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper-spring-boot-starter</artifactId>
 		    <version>1.4.1</version>
