@@ -3,6 +3,7 @@ package io.github.icodegarden.commons.elasticsearch.dao;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -10,12 +11,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.rest.RestStatus;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.ErrorCause;
+import co.elastic.clients.elasticsearch._types.ErrorResponse;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -34,12 +36,15 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.UpdateResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.json.JsonData;
 import io.github.icodegarden.commons.elasticsearch.BulkResponseHasErrorException;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
+import io.github.icodegarden.commons.lang.IdObject;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportArrayList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
@@ -87,6 +92,7 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 				throw new IllegalStateException(
 						"add failed, successful shards:" + indexResponse.shards().successful().intValue());
 			}
+			IdObject.setIdIfNecessary(indexResponse.id(), po);
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
@@ -105,6 +111,21 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			if (response.errors()) {
 				throw new BulkResponseHasErrorException("addBatch Bulk had errors", response);
 			}
+
+			List<BulkResponseItem> items = response.items();
+			if (pos.size() == items.size()) {
+				Iterator<PO> it1 = pos.iterator();
+				Iterator<BulkResponseItem> it2 = items.iterator();
+				while (it1.hasNext()) {
+					PO po = it1.next();
+					BulkResponseItem item = it2.next();
+					IdObject.setIdIfNecessary(item.id(), po);
+				}
+			} else {
+				LogUtils.warnIfEnabled(log,
+						() -> log.warn("can not setId after addBatch, size not eq, pos size:{}, responseItems size:{}",
+								pos.size(), items.size()));
+			}
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
@@ -114,9 +135,9 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 	public int update(U update) {
 		try {
 			doUpdate(getIndex(), update);
-		} catch (ElasticsearchStatusException e) {
+		} catch (ElasticsearchException e) {
 			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch update status is {}, index:{}, update:{}",
-					e.status().getStatus(), getIndex(), update));
+					e.status(), getIndex(), update));
 
 			/**
 			 * 理用这个可以得到id
@@ -153,7 +174,7 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 		}
 	}
 
-	private void doUpdate(String index, U update) throws ElasticsearchStatusException {
+	private void doUpdate(String index, U update) throws ElasticsearchException {
 		UpdateRequest.Builder<U, U> builder = buildUpdateRequestBuilderOnUpdate(update);
 		builder.index(index);
 		try {
@@ -162,8 +183,8 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 				throw new IllegalStateException(
 						"update failed, failed shards:" + updateResponse.shards().failed().intValue());
 			}
-		} catch (ElasticsearchStatusException e) {
-			if (RestStatus.CONFLICT.equals(e.status())) {
+		} catch (ElasticsearchException e) {
+			if (e.status() == 409) {// CONFLICT
 				/**
 				 * 通过id的更新，几乎不应该存在并发更新
 				 */
@@ -236,6 +257,9 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 				for (Hit<DO> hit : hits.hits()) {
 					if (i != query.getSize()) {// not last one
 						DO result = hit.source();
+
+						IdObject.setIdIfNecessary(hit.id(), result);
+
 						list.add(result);
 					} else {// more 1,last
 						hasNextPage.set(true);
@@ -347,15 +371,19 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			if (!getResponse.found()) {
 				return null;
 			}
-			return getResponse.source();
-		} catch (ElasticsearchStatusException e) {
-			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch findOne status is {}, index:{}, id:{}",
-					e.status().getStatus(), getIndex(), id));
+
+			DO result = getResponse.source();
+			IdObject.setIdIfNecessary(getResponse.id(), result);
+
+			return result;
+		} catch (ElasticsearchException e) {
+			LogUtils.warnIfEnabled(log,
+					() -> log.warn("Elasticsearch findOne status is {}, index:{}, id:{}", e.status(), getIndex(), id));
 
 			/**
 			 * 404
 			 */
-			if (RestStatus.NOT_FOUND.equals(e.status())) {
+			if (e.status() == 404) {
 				if (isAliasOfMultiIndex()) {
 					/**
 					 * 如果source中没有定义id字段：不支持通过id查询（因为无法确定real index，pre也不一定准确）
@@ -404,7 +432,15 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 				return Collections.emptyList();
 			}
 
-			List<DO> list = docs.stream().map(doc -> doc.result().source()).collect(Collectors.toList());
+			List<DO> list = docs.stream().map(doc -> {
+				GetResult<DO> getResult = doc.result();
+
+				DO result = getResult.source();
+
+				IdObject.setIdIfNecessary(getResult.id(), result);
+
+				return result;
+			}).collect(Collectors.toList());
 			return list;
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
@@ -443,16 +479,16 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 	public int delete(String id) {
 		try {
 			doDelete(getIndex(), id);
-		} catch (ElasticsearchStatusException e) {
-			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch delete status is {}, index:{}, id:{}",
-					e.status().getStatus(), getIndex(), id));
+		} catch (ElasticsearchException e) {
+			LogUtils.warnIfEnabled(log,
+					() -> log.warn("Elasticsearch delete status is {}, index:{}, id:{}", e.status(), getIndex(), id));
 
 			doOnRealIndexIf404(getIndex(), id, e, realIndex -> doDelete(realIndex, id));
 		}
 		return 1;
 	}
 
-	private void doDelete(String index, String id) throws ElasticsearchStatusException {
+	private void doDelete(String index, String id) throws ElasticsearchException {
 		DeleteRequest.Builder builder = buildDeleteRequestBuilderOnDelete(id);
 		builder.index(index);
 		try {
@@ -461,7 +497,8 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			 * 删除时如果数据不存在，以前的版本不会报ElasticsearchStatusException 404，即使报了这里做冗余也不会错的
 			 */
 			if (deleteResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.NotFound)) {
-				throw new ElasticsearchStatusException("result not found", RestStatus.NOT_FOUND);
+				throw new ElasticsearchException("result not found", new ErrorResponse.Builder().status(404)
+						.error(new ErrorCause.Builder().reason("not found").build()).build());
 			}
 			if (deleteResponse.shards().successful().intValue() < 1) {
 				throw new IllegalStateException(
@@ -493,14 +530,13 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 	/**
 	 * @param consumer<T> T 真实索引
 	 */
-	private void doOnRealIndexIf404(String index, String id, ElasticsearchStatusException e,
-			Consumer<String> consumer) {
+	private void doOnRealIndexIf404(String index, String id, ElasticsearchException e, Consumer<String> consumer) {
 		/**
 		 * 404：#数据确实不存在；#别名of多索引情况下，使用id进行更新或删除(删除时的404不是es
 		 * client报出来的，是得到response后解析并throw的ElasticsearchStatusException)，
 		 * id对应到最新的索引是ok的，如果是老索引则404
 		 */
-		if (RestStatus.NOT_FOUND.equals(e.status())) {
+		if (e.status() == 404) {
 			/**
 			 * index不是aliasOfMultiIndex，则数据确实不存在
 			 */

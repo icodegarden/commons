@@ -13,18 +13,20 @@ import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 
 /**
+ * 测试时要注释es7的依赖<br>
  * 
  * @author xff
  *
  */
 public class DemoElasticsearchDaoTests {
 
-	ElasticsearchClient client = ElasticsearchClientBuilder.buildElasticsearchClient(new ElasticsearchClientConfig("http://192.168.80.130:9200"));
+	ElasticsearchClient client = ElasticsearchClientBuilder
+			.buildElasticsearchClient(new ElasticsearchClientConfig("http://192.168.80.130:9200"));
 	DemoElasticsearchDao dao = new DemoElasticsearchDao(client);
 
 	DemoPO newDemoPO() {
 		DemoPO po = new DemoPO();
-		po.setId(System.currentTimeMillis() + "");
+//		po.setId(System.currentTimeMillis() + "");
 		po.setVin("vin" + po.getId());
 		po.setModel("CX11");
 		po.setVehicleModelId(100L);
@@ -33,12 +35,23 @@ public class DemoElasticsearchDaoTests {
 
 	@Test
 	public void add() throws Exception {
-		dao.add(newDemoPO());
+		DemoPO po = newDemoPO();
+		dao.add(po);
+
+		Assertions.assertThat(po.getId()).isNotNull();
+		System.out.println(po.getId());
 	}
 
 	@Test
 	public void addBatch() throws Exception {
-		dao.addBatch(Arrays.asList(newDemoPO(), newDemoPO()));
+		DemoPO po1 = newDemoPO();
+		DemoPO po2 = newDemoPO();
+		dao.addBatch(Arrays.asList(po1, po2));
+
+		Assertions.assertThat(po1.getId()).isNotNull();
+		Assertions.assertThat(po2.getId()).isNotNull();
+		System.out.println(po1.getId());
+		System.out.println(po2.getId());
 	}
 
 	@Test
@@ -83,6 +96,11 @@ public class DemoElasticsearchDaoTests {
 		Assertions.assertThat(page.hasNextPage()).isTrue();
 		Assertions.assertThat(page.getSearchAfter()).isNotNull();
 		System.out.println(page.getTotal());
+
+		page.forEach(po -> {
+			Assertions.assertThat(po.getId()).isNotNull();
+			System.out.println(po.getId());
+		});
 	}
 
 	@Test
@@ -93,6 +111,9 @@ public class DemoElasticsearchDaoTests {
 		DemoPO findOne = dao.findOne(po.getId(), null);
 		Assertions.assertThat(findOne).isNotNull();
 		Assertions.assertThat(findOne.getModel()).isNotNull();
+
+		Assertions.assertThat(findOne.getId()).isNotNull();
+		System.out.println(findOne.getId());
 	}
 
 	@Test
@@ -104,6 +125,11 @@ public class DemoElasticsearchDaoTests {
 
 		List<DemoPO> list = dao.findByIds(Arrays.asList(po1.getId(), po2.getId()), null);
 		Assertions.assertThat(list.size()).isEqualTo(2);
+
+		list.forEach(po -> {
+			Assertions.assertThat(po.getId()).isNotNull();
+			System.out.println(po.getId());
+		});
 	}
 
 	@Test

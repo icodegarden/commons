@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -47,6 +49,7 @@ import org.springframework.util.StringUtils;
 import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchDaoSupport;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.elasticsearch.v7.BulkResponseHasErrorV7Exception;
+import io.github.icodegarden.commons.lang.IdObject;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportArrayList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
 import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
@@ -91,6 +94,7 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 				throw new IllegalStateException(
 						"add failed, successful shards:" + indexResponse.getShardInfo().getSuccessful());
 			}
+			IdObject.setIdIfNecessary(indexResponse.getId(), po);
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
@@ -107,6 +111,21 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 			BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
 			if (response.hasFailures()) {
 				throw new BulkResponseHasErrorV7Exception("addBatch Bulk had errors", response);
+			}
+			
+			List<BulkItemResponse> items = Arrays.asList(response.getItems());
+			if (pos.size() == items.size()) {
+				Iterator<PO> it1 = pos.iterator();
+				Iterator<BulkItemResponse> it2 = items.iterator();
+				while (it1.hasNext()) {
+					PO po = it1.next();
+					BulkItemResponse item = it2.next();
+					IdObject.setIdIfNecessary(item.getId(), po);
+				}
+			} else {
+				LogUtils.warnIfEnabled(log,
+						() -> log.warn("can not setId after addBatch, size not eq, pos size:{}, responseItems size:{}",
+								pos.size(), items.size()));
 			}
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
@@ -235,6 +254,9 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 				for (SearchHit hit : hits) {
 					if (i != query.getSize()) {// not last one
 						DO result = extractResult(hit);
+						
+						IdObject.setIdIfNecessary(hit.getId(), result);
+						
 						list.add(result);
 					} else {// more 1,last
 						hasNextPage.set(true);
@@ -342,7 +364,11 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 			if (!getResponse.isExists()) {
 				return null;
 			}
-			return extractResult(getResponse);
+			DO result = extractResult(getResponse);
+			
+			IdObject.setIdIfNecessary(getResponse.getId(), result);
+			
+			return result;
 		} catch (ElasticsearchStatusException e) {
 			LogUtils.warnIfEnabled(log, () -> log.warn("Elasticsearch findOne status is {}, index:{}, id:{}",
 					e.status().getStatus(), getIndex(), id));
@@ -399,8 +425,15 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 				return Collections.emptyList();
 			}
 
-			List<DO> list = Arrays.asList(responses).stream().map(response -> extractResult(response.getResponse()))
-					.collect(Collectors.toList());
+			List<DO> list = Arrays.asList(responses).stream().map(response -> {
+				GetResponse getResponse = response.getResponse();
+				
+				DO result = extractResult(getResponse);
+				
+				IdObject.setIdIfNecessary(getResponse.getId(), result);
+				
+				return result;
+			}).collect(Collectors.toList());
 			return list;
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
