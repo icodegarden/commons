@@ -15,7 +15,7 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
  * @author Fangfang.Xu
  *
  */
-public class ExtLogbackConverter extends MessageConverter {
+public class LogbackExtConverter extends MessageConverter {
 
 	private static Method getUserIdM;
 	private static Method getUsernameM;

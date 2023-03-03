@@ -278,7 +278,7 @@
 #FAQ
 ##如何设置1qps/5秒
 ###ParamFlowRule方式
-	他支持setDurationInSec可以N秒，还支持集群，这种方式最好
+	他支持durationInSec可以M次/N秒，还支持集群，这种方式最好
 ###FlowRule方式
 	Sentinel无法直接设定一个5秒一共1个请求的流控规则，但可以使用PaceFlow方式来变相支持
 	FlowRule rule1 = new FlowRule();
