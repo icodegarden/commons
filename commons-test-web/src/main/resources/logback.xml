@@ -2,7 +2,7 @@
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
 	<contextName>myAppName</contextName> 
 	
-	<conversionRule conversionWord="ext" converterClass="io.github.icodegarden.commons.lang.log.ExtLogbackConverter" />
+	<conversionRule conversionWord="ext" converterClass="io.github.icodegarden.commons.lang.log.LogbackExtConverter" />
 	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
