@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.icodegarden.commons.test.web.mapper.ConsumerSystemMapper">
+
+	<resultMap id="baseMap" type="io.github.icodegarden.commons.test.web.pojo.persistence.ConsumerSystemPO">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="email" column="email" />
+		<result property="saslUsername" column="sasl_username" />
+		<result property="saslPassword" column="sasl_password" />
+		<result property="appId" column="app_id" />
+		<result property="actived" column="is_actived" />
+		<result property="createdBy" column="created_by" />
+		<result property="createdAt" column="created_at" />
+		<result property="updatedBy" column="updated_by" />
+		<result property="updatedAt" column="updated_at" />
+	</resultMap>
+	
+	<resultMap id="DOMap" type="io.github.icodegarden.commons.test.web.pojo.persistence.ConsumerSystemPO" extends="baseMap">
+	</resultMap>
+
+	<insert id="add" parameterType="io.github.icodegarden.commons.test.web.pojo.persistence.ConsumerSystemPO" keyProperty="id">
+		insert into `consumer_system` (
+		<if test="id != null">`id`,</if>
+		<if test="name != null">`name`,</if>
+		<if test="email != null">`email`,</if>
+		<if test="saslUsername != null">`sasl_username`,</if>
+		<if test="saslPassword != null">`sasl_password`,</if>
+		<if test="appId != null">`app_id`,</if>
+		<if test="actived != null">`is_actived`,</if>
+		<if test="createdBy != null">`created_by`,</if>
+		<if test="createdAt != null">`created_at`,</if>
+		<if test="updatedAt != null">`updated_at`,</if>
+		`updated_by`
+		)
+		values (
+		<if test="id != null">#{id},</if>
+		<if test="name != null">#{name},</if>
+		<if test="email != null">#{email},</if>
+		<if test="saslUsername != null">#{saslUsername},</if>
+		<if test="saslPassword != null">#{saslPassword},</if>
+		<if test="appId != null">#{appId},</if>
+		<if test="actived != null">#{actived},</if>
+		<if test="createdBy != null">#{createdBy},</if>
+		<if test="createdAt != null">#{createdAt},</if>
+		<if test="updatedAt != null">#{updatedAt},</if>
+		#{updatedBy}
+		)
+	</insert>
+	
+	<sql id="findPrefix">
+		select 
+			a.id as id,
+			a.`name` as `name`,
+			a.`email` as `email`,
+			a.`sasl_username` as `sasl_username`,
+			a.`sasl_password` as `sasl_password`,
+			a.app_id as app_id,
+			a.is_actived as is_actived
+			<if test="with != null">
+				<trim prefix="," suffixOverrides=",">
+					<if test="with.createdBy == true">a.created_by as created_by,</if>
+					<if test="with.createdAt == true">a.created_at as created_at,</if>
+					<if test="with.updatedBy == true">a.updated_by as updated_by,</if>
+					<if test="with.updatedAt == true">a.updated_at as updated_at,</if>
+				</trim>
+			</if>
+		from 
+		`consumer_system` a
+	</sql>
+	
+	<select id="findAll" parameterType="java.lang.Object" resultMap="DOMap">
+		<include refid="findPrefix"/>
+		
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="nameLike != null">
+				and a.name LIKE CONCAT(#{nameLike},'%')
+			</if>
+			<if test="actived != null">
+				and a.is_actived = #{actived}
+			</if>
+		</trim>
+	</select>
+	
+	<select id="findOne" resultMap="DOMap">
+		<include refid="findPrefix"/>
+		where a.id = #{id}
+	</select>
+	
+	<select id="findOneByAppId" resultMap="DOMap">
+		<include refid="findPrefix"/>
+		where a.app_id = #{appId} limit 1
+	</select>
+	
+	<update id="update" parameterType="io.github.icodegarden.commons.test.web.pojo.persistence.ConsumerSystemPO$Update">
+		update consumer_system 
+		<trim prefix="set" suffixOverrides=",">
+			<if test="name != null">`name` = #{name},</if>
+			<if test="saslUsername != null">`sasl_username` = #{saslUsername},</if>
+			<if test="saslPassword != null">`sasl_password` = #{saslPassword},</if>
+			<if test="actived != null">is_actived = #{actived},</if>
+			<if test="updatedAt != null">updated_at = #{updatedAt},</if>
+			<if test="updatedBy != null">updated_by = #{updatedBy},</if>
+		</trim>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from consumer_system where id = #{id}
+	</delete>
+</mapper>

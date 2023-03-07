@@ -78,7 +78,7 @@ commons:
       serverPort: 11111      
   mybatis:
     mapperScan:
-      basePackages: io.github.icodegarden.commons.test.web
+      basePackages: io.github.icodegarden.commons.test.web.mapper
   redis:
     pool: 
       host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com

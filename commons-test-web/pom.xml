@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-datasource-nacos</artifactId>
-            <version>1.8.5</version>
+            <version>${sentinel.version}</version>
         </dependency>
         
         <!-- 7和8 2选1 -->
@@ -200,6 +200,24 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
+        
+		<dependency>
+		    <groupId>io.seata</groupId>
+		    <artifactId>seata-spring-boot-starter</artifactId>
+		    <version>${seata.version}</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 		    <groupId>com.alibaba.cloud</groupId> -->
+<!-- 		    <artifactId>spring-cloud-alibaba-seata</artifactId> -->
+<!-- 		    <version>2.2.0.RELEASE</version> -->
+<!-- 		    <exclusions> -->
+<!--                 <exclusion> -->
+<!--                     <groupId>io.seata</groupId> -->
+<!--                     <artifactId>seata-spring-boot-starter</artifactId> -->
+<!--                 </exclusion> -->
+<!--             </exclusions> -->
+<!-- 		</dependency> -->
+		        
         
         <dependency>
             <groupId>mysql</groupId>
