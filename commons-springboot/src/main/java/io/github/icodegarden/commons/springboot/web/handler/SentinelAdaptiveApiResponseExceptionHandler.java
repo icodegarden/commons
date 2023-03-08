@@ -25,6 +25,7 @@ import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
+import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRegistry;
 
 /**
  * 使用 @Bean <br>
@@ -44,6 +45,8 @@ public class SentinelAdaptiveApiResponseExceptionHandler extends ApiResponseExce
 	 */
 	@ExceptionHandler(BlockException.class)
 	public ResponseEntity<ApiResponse> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
+		SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
+		
 		ErrorCodeException ece = null;
 		/**
 		 * 以下一律是触发了但没有降级

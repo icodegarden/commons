@@ -1,9 +1,11 @@
 package io.github.icodegarden.commons.springboot.sentinel;
 
+import com.alibaba.csp.sentinel.slots.block.AbstractRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker.State;
-import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 
 import io.github.icodegarden.commons.lang.util.SystemUtils;
+import io.github.icodegarden.commons.springboot.security.SecurityUtils;
+import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -12,10 +14,24 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public abstract class SentinelEventStarter {
+public abstract class SentinelEventObserverStarter {
 
 	public static void addDefaultLoggingObserver() {
-		EventObserverRegistry.getInstance().addStateChangeObserver("logging",
+		SentinelEventObserverRegistry.getInstance().addBlockExceptionObserver("logging", e -> {
+			if (log.isWarnEnabled()) {
+				AbstractRule rule = e.getRule();
+
+				log.warn("Sentinel {} -> {}, identityId:{}, identityName:{}, requestId:{}, rule:{}",
+						e.getClass().getSimpleName(), //
+						rule.getResource(), //
+						SecurityUtils.getUserId(), //
+						SecurityUtils.getUsername(), //
+						WebUtils.getRequestId(), //
+						rule);
+			}
+		});
+
+		SentinelEventObserverRegistry.getInstance().addCircuitBreakerObserver("logging",
 				(prevState, newState, rule, snapshotValue) -> {
 					if (newState == State.OPEN) {
 						if (log.isWarnEnabled()) {

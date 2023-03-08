@@ -32,6 +32,7 @@ import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.ExceptionUtils;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
+import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRegistry;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -92,6 +93,8 @@ public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
 	private ErrorCodeException toErrorCodeExceptionIfBlockException(Throwable t) {
 		BlockException e = ExceptionUtils.causeOf(t, BlockException.class);
 		if (e != null) {
+			SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
+			
 			ErrorCodeException ece = null;
 			/**
 			 * 以下一律是触发了但没有降级

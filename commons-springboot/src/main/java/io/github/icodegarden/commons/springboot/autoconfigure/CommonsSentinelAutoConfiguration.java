@@ -20,7 +20,7 @@ import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProper
 import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProperties.Cluster;
 import io.github.icodegarden.commons.springboot.properties.CommonsSentinelProperties.Nacos;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelClusterClientStarter;
-import io.github.icodegarden.commons.springboot.sentinel.SentinelEventStarter;
+import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverStarter;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelNacosDynamicRuleStarter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,7 +72,7 @@ public class CommonsSentinelAutoConfiguration {
 				String projectName = env.getRequiredProperty("spring.application.name");
 				System.setProperty("project.name", projectName);// IMPT
 			}
-			SentinelEventStarter.addDefaultLoggingObserver();
+			SentinelEventObserverStarter.addDefaultLoggingObserver();
 
 			/**
 			 * 集群

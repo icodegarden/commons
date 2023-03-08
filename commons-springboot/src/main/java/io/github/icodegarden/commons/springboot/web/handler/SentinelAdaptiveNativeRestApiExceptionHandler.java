@@ -17,6 +17,8 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 
+import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRegistry;
+
 /**
  * 使用 @Bean <br>
  * 支持对Sentinel异常的适配
@@ -35,6 +37,8 @@ public class SentinelAdaptiveNativeRestApiExceptionHandler extends NativeRestApi
 	 */
 	@ExceptionHandler(BlockException.class)
 	public ResponseEntity<String> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
+		SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
+		
 		String message = null;
 		/**
 		 * 以下一律是触发了但没有降级

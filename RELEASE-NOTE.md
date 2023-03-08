@@ -38,7 +38,7 @@
 # 1.2.1
 * fix ZooKeeperHolder 锁
 
-# 1.3.0
+# 2.0.0
 * 增加seata springcloud支持（springcloud lb的xid传递，spring-cloud-alibaba-seata只支持ribbon）
 * 增加beecomb的AutoConfiguration
 * 增加skywalking/arms TraceCtx
