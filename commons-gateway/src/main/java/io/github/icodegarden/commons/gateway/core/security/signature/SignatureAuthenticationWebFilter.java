@@ -159,7 +159,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 			return chain.filter(exchange);
 		}
 
-		Object cachedBody = exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
+		Object cachedBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
 		if (cachedBody != null) {
 			return chain.filter(exchange);
 		}
@@ -198,8 +198,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 				response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer)).subscribe();
 			}).doOnNext(objectValue -> {
 				LogUtils.debugIfEnabled(log, () -> log.debug("request path:{} body:{}", requestPath, objectValue));
-				Object previousCachedBody = exchange.getAttributes()
-						.put(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR, objectValue);
+				Object previousCachedBody = CommonsGatewayUtils.setOpenApiRequestBody(exchange, objectValue);
 				if (previousCachedBody != null) {
 					// store previous cached body
 					exchange.getAttributes().put(CACHED_ORIGINAL_REQUEST_BODY_BACKUP_ATTR, previousCachedBody);
@@ -296,6 +295,8 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 						throw new ErrorCodeAuthenticationException(new ClientParameterInvalidErrorCodeException(
 								ClientParameterInvalidErrorCodeException.SubPair.INVALID_APP_ID));
 					}
+					
+					CommonsGatewayUtils.setApp(exchange, app);
 
 					openApiRequestValidator.validate(requestPath, requestBody, app);
 

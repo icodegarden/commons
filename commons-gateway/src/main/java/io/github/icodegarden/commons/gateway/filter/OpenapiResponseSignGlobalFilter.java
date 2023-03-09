@@ -25,11 +25,11 @@ import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.lang.util.JsonUtils;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import reactor.core.publisher.Mono;
 
 /**
  * <h1>对OpenApiResponse设置签名</h1>
+ * 只对认证成功的response起作用（包括调用失败），认证失败的则是由ServerAuthenticationFailureHandler的实现类处理的<br>
  * 
  * 这个filter的顺序是最前<br>
  * 这个类的生效条件是openapi模式<br>
@@ -93,11 +93,9 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 					/**
 					 * response签名
 					 */
-					String appId = exchange.getRequest().getHeaders()
-							.getFirst(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID);
-					if (appId != null) {
+					App app = CommonsGatewayUtils.getApp(exchange);
+					if (app != null) {
 						OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
-						App app = appProvider.getApp(appId);
 						String sign = CommonsGatewayUtils.responseSign(openApiResponse, requestBody.getSign_type(),
 								app);
 						openApiResponse.setSign(sign);

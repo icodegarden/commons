@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * 对不同身份的流控<br>
- * 由于SentinelGatewayFilter不能支持对不同身份（jwt、app）的流控，因此设立这个Filter
+ * 由于SentinelGatewayFilter不能支持对不同身份（jwt、app）的流控，因此设立这个Filter<br>
  * 
  * @author Fangfang.Xu
  *

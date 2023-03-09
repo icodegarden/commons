@@ -17,12 +17,34 @@ import io.github.icodegarden.commons.lang.spec.sign.RSASignUtils;
  */
 public abstract class CommonsGatewayUtils {
 
+	private static final String CACHED_APP_ATTR = "cachedApp";
+
 	/**
 	 * @return 当被全局filter设置为缓存时有
 	 */
 	public static @Nullable OpenApiRequestBody getOpenApiRequestBody(ServerWebExchange exchange) {
-		OpenApiRequestBody requestBody = exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
-		return requestBody;
+		return exchange.getAttribute(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR);
+	}
+
+	/**
+	 * @return previousCachedBody
+	 */
+	public static Object setOpenApiRequestBody(ServerWebExchange exchange, OpenApiRequestBody requestBody) {
+		return exchange.getAttributes().put(ServerWebExchangeUtils.CACHED_REQUEST_BODY_ATTR, requestBody);
+	}
+
+	/**
+	 * @return 当被认证时能识别到对应的app设置为缓存时有
+	 */
+	public static @Nullable App getApp(ServerWebExchange exchange) {
+		return exchange.getAttribute(CACHED_APP_ATTR);
+	}
+
+	/**
+	 * @return previousCachedBody
+	 */
+	public static Object setApp(ServerWebExchange exchange, App app) {
+		return exchange.getAttributes().put(CACHED_APP_ATTR, app);
 	}
 
 	public static boolean supportsSignType(String sign_type) {

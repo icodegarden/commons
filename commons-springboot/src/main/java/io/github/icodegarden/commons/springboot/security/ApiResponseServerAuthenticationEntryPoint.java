@@ -12,6 +12,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.web.server.ServerWebExchange;
 
+import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
@@ -32,15 +33,36 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 
 	private static final Charset CHARSET = Charset.forName("utf-8");
 
+	private final ApiResponseBuilder builder;
+
+	public ApiResponseServerAuthenticationEntryPoint() {
+		this.builder = new DefaultApiResponseBuilder();
+	}
+
+	public ApiResponseServerAuthenticationEntryPoint(ApiResponseBuilder builder) {
+		this.builder = builder;
+	}
+
+	public static interface ApiResponseBuilder {
+		ApiResponse build(ServerWebExchange exchange, ErrorCodeException ece);
+	}
+
+	private class DefaultApiResponseBuilder implements ApiResponseBuilder {
+		@Override
+		public ApiResponse build(ServerWebExchange exchange, ErrorCodeException ece) {
+			return InternalApiResponse.fail(ece);
+		}
+	}
+
 	/**
 	 * 认证失败时
 	 */
 	@Override
 	public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException e) {
-		if(exchange.getResponse().isCommitted()) {
+		if (exchange.getResponse().isCommitted()) {
 			return Mono.empty();
 		}
-		
+
 		return Mono.defer(() -> Mono.just(exchange.getResponse())).flatMap((response) -> {
 			response.setStatusCode(HttpStatus.OK);
 			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
@@ -52,10 +74,10 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 				String path = null;
 				try {
 					path = exchange.getRequest().getPath().toString();
-				}catch (Exception ex) {
+				} catch (Exception ex) {
 					log.error("ex on get request path", ex);
 				}
-				
+
 				log.info("path of {} request Authentication failed:{}", path, message);
 			}
 
@@ -72,10 +94,7 @@ public class ApiResponseServerAuthenticationEntryPoint implements ServerAuthenti
 						ClientParameterInvalidErrorCodeException.SubPair.INVALID_SIGNATURE.getSub_code(), message);
 			}
 
-			/**
-			 * 因为是认证失败时触发的，所以openapi此时不用管biz_code，可以使用InternalApiResponse.fail(ece);来兼容响应
-			 */
-			InternalApiResponse<Object> apiResponse = InternalApiResponse.fail(ece);
+			ApiResponse apiResponse = builder.build(exchange, ece);
 
 			DataBuffer buffer = dataBufferFactory.wrap(JsonUtils.serialize(apiResponse).getBytes(CHARSET));
 			return response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer));

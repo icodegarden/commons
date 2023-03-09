@@ -17,16 +17,22 @@ import reactor.netty.ReactorNetty;
 @Slf4j
 public class CommonsGatewayApplication {
 
+	/**
+	 * 适用于项目自身不需要被spring扫描
+	 */
 	public static void main(String[] args) throws Exception {
 		initServerConfig(args);
 
 		SpringApplication.run(CommonsGatewayApplication.class, args);
 	}
 
+	/**
+	 * 适用于项目自身需要被spring扫描
+	 */
 	public static ConfigurableApplicationContext run(Class<?> primarySource, String[] args) {
 		initServerConfig(args);
 
-		return SpringApplication.run(primarySource, args);
+		return SpringApplication.run(new Class[] { CommonsGatewayApplication.class, primarySource }, args);
 	}
 
 	public static void initServerConfig(String[] args) {
