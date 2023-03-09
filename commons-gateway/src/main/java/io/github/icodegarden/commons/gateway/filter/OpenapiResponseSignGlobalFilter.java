@@ -50,7 +50,6 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 	private Set<MessageBodyDecoder> bodyDecoders;
 	@Autowired
 	private Set<MessageBodyEncoder> bodyEncoders;
-
 	@Autowired
 	private CommonsGatewaySecurityProperties securityProperties;
 	@Autowired

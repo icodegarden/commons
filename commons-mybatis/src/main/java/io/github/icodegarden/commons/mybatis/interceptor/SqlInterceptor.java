@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.logging.Log;
-import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
@@ -24,6 +24,8 @@ import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 import org.apache.ibatis.session.ResultHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Intercepts({
 		@Signature(type = StatementHandler.class, method = "query", args = { Statement.class, ResultHandler.class }),
@@ -31,18 +33,21 @@ import org.apache.ibatis.session.ResultHandler;
 		@Signature(type = StatementHandler.class, method = "batch", args = { Statement.class }) })
 public class SqlInterceptor implements Interceptor {
 
-	private static final Log log = LogFactory.getLog(SqlInterceptor.class);
-	private static String DruidPooledPreparedStatement = "com.alibaba.druid.pool.DruidPooledPreparedStatement";
-	private static String T4CPreparedStatement = "oracle.jdbc.driver.T4CPreparedStatement";
-	private static String OraclePreparedStatementWrapper = "oracle.jdbc.driver.OraclePreparedStatementWrapper";
-	private static String ShardingSpherePreparedStatement = "org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSpherePreparedStatement";
+//	private static final Log log = LogFactory.getLog(SqlInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(SqlInterceptor.class);
+
+	private static final String DruidPooledPreparedStatement = "com.alibaba.druid.pool.DruidPooledPreparedStatement";
+	private static final String T4CPreparedStatement = "oracle.jdbc.driver.T4CPreparedStatement";
+	private static final String OraclePreparedStatementWrapper = "oracle.jdbc.driver.OraclePreparedStatementWrapper";
+	private static final String ShardingSpherePreparedStatement = "org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSpherePreparedStatement";
+	private static final String SeataPreparedStatement = "io.seata.rm.datasource.PreparedStatementProxy";
 	/**
 	 * 预估sql长度，跟生成完整sql的性能有关
 	 */
 	private int estimatedSqlLength = 256;
 
 	private SqlConfig sqlConfig = new SqlConfig();
-	
+
 	/**
 	 * 非健康sql默认处理方式是打印err
 	 */
@@ -56,6 +61,9 @@ public class SqlInterceptor implements Interceptor {
 	private Method shardingSphereGetParamtersMethod;
 	private Field shardingSphereSqlField;
 
+	private Method seataGetParamtersMethod;// getParameters
+	private Method seataGetSqlMethod;// targetSQL
+
 	public void setSqlConfig(SqlConfig sqlConfig) {
 		this.sqlConfig = sqlConfig;
 	}
@@ -67,6 +75,8 @@ public class SqlInterceptor implements Interceptor {
 		long timing = System.currentTimeMillis() - start;
 
 		if (timing > sqlConfig.getOutputThresholdMs()) {
+			long resolveSqlStart = System.currentTimeMillis();
+
 			Statement statement;
 			Object firstArg = invocation.getArgs()[0];
 			if (Proxy.isProxyClass(firstArg.getClass())) {
@@ -91,15 +101,23 @@ public class SqlInterceptor implements Interceptor {
 
 			try {
 				List<Object> paramters = extractParamters(statement);
-				
+
 				String originalSql = resolveOriginalSql(statement, paramters);
+
+				StringBuilder formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing)
+						.append(" ms - ID：");
 
 				// 格式化 SQL 打印执行结果
 				Object target = PluginUtils.realTarget(invocation.getTarget());
-				MetaObject metaObject = SystemMetaObject.forObject(target);
-				MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
-				StringBuilder formatSql = new StringBuilder(estimatedSqlLength).append(" Time：").append(timing).append(" ms - ID：")
-						.append(ms.getId());
+				if (target != null) {
+					MetaObject metaObject = SystemMetaObject.forObject(target);
+					MappedStatement ms = (MappedStatement) metaObject.getValue("delegate.mappedStatement");
+					formatSql.append(ms.getId());
+				}
+
+				long cost = System.currentTimeMillis() - resolveSqlStart;
+				formatSql.append(" resolveSql-cost:").append(cost).append("ms");
+
 				if (sqlConfig.isFormat()) {
 					formatSql.append(StringPool.NEWLINE).append("Execute SQL：")
 							.append(SqlUtils.sqlFormat(originalSql, sqlConfig.isFormat())).append(StringPool.NEWLINE);
@@ -191,7 +209,32 @@ public class SqlInterceptor implements Interceptor {
 				String sql = (String) shardingSphereSqlField.get(statement);
 				if (paramters != null) {
 					for (Object paramter : paramters) {
-						sql = sql.replaceFirst("\\?"/* 该参数是个正则，不能直接?号 */, paramter != null ? paramter.toString() : "null");
+						sql = sql.replaceFirst("\\?"/* 该参数是个正则，不能直接?号 */,
+								paramter != null ? paramter.toString() : "null");
+					}
+				}
+				return sql;
+			} catch (Exception e) {
+				log.error("", e);
+			}
+		} else if (SeataPreparedStatement.equals(stmtClassName)) {
+			try {
+//				if (seataSqlField == null) {
+//					Class<?> clazz = Class.forName(SeataPreparedStatement);
+//					seataSqlField = clazz.getDeclaredField("targetSQL");
+//					seataSqlField.setAccessible(true);
+//				}
+
+				if (seataGetSqlMethod == null) {
+					Class<?> clazz = Class.forName(SeataPreparedStatement);
+					seataGetSqlMethod = clazz.getMethod("getTargetSQL");
+				}
+
+				String sql = (String) seataGetSqlMethod.invoke(statement);
+				if (paramters != null) {
+					for (Object paramter : paramters) {
+						sql = sql.replaceFirst("\\?"/* 该参数是个正则，不能直接?号 */,
+								paramter != null ? paramter.toString() : "null");
 					}
 				}
 				return sql;
@@ -215,9 +258,27 @@ public class SqlInterceptor implements Interceptor {
 					shardingSphereGetParamtersMethod = clazz.getMethod("getParameters");
 				}
 				List<Object> paramters = (List<Object>) shardingSphereGetParamtersMethod.invoke(statement);
-				return new ArrayList<Object>(paramters);//要赋值一份新的，否则引用会发生变化
+				return new ArrayList<Object>(paramters);// 要赋值一份新的，否则引用会发生变化
 			} catch (Exception e) {
-				log.error("WARN ex on extractParamters", e);
+				log.error("WARN ex on extractParamters of shardingSphere", e);
+			}
+		} else if (SeataPreparedStatement.equals(stmtClassName)) {
+			try {
+				if (seataGetParamtersMethod == null) {
+					Class<?> clazz = Class.forName(SeataPreparedStatement);
+					seataGetParamtersMethod = clazz.getMethod("getParameters");
+				}
+				Map<Integer, ArrayList<Object>> map = (Map<Integer, ArrayList<Object>>) seataGetParamtersMethod
+						.invoke(statement);
+				List<String> paramters = map.values().stream().map(list ->
+				/*
+				 * list是同类批量参数，用,号间隔组成字符串
+				 */
+				list.stream().map(i -> String.valueOf(i)).collect(Collectors.joining(",")))
+						.collect(Collectors.toList());
+				return new ArrayList<Object>(paramters);// 要赋值一份新的，否则引用会发生变化
+			} catch (Exception e) {
+				log.error("WARN ex on extractParamters of seata", e);
 			}
 		}
 		return null;

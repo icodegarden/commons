@@ -173,6 +173,14 @@ public abstract class SystemUtils {
 		return ip + ":" + port;
 	}
 
+	public static Tuple2<String, Integer> resolveIpPort(String ipport) {
+		String[] split = ipport.split(":");
+
+		String ip = split[0];
+		int port = Integer.parseInt(split[1]);
+		return Tuples.of(ip, port);
+	}
+
 	public static String normalizeHostAddress(final InetAddress localHost) {
 		if (localHost instanceof Inet6Address) {
 			return "[" + localHost.getHostAddress() + "]";

@@ -11,14 +11,29 @@ class PluginUtils {
 
 	/**
 	 * 获得真正的处理对象,可能多层代理.
+	 * @return Nullable
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T realTarget(Object target) {
-		if (Proxy.isProxyClass(target.getClass())) {
+	public static <T> T realTarget(Object t) {
+		int counter = 0;
+		int max = 10;
+		Object target = t;
+		while (counter++ < max && Proxy.isProxyClass(target.getClass())) {
 			MetaObject metaObject = SystemMetaObject.forObject(target);
-			return realTarget(metaObject.getValue("h.target"));
+			target = metaObject.getValue("h.target");
 		}
+		
+		if(counter == max) {
+			return null;
+		}
+		
 		return (T) target;
+
+//		if (Proxy.isProxyClass(t.getClass())) {
+//			MetaObject metaObject = SystemMetaObject.forObject(t);
+//			return realTarget(metaObject.getValue("h.target"));
+//		}
+//		return (T) t;
 	}
 
 	/**
