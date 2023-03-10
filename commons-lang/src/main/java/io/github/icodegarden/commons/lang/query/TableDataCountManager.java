@@ -92,7 +92,7 @@ public class TableDataCountManager {
 				// 新增，可能并发
 				try {
 					create(table);
-				} catch (io.github.icodegarden.commons.lang.query.DuplicateKeyException ignore) {
+				} catch (io.github.icodegarden.commons.lang.exception.DuplicateKeyException ignore) {
 					log.info("duplicate table name:{} on table", table);
 				}
 				tableCount = 0L;

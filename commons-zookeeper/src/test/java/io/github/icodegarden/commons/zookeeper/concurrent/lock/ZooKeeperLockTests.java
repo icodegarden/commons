@@ -44,6 +44,11 @@ public class ZooKeeperLockTests extends DistributedLockTests {
 	protected DistributedLock newDistributedLock(String name) {
 		return new ZooKeeperLock(client, root, name);
 	}
+	
+	@Override
+	protected long getExpireSeconds() {
+		return 1;
+	}
 
 	@Test
 	void destory() throws Exception {

@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import io.github.icodegarden.commons.lang.exception.DuplicateKeyException;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 
 /**
@@ -41,9 +42,11 @@ public class MysqlTableDataCountStorage implements TableDataCountStorage {
 				ptmt.execute();
 			}
 		} catch (SQLException e) {
-			if (e instanceof SQLIntegrityConstraintViolationException && e.getMessage().contains("Duplicate")) {
-				throw new DuplicateKeyException(String.format("exist table:%s", po.getTableName()), e);
-			}
+//			if (e instanceof SQLIntegrityConstraintViolationException && e.getMessage().contains("Duplicate")) {
+//				throw new DuplicateKeyException(String.format("exist table:%s", po.getTableName()), e);
+//			}
+			DuplicateKeyException.throwIfCompatible(e);
+			
 			throw new IllegalStateException(String.format("insert table_data_count error, request:%s", po), e);
 		}
 	}

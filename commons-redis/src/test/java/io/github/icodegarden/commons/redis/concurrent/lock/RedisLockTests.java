@@ -21,7 +21,11 @@ public class RedisLockTests extends DistributedLockTests {
 
 	@Override
 	protected DistributedLock newDistributedLock(String name) {
-		return new RedisLock(redisExecutor, name, 30L);
+		return new RedisLock(redisExecutor, name, getExpireSeconds());
 	}
 
+	@Override
+	protected long getExpireSeconds() {
+		return 3;
+	}
 }

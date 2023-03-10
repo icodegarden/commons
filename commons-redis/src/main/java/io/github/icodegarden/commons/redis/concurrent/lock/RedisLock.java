@@ -65,12 +65,7 @@ public class RedisLock implements DistributedLock {
 
 	@Override
 	public void acquire() throws LockException {
-		for (;;) {
-			boolean acquire = acquire(Long.MAX_VALUE);
-			if (!acquire) {
-				sleep();
-			}
-		}
+		acquire(Long.MAX_VALUE);
 	}
 
 	@Override
@@ -81,16 +76,16 @@ public class RedisLock implements DistributedLock {
 				Object obj = redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
 				// redisTemplate返回的是boolean
 				if (obj instanceof Boolean) {
-					return (Boolean) obj;
-				}
-
-				// 这里返回类型是Long的原因是redis直接返回的0或1，而不是设置进去的
-				Long result = (Long) obj;
-
-				boolean success = result == 1;
-
-				if (success) {
-					return true;
+					if((Boolean) obj) {
+						return true;
+					}
+				} else {
+					// 这里返回类型是Long的原因是redis直接返回的0或1，而不是设置进去的
+					Long result = (Long) obj;
+					boolean success = result == 1;
+					if (success) {
+						return true;
+					}
 				}
 
 				if (SystemUtils.now().minus(timeoutMillis, ChronoUnit.MILLIS).isAfter(start)) {

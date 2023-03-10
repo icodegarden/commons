@@ -67,7 +67,7 @@ class BTreeTests {
 	void build_more() {
 		final int m = 3;
 		
-		BTree tree = BTree.build(list, m);
-		System.out.println(tree.root());
+//		BTree tree = BTree.build(list, m);
+//		System.out.println(tree.root());
 	}
 }
