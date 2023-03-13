@@ -15,10 +15,10 @@ import org.springframework.cloud.gateway.filter.factory.rewrite.ModifyResponseBo
 import org.springframework.core.Ordered;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 
 import io.github.icodegarden.commons.gateway.core.security.signature.App;
+import io.github.icodegarden.commons.gateway.core.security.signature.AuthMatcher;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
@@ -54,6 +54,8 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 	private CommonsGatewaySecurityProperties securityProperties;
 	@Autowired
 	private AppProvider appProvider;
+	@Autowired
+	private AuthMatcher authMatcher;
 
 	private GatewayFilter delegatorFilter;
 
@@ -72,6 +74,13 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 			config.setRewriteFunction((exc, obj) -> {
 				ServerWebExchange exchange = (ServerWebExchange) exc;
 
+				if (!authMatcher.isAuthPath(exchange)) {
+					/**
+					 * 不需要认证的请求只透传，不处理
+					 */
+					return Mono.just(obj);
+				}
+
 				OpenApiResponse openApiResponse;
 				if (obj instanceof String) {
 					/**
@@ -88,13 +97,15 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 					return Mono.just(obj);
 				}
 
-				if (!StringUtils.hasText(openApiResponse.getSign())) {
+				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+				if (requestBody != null) {
+					openApiResponse.setBiz_code(requestBody.getMethod());
+
 					/**
 					 * response签名
 					 */
 					App app = CommonsGatewayUtils.getApp(exchange);
 					if (app != null) {
-						OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
 						String sign = CommonsGatewayUtils.responseSign(openApiResponse, requestBody.getSign_type(),
 								app);
 						openApiResponse.setSign(sign);

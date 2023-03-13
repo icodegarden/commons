@@ -25,6 +25,7 @@ import io.github.icodegarden.commons.gateway.core.security.NoOpReactiveAuthentic
 import io.github.icodegarden.commons.gateway.core.security.UserServerAuthenticationSuccessHandler;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTServerAuthenticationConverter;
+import io.github.icodegarden.commons.gateway.core.security.signature.AuthMatcher;
 import io.github.icodegarden.commons.gateway.core.security.signature.SignatureAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
@@ -52,6 +53,8 @@ public class GatewaySecurityAutoConfiguration {
 
 	@Autowired
 	private CommonsGatewaySecurityProperties securityProperties;
+	@Autowired
+	private AuthMatcher authMatcher;
 	@Autowired
 	private ServerCodecConfigurer codecConfigurer;
 	@Autowired(required = false)
@@ -119,13 +122,13 @@ public class GatewaySecurityAutoConfiguration {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
 			SignatureAuthenticationWebFilter.Config config = new SignatureAuthenticationWebFilter.Config(
-					codecConfigurer, signature.getAuthPathPatterns(), appProvider, openApiRequestValidator,
+					codecConfigurer, appProvider, openApiRequestValidator,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
 							: new AppServerAuthenticationSuccessHandler(appProvider, signature.getHeaderAppKey()),
 					authenticationFailureHandler != null ? authenticationFailureHandler
 							: new ApiResponseServerAuthenticationFailureHandler());
-			webFilter = new SignatureAuthenticationWebFilter(config);
+			webFilter = new SignatureAuthenticationWebFilter(authMatcher, config);
 		} else {
 			log.info("gateway security config Authentication WebFilter by NoOp");
 			webFilter = new NoOpWebFilter();

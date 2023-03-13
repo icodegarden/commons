@@ -67,7 +67,7 @@ public abstract class DatabaseDistributedLock implements DistributedLock {
 		LocalDateTime start = SystemUtils.now();
 		for (;;) {
 			try {
-				if (lockDao.existsRow(name) == 1) {
+				if (lockDao.findRow(name) != null) {
 					int rows = lockDao.updateLocked(name, identifier, expireSeconds,
 							SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now()));
 					if (rows == 1) {
@@ -80,6 +80,13 @@ public abstract class DatabaseDistributedLock implements DistributedLock {
 						return true;
 					} catch (DuplicateKeyException e) {
 						// 继续下一轮
+					} catch (Exception e) {
+						try{
+							DuplicateKeyException.throwIfCompatible(e); //org.apache.ibatis.exceptions.PersistenceException
+							throw e;
+						}catch (DuplicateKeyException ex) {
+							// 继续下一轮							
+						}
 					}
 				}
 

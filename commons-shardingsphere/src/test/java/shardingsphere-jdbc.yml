@@ -2,13 +2,13 @@ dataSources:
   ds0:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
     driverClassName: com.mysql.jdbc.Driver
-    jdbcUrl: jdbc:mysql://172.22.122.23:53306/beecomb_0
+    jdbcUrl: jdbc:mysql://192.168.80.130:3306/beecomb_0
     username: root
     password: 123456
   ds1:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
     driverClassName: com.mysql.jdbc.Driver
-    jdbcUrl: jdbc:mysql://172.22.122.23:53306/beecomb_1
+    jdbcUrl: jdbc:mysql://192.168.80.130:3306/beecomb_1
     username: root
     password: 123456
 

@@ -41,6 +41,7 @@
 # 2.0.0
 * 增加seata springcloud支持（springcloud lb的xid传递，spring-cloud-alibaba-seata只支持ribbon）
 * 增加beecomb的AutoConfiguration
+* 增加mysql分布式锁
 * 增加skywalking/arms TraceCtx
 * 增加logback LogbackExtConverter
 * 增加gateway Signature模式下哪些path需要认证可配

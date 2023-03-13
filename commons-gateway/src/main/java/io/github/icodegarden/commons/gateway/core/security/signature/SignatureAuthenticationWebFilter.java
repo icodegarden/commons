@@ -6,9 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -28,10 +25,6 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
-import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
-import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher.MatchResult;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -53,7 +46,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * 
@@ -71,9 +63,9 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 	private final AppProvider appProvider;
 	private final OpenApiRequestValidator openApiRequestValidator;
 //	private final ServerWebExchangeMatcher acceptMatcher;
-	private final ServerWebExchangeMatcher authMatcher;
+	private final AuthMatcher authMatcher;
 
-	public SignatureAuthenticationWebFilter(Config config) {
+	public SignatureAuthenticationWebFilter(AuthMatcher authMatcher, Config config) {
 		ServerCodecConfigurer codecConfigurer = config.getCodecConfigurer();
 		this.messageReaders = codecConfigurer.getReaders();
 //		List<ServerWebExchangeMatcher> matchers = config.getAcceptPathPatterns().stream().map(path -> {
@@ -81,10 +73,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //		}).collect(Collectors.toList());
 //		acceptMatcher = new OrServerWebExchangeMatcher(matchers);
 
-		List<ServerWebExchangeMatcher> matchers = config.getAuthPathPatterns().stream().map(path -> {
-			return new PathPatternParserServerWebExchangeMatcher(path);
-		}).collect(Collectors.toList());
-		authMatcher = new OrServerWebExchangeMatcher(matchers);
+		this.authMatcher = authMatcher;
 
 		this.appProvider = config.getAppProvider();
 		this.openApiRequestValidator = config.getOpenApiRequestValidator();
@@ -116,9 +105,13 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //			return response.writeWith(Mono.just(buffer));
 //		}
 
-		if (!isAuthPath(exchange)) {
-			LogUtils.infoIfEnabled(log,
-					() -> log.info("request path:{} not a AuthPath, ignore authentication", requestPath));
+		if (!authMatcher.isAuthPath(exchange)) {
+			/**
+			 * 不需要认证的请求只透传，不处理
+			 */
+			if(log.isDebugEnabled()) {
+				log.debug("request path:{} not a AuthPath, ignore authentication", requestPath);	
+			}
 			return chain.filter(exchange);
 		}
 
@@ -234,38 +227,22 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //		return match.get();
 //	}
 
-	/**
-	 * 该认证只针对符合规范的openapi，其他的一律不做处理交给spring security识别是否需要认证<br>
-	 * 因为历史开放接口可能不是按规范来的，则交给下游服务自行处理
-	 */
-	private boolean isAuthPath(ServerWebExchange exchange) {
-		AtomicReference<Boolean> match = new AtomicReference<Boolean>();
-		Mono<MatchResult> mono = authMatcher.matches(exchange);
-		mono.subscribeOn(Schedulers.immediate());
-		mono.subscribe(next -> {
-			match.set(next.isMatch());
-		});
-		return match.get();
-	}
-
 	@Getter
 	@ToString
 	public static class Config {
 		private ServerCodecConfigurer codecConfigurer;
 //		private Set<String> acceptPathPatterns;
-		private Set<String> authPathPatterns;
 		private AppProvider appProvider;
 		private OpenApiRequestValidator openApiRequestValidator;
 		private ReactiveAuthenticationManager authenticationManager;
 		private ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler;
 		private ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 
-		public Config(ServerCodecConfigurer codecConfigurer, Set<String> authPathPatterns, AppProvider appProvider,
+		public Config(ServerCodecConfigurer codecConfigurer, AppProvider appProvider,
 				OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
 				ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
 				ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
 			this.codecConfigurer = codecConfigurer;
-			this.authPathPatterns = authPathPatterns;
 			this.appProvider = appProvider;
 			this.openApiRequestValidator = openApiRequestValidator;
 			this.authenticationManager = authenticationManager;

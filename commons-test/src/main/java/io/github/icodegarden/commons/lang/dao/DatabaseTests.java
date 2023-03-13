@@ -3,9 +3,9 @@ package io.github.icodegarden.commons.lang.dao;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.TestsDataSourceDependent;
 import io.github.icodegarden.commons.lang.dao.OptimizeTableResults.Result;
 
 /**
@@ -13,9 +13,18 @@ import io.github.icodegarden.commons.lang.dao.OptimizeTableResults.Result;
  * @author Fangfang.Xu
  *
  */
-class MysqlJdbcDatabaseTests {
+public abstract class DatabaseTests {
 
-	MysqlJdbcDatabase database = new MysqlJdbcDatabase(TestsDataSourceDependent.DATASOURCE);
+	protected abstract Database getDatabase();
+
+	Database database;
+
+	@BeforeEach
+	void init() {
+		if (database == null) {
+			database = getDatabase();
+		}
+	}
 
 	@Test
 	void version() throws Exception {

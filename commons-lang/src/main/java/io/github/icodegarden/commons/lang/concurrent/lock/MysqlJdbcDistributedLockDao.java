@@ -52,23 +52,23 @@ public class MysqlJdbcDistributedLockDao implements DatabaseDistributedLockDao {
 	}
 
 	@Override
-	public int existsRow(String lockName) {
+	public Long findRow(String lockName) {
 		try (Connection connection = dataSource.getConnection();) {
 			String sql = new StringBuilder(30).append("select id from ").append(TABLE_NAME).append(" where name = '")
 					.append(lockName).append("'").toString();
 			try (PreparedStatement ptmt = connection.prepareStatement(sql);) {
 				try (ResultSet rs = ptmt.executeQuery();) {
 					while (rs.next()) {
-//						long id = rs.getLong(1);
+						long id = rs.getLong(1);
 //						String name = rs.getString(2);
-						return 1;
+						return id;
 					}
 				}
 			}
 		} catch (SQLException e) {
 			throw new IllegalStateException("ex on existsRow", e);
 		}
-		return 0;
+		return null;
 	}
 
 	@Override

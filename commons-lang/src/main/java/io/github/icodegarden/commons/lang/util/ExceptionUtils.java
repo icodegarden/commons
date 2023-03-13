@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import io.github.icodegarden.commons.lang.annotation.Nullable;
-
 /**
  * @author Fangfang.Xu
  *
@@ -28,18 +26,23 @@ public final class ExceptionUtils {
 
 	/**
 	 * 异常是否由causeOf 引起
+	 * 
 	 * @return Nullable
 	 */
-	public static  <E extends Exception> E causeOf(Throwable t, Class<E> causeOf) {
+	public static <E extends Exception> E causeOf(Throwable e, Class<E> type) {
 		int counter = 0;
-		Throwable cause = t;
+		Throwable cause = e;
 		while (cause != null && counter++ < 10) {
-			if (causeOf.isAssignableFrom(cause.getClass())) {
+			if (type.isAssignableFrom(cause.getClass())) {
 				return (E) cause;
 			}
 			cause = cause.getCause();
 		}
 		return null;
+	}
+
+	public static boolean isCauseOf(Throwable e, Class type) {
+		return causeOf(e, type) != null;
 	}
 
 	private static class UnsafeStringWriter extends Writer {

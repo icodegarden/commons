@@ -1,7 +1,8 @@
 package io.github.icodegarden.commons.lang.exception;
 
-import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
+import io.github.icodegarden.commons.lang.util.ExceptionUtils;
 
 /**
  * 
@@ -19,8 +20,10 @@ public class DuplicateKeyException extends RuntimeException {
 		super(message);
 	}
 
-	public static void throwIfCompatible(SQLException e) throws DuplicateKeyException {
-		if (e instanceof SQLIntegrityConstraintViolationException && e.getMessage().contains("Duplicate")) {
+	public static void throwIfCompatible(Exception e) throws DuplicateKeyException {
+		SQLIntegrityConstraintViolationException cause = ExceptionUtils.causeOf(e,
+				SQLIntegrityConstraintViolationException.class);
+		if (cause != null && cause.getMessage().contains("Duplicate")) {
 			throw new DuplicateKeyException("Duplicate key", e);
 		}
 	}
