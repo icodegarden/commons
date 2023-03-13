@@ -7,6 +7,6 @@ import io.github.icodegarden.commons.lang.concurrent.lock.DistributedLock;
  * @author Fangfang.Xu
  *
  */
-public interface MybatisDistributedLock extends DistributedLock {
+public interface MybatisLock extends DistributedLock {
 	
 }

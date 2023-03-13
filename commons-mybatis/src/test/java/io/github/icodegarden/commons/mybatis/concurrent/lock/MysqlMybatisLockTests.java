@@ -9,12 +9,12 @@ import io.github.icodegarden.commons.test.concurrent.lock.DistributedLockTests;
  * @author Fangfang.Xu
  *
  */
-public class MysqlMybatisDistributedLockTests extends DistributedLockTests {
+public class MysqlMybatisLockTests extends DistributedLockTests {
 
 	@Override
 	protected DistributedLock newDistributedLock(String name) {
-		MysqlMybatisDistributedLockMapper mapper = MybatisTestUtils.getMapper(MysqlMybatisDistributedLockMapper.class);
-		return new MysqlMybatisDistributedLock(mapper, name, getExpireSeconds());
+		MysqlMybatisLockMapper mapper = MybatisTestUtils.getMapper(MysqlMybatisLockMapper.class);
+		return new MysqlMybatisLock(mapper, name, getExpireSeconds());
 	}
 
 	@Override

@@ -14,20 +14,20 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
  * @author Fangfang.Xu
  *
  */
-public abstract class DatabaseDistributedLock implements DistributedLock {
+public abstract class DatabaseLock implements DistributedLock {
 
 	public static final String TABLE_NAME = "distributed_lock";
 
 	private final String identifier = UUID.randomUUID().toString();
 
-	private final DatabaseDistributedLockDao lockDao;
+	private final DatabaseLockDao lockDao;
 
 	private final String name;
 	private final Long expireSeconds;
 
 	private long acquireIntervalMillis = 500;
 
-	public DatabaseDistributedLock(DatabaseDistributedLockDao lockDao, String name, Long expireSeconds) {
+	public DatabaseLock(DatabaseLockDao lockDao, String name, Long expireSeconds) {
 		Assert.hasText(name, "name must not empty");
 		Assert.isTrue(name.length() <= 20, "name length must <= 20");
 

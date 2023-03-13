@@ -7,9 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.icodegarden.commons.lang.concurrent.lock.MysqlJdbcDistributedLock;
-import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisDistributedLock;
-import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisDistributedLockMapper;
+import io.github.icodegarden.commons.lang.concurrent.lock.MysqlJdbcLock;
+import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLock;
+import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper;
 
 /**
  * 
@@ -20,20 +20,20 @@ import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisDistrib
 public class DistributedLockController {
 
 	@Autowired
-	MysqlMybatisDistributedLockMapper mapper;
+	MysqlMybatisLockMapper mapper;
 	@Autowired
 	DataSource dataSource;
 
 	@GetMapping("lock/mysqlJdbc")
 	public ResponseEntity<?> mysqlJdbc() {
-		MysqlJdbcDistributedLock lock = new MysqlJdbcDistributedLock(dataSource, "abc", 5L);
+		MysqlJdbcLock lock = new MysqlJdbcLock(dataSource, "abc", 5L);
 		boolean b = lock.acquire(1);
 		return ResponseEntity.ok(b);
 	}
 
 	@GetMapping("lock/mysqlMybatis")
 	public ResponseEntity<?> mysqlMybatis() {
-		MysqlMybatisDistributedLock lock = new MysqlMybatisDistributedLock(mapper, "abc", 5L);
+		MysqlMybatisLock lock = new MysqlMybatisLock(mapper, "abc", 5L);
 		boolean b = lock.acquire(1);
 		return ResponseEntity.ok(b);
 	}

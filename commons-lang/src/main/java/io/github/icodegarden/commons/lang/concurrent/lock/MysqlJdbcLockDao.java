@@ -16,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class MysqlJdbcDistributedLockDao implements DatabaseDistributedLockDao {
+public class MysqlJdbcLockDao implements DatabaseLockDao {
 
 	private final DataSource dataSource;
 
-	public MysqlJdbcDistributedLockDao(DataSource dataSource) {
+	public MysqlJdbcLockDao(DataSource dataSource) {
 		super();
 		this.dataSource = dataSource;
 	}

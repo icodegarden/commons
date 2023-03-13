@@ -8,11 +8,11 @@ import io.github.icodegarden.commons.test.concurrent.lock.DistributedLockTests;
  * @author Fangfang.Xu
  *
  */
-public class MysqlJdbcDistributedLockTests extends DistributedLockTests {
+public class MysqlJdbcLockTests extends DistributedLockTests {
 
 	@Override
 	protected DistributedLock newDistributedLock(String name) {
-		return new MysqlJdbcDistributedLock(TestsDataSourceDependent.DATASOURCE, name, getExpireSeconds());
+		return new MysqlJdbcLock(TestsDataSourceDependent.DATASOURCE, name, getExpireSeconds());
 	}
 	
 	@Override

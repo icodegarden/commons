@@ -5,7 +5,7 @@ package io.github.icodegarden.commons.lang.concurrent.lock;
  * @author Fangfang.Xu
  *
  */
-public interface DatabaseDistributedLockDao {
+public interface DatabaseLockDao {
 
 	public static final String TABLE_NAME = "distributed_lock";
 
