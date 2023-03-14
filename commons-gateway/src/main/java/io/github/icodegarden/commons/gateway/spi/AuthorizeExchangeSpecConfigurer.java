@@ -2,6 +2,9 @@ package io.github.icodegarden.commons.gateway.spi;
 
 import org.springframework.security.config.web.server.ServerHttpSecurity.AuthorizeExchangeSpec;
 
+import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
+import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -9,16 +12,29 @@ import org.springframework.security.config.web.server.ServerHttpSecurity.Authori
  */
 public interface AuthorizeExchangeSpecConfigurer {
 
-	void config(AuthorizeExchangeSpec authorizeExchangeSpec);
+	void config(CommonsGatewaySecurityProperties securityProperties, AuthorizeExchangeSpec authorizeExchangeSpec);
 
-	public static void configDefault(AuthorizeExchangeSpec authorizeExchangeSpec) {
-		authorizeExchangeSpec
+	public static void configDefault(CommonsGatewaySecurityProperties securityProperties,
+			AuthorizeExchangeSpec authorizeExchangeSpec) {
+		CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
+		Jwt jwt = securityProperties.getJwt();
+		if (signature != null) {
+			signature.getAuthPathPatterns().forEach(pathPattern -> {
+				/**
+				 * openapi系列
+				 */
+				authorizeExchangeSpec.pathMatchers(pathPattern).authenticated();
+			});
+		} else if (jwt != null) {
+			jwt.getAuthPathPatterns().forEach(pathPattern -> {
 				/**
 				 * api系列
 				 */
-				.pathMatchers("/openapi/**").authenticated()//
-				.pathMatchers("/*/api/**").authenticated()//
-				.pathMatchers("/*/internalapi/**").authenticated()//
+				authorizeExchangeSpec.pathMatchers(pathPattern).authenticated();
+			});
+		}
+
+		authorizeExchangeSpec
 				/**
 				 * 登录认证
 				 */

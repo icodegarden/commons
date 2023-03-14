@@ -93,10 +93,10 @@ public class GatewaySecurityAutoConfiguration {
 
 		if (authorizeExchangeSpecConfigurer != null) {
 			log.info("gateway security AuthorizeExchangeSpecConfigurer is exist, do config custom");
-			authorizeExchangeSpecConfigurer.config(authorizeExchangeSpec);
+			authorizeExchangeSpecConfigurer.config(securityProperties, authorizeExchangeSpec);
 		} else {
 			log.info("gateway security AuthorizeExchangeSpecConfigurer not exist, do config default");
-			AuthorizeExchangeSpecConfigurer.configDefault(authorizeExchangeSpec);
+			AuthorizeExchangeSpecConfigurer.configDefault(securityProperties, authorizeExchangeSpec);
 		}
 
 		WebFilter webFilter;

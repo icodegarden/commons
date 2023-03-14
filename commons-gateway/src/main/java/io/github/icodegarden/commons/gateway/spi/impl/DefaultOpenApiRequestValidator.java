@@ -30,9 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 
-	private static final long REJECT_SECONDS_BEFORE = 5 * 60;
-	private static final long REJECT_SECONDS_AFTER = 10;
-	private static final Pattern DATETIME_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
+	public static long REJECT_SECONDS_BEFORE = 5 * 60;
+	public static long REJECT_SECONDS_AFTER = 10;
+	public static Pattern DATETIME_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
 
 	private GeneralValidator generalValidator = new GeneralValidator();
 	private RequestIdValidator requestIdValidator = new RequestIdValidator();

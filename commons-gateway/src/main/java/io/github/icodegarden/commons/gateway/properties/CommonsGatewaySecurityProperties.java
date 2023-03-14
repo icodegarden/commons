@@ -32,6 +32,12 @@ public class CommonsGatewaySecurityProperties {
 	@Setter
 	@ToString
 	public static class Jwt {
+		/**
+		 * 需要被网关认证的请求，不在此范围的直接跳过认证，能不能pass则看springsecurity的配置规则
+		 */
+		private Set<String> authPathPatterns = new HashSet<String>(
+				Arrays.asList("/*/api/**", "/*/internalapi/**", "/api/**", "/internalapi/**"));
+
 		private String issuer;
 		private String secretKey;
 		private int tokenExpireSeconds = 3600;
@@ -48,7 +54,7 @@ public class CommonsGatewaySecurityProperties {
 		/**
 		 * 需要被网关认证的请求，不在此范围的直接跳过认证，能不能pass则看springsecurity的配置规则
 		 */
-		private Set<String> authPathPatterns = new HashSet<String>(Arrays.asList("/openapi/v1/biz/methods"));// 默认只需对此path进行认证
+		private Set<String> authPathPatterns = new HashSet<String>(Arrays.asList("/openapi/**"));// 包含了/openapi/v1/biz/methods
 
 		/**
 		 * 是否在认证后设置appKey到header
