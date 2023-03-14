@@ -47,8 +47,10 @@ public class BodyMethodRoutePredicateFactory
 			@Override
 			public boolean test(ServerWebExchange exchange) {
 				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+				if(requestBody == null) {
+					return false;
+				}
 				String method = requestBody.getMethod();
-
 				return config.getBodyMethod().equals(method);
 			}
 
