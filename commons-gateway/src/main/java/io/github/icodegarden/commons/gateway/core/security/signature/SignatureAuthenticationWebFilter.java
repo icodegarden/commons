@@ -30,6 +30,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 
+import io.github.icodegarden.commons.gateway.core.security.AuthMatcher;
 import io.github.icodegarden.commons.gateway.spi.AppProvider;
 import io.github.icodegarden.commons.gateway.spi.AuthWebFilter;
 import io.github.icodegarden.commons.gateway.spi.OpenApiRequestValidator;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.springframework.util.StringUtils;
@@ -33,6 +34,8 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 	public static long REJECT_SECONDS_BEFORE = 5 * 60;
 	public static long REJECT_SECONDS_AFTER = 10;
 	public static Pattern DATETIME_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$");
+	public static Function<String, LocalDateTime> TIMESTAMP_PARSER = timestamp -> LocalDateTime.parse(timestamp,
+			SystemUtils.STANDARD_DATETIME_FORMATTER);
 
 	private GeneralValidator generalValidator = new GeneralValidator();
 	private RequestIdValidator requestIdValidator = new RequestIdValidator();
@@ -108,7 +111,7 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 			/**
 			 * n秒（例如5分钟）之前的视为重放;比现在晚n秒（例如10秒）以上视为不符合
 			 */
-			LocalDateTime ts = LocalDateTime.parse(requestBody.getTimestamp(), SystemUtils.STANDARD_DATETIME_FORMATTER);
+			LocalDateTime ts = TIMESTAMP_PARSER.apply(requestBody.getTimestamp());
 			if (ts.plusSeconds(REJECT_SECONDS_BEFORE).isBefore(SystemUtils.now())
 					|| ts.minusSeconds(REJECT_SECONDS_AFTER).isAfter(SystemUtils.now())) {
 				LogUtils.infoIfEnabled(log, () -> log.info("app:{}.{} of rquest path:{} INVALID_TIMESTAMP:{}",

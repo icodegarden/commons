@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.gateway.core.security.signature;
+package io.github.icodegarden.commons.gateway.core.security;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
+import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -27,8 +28,14 @@ public class AuthMatcher {
 
 	public AuthMatcher(CommonsGatewaySecurityProperties securityProperties) {
 		CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
+		Jwt jwt = securityProperties.getJwt();
 		if (signature != null) {
 			List<ServerWebExchangeMatcher> matchers = signature.getAuthPathPatterns().stream().map(path -> {
+				return new PathPatternParserServerWebExchangeMatcher(path);
+			}).collect(Collectors.toList());
+			authMatcher = new OrServerWebExchangeMatcher(matchers);
+		} else if (jwt != null) {
+			List<ServerWebExchangeMatcher> matchers = jwt.getAuthPathPatterns().stream().map(path -> {
 				return new PathPatternParserServerWebExchangeMatcher(path);
 			}).collect(Collectors.toList());
 			authMatcher = new OrServerWebExchangeMatcher(matchers);

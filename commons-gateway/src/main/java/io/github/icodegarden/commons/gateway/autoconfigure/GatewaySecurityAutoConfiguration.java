@@ -21,11 +21,11 @@ import org.springframework.web.server.WebFilterChain;
 
 import io.github.icodegarden.commons.gateway.core.security.ApiResponseServerAuthenticationFailureHandler;
 import io.github.icodegarden.commons.gateway.core.security.AppServerAuthenticationSuccessHandler;
+import io.github.icodegarden.commons.gateway.core.security.AuthMatcher;
 import io.github.icodegarden.commons.gateway.core.security.NoOpReactiveAuthenticationManager;
 import io.github.icodegarden.commons.gateway.core.security.UserServerAuthenticationSuccessHandler;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTServerAuthenticationConverter;
-import io.github.icodegarden.commons.gateway.core.security.signature.AuthMatcher;
 import io.github.icodegarden.commons.gateway.core.security.signature.SignatureAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
@@ -109,7 +109,7 @@ public class GatewaySecurityAutoConfiguration {
 			Jwt jwt = securityProperties.getJwt();
 			log.info("gateway security config Authentication WebFilter by jwt:{}", jwt);
 
-			webFilter = new JWTAuthenticationWebFilter(
+			webFilter = new JWTAuthenticationWebFilter(authMatcher,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationConverter != null ? serverAuthenticationConverter
 							: new JWTServerAuthenticationConverter(jwt.getSecretKey(), jwtTokenExtractor,
