@@ -1,0 +1,1 @@
+mysql 的 insert ... on duplicate key update ...     innodb是行锁，死锁问题官方已在5.7后续版本修复

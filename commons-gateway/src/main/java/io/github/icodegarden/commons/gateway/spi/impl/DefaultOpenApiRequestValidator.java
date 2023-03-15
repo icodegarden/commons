@@ -202,7 +202,7 @@ public class DefaultOpenApiRequestValidator implements OpenApiRequestValidator {
 						 */
 						try {
 							/**
-							 * 从referenceQueue获取出来的，reference.get() 是null
+							 * 从referenceQueue获取出来的。如果使用reference.get() 可能是null，不阻塞
 							 */
 							RequestIdSoftReference reference = (RequestIdSoftReference) referenceQueue.remove();// 阻塞的
 							Map<RequestIdSoftReference, Object> map = appRequestIds.get(reference.app_id);
