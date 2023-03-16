@@ -16,10 +16,16 @@ public class RedisSequenceManager extends AtomicSequenceManager {
 
 	private final long increment;
 
-	private byte[] key = "redis:sequence:manager".getBytes(Charset.forName("utf-8"));
-	private final byte[] f_key;
+	private final byte[] key;
+	
+//	使用redis hash的原子操作，该hash key及其field不需要提前建
+//	private final byte[] f_key;
 
 	private RedisExecutor redisExecutor;
+
+	public RedisSequenceManager(String moduleName, RedisExecutor redisExecutor) {
+		this(moduleName, redisExecutor, 100);
+	}
 
 	public RedisSequenceManager(String moduleName, RedisExecutor redisExecutor, long increment) {
 		super(moduleName);
@@ -28,7 +34,9 @@ public class RedisSequenceManager extends AtomicSequenceManager {
 
 		this.increment = increment;
 
-		this.f_key = moduleName.getBytes(Charset.forName("utf-8"));
+		this.key = ("redis:sequence:" + moduleName).getBytes(Charset.forName("utf-8"));
+
+//		this.f_key = moduleName.getBytes(Charset.forName("utf-8"));
 	}
 
 	@Override
@@ -36,12 +44,13 @@ public class RedisSequenceManager extends AtomicSequenceManager {
 		return increment;
 	}
 
-	public void setKey(byte[] key) {
-		this.key = key;
-	}
+//	public void setKey(byte[] key) {
+//		this.key = key;
+//	}
 
 	@Override
 	public long nextMaxId() {
-		return redisExecutor.hincrBy(key, f_key, increment);
+//		return redisExecutor.hincrBy(key, f_key, increment);
+		return redisExecutor.incrBy(key, increment);
 	}
 }
