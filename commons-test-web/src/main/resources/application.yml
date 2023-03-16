@@ -47,6 +47,11 @@ spring:
       connection-timeout: 250 #默认30000,包含了request timeout,不能小于250
 #      idle-timeout: 600000 #默认10分钟 
 #      connection-test-query: SELECT 1    
+  redis:
+    ssl: false
+    cluster:
+      nodes: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com:6379
+    password: Aa@653210000
   cloud:
     loadbalancer: #LoadBalancerClientsProperties
       retry:
@@ -79,11 +84,11 @@ commons:
   mybatis:
     mapperScan:
       basePackages: io.github.icodegarden.commons.test.web.mapper
-  redis:
-    pool: 
-      host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com
-      port: 6379
-      password: Aa@653210000  
+#  redis: #当配置了spring.redis时，这里可以不配，自动创建RedisExecutor(RedisTemplate)
+#    pool: 
+#      host: r-bp1pozc9d7ehti3jbf.redis.rds.aliyuncs.com
+#      port: 6379
+#      password: Aa@653210000  
   elasticsearch:
     httpHosts: http://localhost:9200
   hbase:

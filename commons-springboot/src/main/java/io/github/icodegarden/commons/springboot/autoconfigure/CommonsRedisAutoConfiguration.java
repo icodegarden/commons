@@ -3,19 +3,23 @@ package io.github.icodegarden.commons.springboot.autoconfigure;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import io.github.icodegarden.commons.redis.ClusterRedisExecutor;
 import io.github.icodegarden.commons.redis.PoolRedisExecutor;
 import io.github.icodegarden.commons.redis.RedisExecutor;
+import io.github.icodegarden.commons.redis.TemplateRedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
@@ -31,15 +35,27 @@ import redis.clients.jedis.JedisPool;
 @Configuration
 @Slf4j
 public class CommonsRedisAutoConfiguration {
-	
+
+	@ConditionalOnClass(RedisTemplate.class)
+	@Configuration
+	@Getter
+	protected class RedisTemplateWrap {
+		@Autowired(required = false)
+		private RedisTemplate redisTemplate;
+	}
+
+	@Autowired(required = false)
+	RedisTemplateWrap redisTemplateWrap;
+
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	@Bean
 	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
 		log.info("commons init bean of RedisExecutor");
-		
+
 		Cluster cluster = redisProperties.getCluster();
 		if (cluster != null) {
+			log.info("create RedisExecutor by Cluster");
 			Set<HostAndPort> clusterNodes = cluster.getNodes().stream()
 					.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
 
@@ -52,13 +68,18 @@ public class CommonsRedisAutoConfiguration {
 
 		Pool pool = redisProperties.getPool();
 		if (pool != null) {
+			log.info("create RedisExecutor by Pool");
 			JedisPool jp = new JedisPool(pool, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
 					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
 					pool.isSsl());
 			return new PoolRedisExecutor(jp);
 		}
 
+		if (redisTemplateWrap != null && redisTemplateWrap.getRedisTemplate() != null) {
+			log.info("create RedisExecutor by RedisTemplate");
+			return new TemplateRedisExecutor(redisTemplateWrap.getRedisTemplate());
+		}
+
 		throw new IllegalStateException("CommonsRedisProperties config error, cluster or pool must not null");
 	}
-
 }
