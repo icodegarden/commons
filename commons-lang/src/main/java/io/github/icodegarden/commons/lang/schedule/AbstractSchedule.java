@@ -25,9 +25,7 @@ public abstract class AbstractSchedule implements Schedule {
 		scheduleThreadPool.setRemoveOnCancelPolicy(true);
 	}
 
-	private long loop;
-
-	private long logmod = 100;
+	private long scheduleTimes;
 
 	private final AtomicBoolean started = new AtomicBoolean(false);
 	private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -61,7 +59,7 @@ public abstract class AbstractSchedule implements Schedule {
 	@Override
 	public boolean scheduleWithCron(String cron) {
 		Assert.isTrue(CronUtils.isValid(cron), "Invalid:cron");
-		
+
 		if (started.compareAndSet(false, true)) {
 
 			doCron(cron);
@@ -82,8 +80,8 @@ public abstract class AbstractSchedule implements Schedule {
 	private void scheduling() {
 		synchronized (this) {// 关闭等待用
 			try {
-				if (log.isInfoEnabled() && allowLoopLog()) {
-					log.info("{} schedule run, loop:{}", this.getClass().getSimpleName(), loop);
+				if (log.isInfoEnabled()) {
+					log.info("{} schedule run, scheduleTimes:{}", this.getClass().getSimpleName(), scheduleTimes);
 				}
 
 				if (isClosed()) {
@@ -95,23 +93,15 @@ public abstract class AbstractSchedule implements Schedule {
 				}
 				doSchedule();
 			} catch (Throwable e) {
-				log.warn("ex on {}", AbstractSchedule.this.getClass().getSimpleName(), e);
+				log.error("ex on {}", AbstractSchedule.this.getClass().getSimpleName(), e);
 			} finally {
-				loop++;
+				scheduleTimes++;
 			}
 		}
 	}
 
 	protected abstract void doSchedule() throws Throwable;
 
-	public void setLogmod(long logmod) {
-		this.logmod = logmod;
-	}
-
-	protected boolean allowLoopLog() {
-		return loop % logmod == 0;
-	}
-	
 	@Override
 	public boolean isClosed() {
 		return closed.get();

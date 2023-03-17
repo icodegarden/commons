@@ -36,10 +36,15 @@ import redis.clients.jedis.JedisPool;
 @Slf4j
 public class CommonsRedisAutoConfiguration {
 
+	/**
+	 * 为了让创建RedisExecutor bean时能识别是否有RedisTemplate设立这个类，否则不引RedisTemplate包时报类找不到的
+	 * @author Fangfang.Xu
+	 *
+	 */
 	@ConditionalOnClass(RedisTemplate.class)
 	@Configuration
 	@Getter
-	protected class RedisTemplateWrap {
+	protected static class RedisTemplateWrap {
 		@Autowired(required = false)
 		private RedisTemplate redisTemplate;
 	}

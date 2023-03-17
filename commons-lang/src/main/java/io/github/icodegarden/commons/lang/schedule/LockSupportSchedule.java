@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.lang.schedule;
 
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedLock;
+import io.github.icodegarden.commons.lang.util.SystemUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,8 +32,8 @@ public abstract class LockSupportSchedule extends GracefullyShutdownSchedule {
 				lock.release();
 			}
 		} else {
-			if (log.isInfoEnabled() && allowLoopLog()) {
-				log.info("{} acquire lock false", this.getClass().getSimpleName());
+			if (log.isInfoEnabled()) {
+				log.info("{} acquire lock false, host:{}", this.getClass().getSimpleName(), SystemUtils.getIp());
 			}
 		}
 	}
