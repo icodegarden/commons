@@ -68,8 +68,8 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 			 * 指定了String后，setRewriteFunction就只会进String类型<br>
 			 * 下游服务的返回体是json String，ServerErrorGlobalFilter的返回体也是json String，因此这里String正合适
 			 */
-			config.setInClass(String.class);
-			config.setOutClass(Object.class);
+			config.setInClass(String.class);//进入json
+			config.setOutClass(String.class);//response json
 
 			config.setRewriteFunction((exc, obj) -> {
 				ServerWebExchange exchange = (ServerWebExchange) exc;
@@ -112,7 +112,7 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 					}
 				}
 
-				return Mono.just(openApiResponse);
+				return Mono.just(JsonUtils.serialize(openApiResponse));//要转成json string
 			});
 
 			/**

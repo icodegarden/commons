@@ -77,12 +77,14 @@
 		    <artifactId>apm-toolkit-trace</artifactId>
 		    <version>${skywalking.version}</version>
 		    <scope>provided</scope><!-- 由agent提供 -->
+		    <optional>true</optional><!-- 可选的 -->
 		</dependency>
 		<dependency>
 		    <groupId>com.alibaba.arms.apm</groupId>
 		    <artifactId>arms-sdk</artifactId>
 		    <version>${arms.version}</version>
 		    <scope>provided</scope><!-- 由agent提供 -->
+		    <optional>true</optional><!-- 可选的 -->
 		</dependency>
 		
 		<dependency>
