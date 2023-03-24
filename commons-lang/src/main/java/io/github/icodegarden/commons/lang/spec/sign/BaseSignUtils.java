@@ -20,7 +20,7 @@ abstract class BaseSignUtils {
 		// [app_id, biz_content, charset, format, method, sign_type, timestamp, token,
 		// version]
 
-		StringBuilder sb = new StringBuilder("app_id=").append(body.getApp_id());
+		StringBuilder sb = new StringBuilder(200).append("app_id=").append(body.getApp_id());
 		if (hasText(body.getBiz_content())) {
 			sb.append("&biz_content=").append(body.getBiz_content());
 		}
@@ -45,8 +45,8 @@ abstract class BaseSignUtils {
 		if (hasText(body.getVersion())) {
 			sb.append("&version=").append(body.getVersion());
 		}
-		if(hasText(appKey)) {
-			sb.append("&key=").append(appKey);// key排最后			
+		if (hasText(appKey)) {
+			sb.append("&key=").append(appKey);// key排最后
 		}
 		return sb.toString();
 	}
@@ -56,7 +56,27 @@ abstract class BaseSignUtils {
 	}
 
 	protected static String buildResponseSignParams(OpenApiResponse body, String appKey) {
-		StringBuilder sb = new StringBuilder("biz_content=").append(body.getBiz_content());
+		StringBuilder sb = new StringBuilder(150);
+
+		if (body.getBiz_code() != null) {
+			sb.append("biz_code=").append(body.getBiz_code());
+		}
+		if (body.getBiz_content() != null) {
+			sb.append("&biz_content=").append(body.getBiz_content());
+		}
+		if (body.getCode() != null) {
+			sb.append("&code=").append(body.getCode());
+		}
+		if (body.getMsg() != null) {
+			sb.append("&msg=").append(body.getMsg());
+		}
+		if (body.getSub_code() != null) {
+			sb.append("&sub_code=").append(body.getSub_code());
+		}
+		if (body.getSub_msg() != null) {
+			sb.append("&sub_msg=").append(body.getSub_msg());
+		}
+
 		sb.append("&key=").append(appKey);// key排最后
 		return sb.toString();
 	}
