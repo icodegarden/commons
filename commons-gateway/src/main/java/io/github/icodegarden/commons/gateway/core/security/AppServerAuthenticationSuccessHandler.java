@@ -47,10 +47,10 @@ public class AppServerAuthenticationSuccessHandler implements ServerAuthenticati
 
 			ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
 				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
-				httpHeaders.add(WebUtils.HTTPHEADER_REQUEST_ID, requestBody.getRequest_id());
+				httpHeaders.add(WebUtils.HEADER_REQUEST_ID, requestBody.getRequest_id());
 				
-				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID, principal.getUserId());
-				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPNAME, principal.getUsername());
+				httpHeaders.add(WebUtils.HEADER_APPID, principal.getUserId());
+				httpHeaders.add(WebUtils.HEADER_APPNAME, principal.getUsername());
 				if (details != null) {
 					String flowTagRequired = (String) details.get(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_REQUIRED);
 					String flowTagFirst = (String) details.get(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST);

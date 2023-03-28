@@ -24,7 +24,7 @@ public class DefaultJWTTokenExtractor implements JWTTokenExtractor {
 	}
 
 	private String getJWT(ServerHttpRequest request) {
-		String bearerToken = request.getHeaders().getFirst(WebUtils.AUTHORIZATION_HEADER);
+		String bearerToken = request.getHeaders().getFirst(WebUtils.HEADER_AUTHORIZATION);
 		if (bearerToken != null) {
 			return resolveBearerToken(bearerToken, " ");
 		}

@@ -37,8 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
+ * 把网关异常以正确的api规范进行响应<br>
+ * 
  * 下游服务发生异常是不会进到这里的，但网络异常、服务不在线、被Sentinel拒绝等，会到这里<br>
- * 这个filter的顺序要在OpenapiResponseSignGlobalFilter之后<br>
+ * 
+ * 这个filter的order要低于OpenApiResponseSignGlobalFilter，在response时让这个filter先起作用<br>
  * 
  * @author Fangfang.Xu
  *
@@ -47,7 +50,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class ServerErrorGlobalFilter implements GlobalFilter, Ordered {
 	
-	public static final int ORDER = OpenapiResponseSignGlobalFilter.ORDER + 1;
+	public static final int ORDER = OpenApiResponseSignGlobalFilter.ORDER + 100;
 	
 	private static final Charset CHARSET = Charset.forName("utf-8");
 

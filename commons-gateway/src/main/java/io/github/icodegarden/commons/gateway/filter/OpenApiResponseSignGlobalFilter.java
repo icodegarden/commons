@@ -29,9 +29,10 @@ import reactor.core.publisher.Mono;
 
 /**
  * <h1>对OpenApiResponse设置签名</h1>
- * 只对认证成功的response起作用（包括调用失败），认证失败的则是由ServerAuthenticationFailureHandler的实现类处理的<br>
+ * 只对认证成功的response起作用（包括调用失败、业务失败等），认证失败的则是由ServerAuthenticationFailureHandler的实现类处理的<br>
  * 
- * 这个filter的顺序是最前<br>
+ * 这个filter的order顺序是最前<br>
+ * 
  * 这个类的生效条件是openapi模式<br>
  * 
  * 所有GlobalFilter的顺序在认证的WebFilter（AppKeyAuthenticationWebFilter、JWTAuthenticationWebFilter）之后，因此可以拿到已认证的身份信息（如果认证通过）<br>
@@ -40,7 +41,7 @@ import reactor.core.publisher.Mono;
  *
  */
 @Component
-public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
+public class OpenApiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 
 	public static final int ORDER = HIGHEST_PRECEDENCE;
 
@@ -62,6 +63,9 @@ public class OpenapiResponseSignGlobalFilter implements GlobalFilter, Ordered {
 	@PostConstruct
 	private void init() {
 		CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
+		/**
+		 * 只会对openapi signature模式起作用
+		 */
 		if (signature != null) {
 			Config config = new ModifyResponseBodyGatewayFilterFactory.Config();
 			/**

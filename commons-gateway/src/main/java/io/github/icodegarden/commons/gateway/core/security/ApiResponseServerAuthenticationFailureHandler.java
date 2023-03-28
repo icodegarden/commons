@@ -15,6 +15,7 @@ import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAuthenticationEntryPoint;
 import io.github.icodegarden.commons.springboot.security.ApiResponseServerAuthenticationEntryPoint.ApiResponseBuilder;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
  * @author Fangfang.Xu
  *
  */
+@Slf4j
 public class ApiResponseServerAuthenticationFailureHandler implements ServerAuthenticationFailureHandler {
 
 	private final ServerAuthenticationEntryPoint authenticationEntryPoint;
@@ -48,6 +50,11 @@ public class ApiResponseServerAuthenticationFailureHandler implements ServerAuth
 				 */
 				App app = CommonsGatewayUtils.getApp(exchange);
 				if (app != null) {
+					if (log.isInfoEnabled()) {
+						log.info("Authentication Failure, app_name:{}, request_id:{}, {}", app.getAppName(),
+								requestBody.getRequest_id(), ece.getMessage());
+					}
+
 					String sign = CommonsGatewayUtils.responseSign(openApiResponse, requestBody.getSign_type(), app);
 					openApiResponse.setSign(sign);
 				}

@@ -15,7 +15,6 @@ import feign.RequestInterceptor;
 import io.github.icodegarden.commons.springboot.properties.CommonsFeignProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsFeignProperties.Header;
 import io.github.icodegarden.commons.springboot.security.SecurityUtils;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,14 +58,14 @@ public class CommonsFeignAutoConfiguration implements RequestInterceptor {
 			template.header(ACCEPT_LANGUAGE, language);
 		}
 
-		template.header(WebUtils.HTTPHEADER_INTERNAL_RPC, "true");
+		template.header(WebUtils.HEADER_INTERNAL_RPC, "true");
 
 		String userId = SecurityUtils.getUserId();
 		userId = userId != null ? userId : header.getUserIdIfNotPresent();
 		String username = SecurityUtils.getUsername();
 		username = username != null ? username : header.getUsernameIfNotPresent();
 
-		template.header(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERID, userId);
-		template.header(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERNAME, username);
+		template.header(WebUtils.HEADER_USERID, userId);
+		template.header(WebUtils.HEADER_USERNAME, username);
 	}
 }

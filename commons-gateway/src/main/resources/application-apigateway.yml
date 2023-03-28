@@ -10,13 +10,15 @@ spring:
 #        args:
 #          maxSize: 2048MB      
       routes:
-      - id: admin_route
-        uri: lb://gddc-admin
+      - id: commons-test-web_route
+        uri: lb://commons-test-web
         predicates:
-        - Path=/admin/**
-#        metadata:
-#          connect-timeout: 1000
-#          response-timeout: 3000
+        - Path=/commons/**
+#        filters: 
+#        - InternalApiModifyResponseBody #后端只返回biz_content时需要
+        metadata:
+          connect-timeout: 1000
+          response-timeout: 3000
       - id: manage_route
         uri: lb://gddc-manage
         predicates:

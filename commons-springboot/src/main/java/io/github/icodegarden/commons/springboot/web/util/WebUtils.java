@@ -27,37 +27,46 @@ public class WebUtils {
 	private WebUtils() {
 	}
 
-	public final static String AUTHORIZATION_HEADER = "Authorization";
-	/**
-	 * 总页数
-	 */
-	public static final String HTTPHEADER_TOTALPAGES = "X-Total-Pages";
-	/**
-	 * 总条数
-	 */
-	public static final String HTTPHEADER_TOTALCOUNT = "X-Total-Count";
-	/**
-	 * 下一页搜索的searchAfter
-	 */
-	public static final String HTTPHEADER_SEARCHAFTER = "X-Search-After";
-	/**
-	 * 消息描述
-	 */
-	public static final String HTTPHEADER_MESSAGE = "X-Message";
-	/**
-	 * 是否内部服务间调用的标记
-	 */
-	public static final String HTTPHEADER_INTERNAL_RPC = "X-Internal-Rpc";
+	public final static String HEADER_AUTHORIZATION = "Authorization";
+	
+	public static final String HEADER_APPID = "X-Auth-AppId";
+	
+	public static final String HEADER_APPNAME = "X-Auth-Appname";
+	
+	public static final String HEADER_USERID = "X-Auth-UserId";
+	
+	public static final String HEADER_USERNAME = "X-Auth-Username";
 	/**
 	 * 请求id，多用于openapi
 	 */
-	public static final String HTTPHEADER_REQUEST_ID = "X-Request-Id";
+	public static final String HEADER_REQUEST_ID = "X-Request-Id";
+	
+	/**
+	 * 总页数
+	 */
+	public static final String HEADER_TOTALPAGES = "X-Total-Pages";
+	/**
+	 * 总条数
+	 */
+	public static final String HEADER_TOTALCOUNT = "X-Total-Count";
+	/**
+	 * 下一页搜索的searchAfter
+	 */
+	public static final String HEADER_SEARCHAFTER = "X-Search-After";
+	/**
+	 * 消息描述
+	 */
+	public static final String HEADER_MESSAGE = "X-Message";
+	/**
+	 * 是否内部服务间调用的标记
+	 */
+	public static final String HEADER_INTERNAL_RPC = "X-Internal-Rpc";
 
 	public static HttpHeaders pageHeaders(int totalPages, long totalCount) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.add(HTTPHEADER_TOTALPAGES,
+		httpHeaders.add(HEADER_TOTALPAGES,
 				(totalPages <= BaseQuery.MAX_TOTAL_PAGES ? totalPages : BaseQuery.MAX_TOTAL_PAGES) + "");
-		httpHeaders.add(HTTPHEADER_TOTALCOUNT, totalCount + "");
+		httpHeaders.add(HEADER_TOTALCOUNT, totalCount + "");
 		return httpHeaders;
 	}
 
@@ -65,13 +74,13 @@ public class WebUtils {
 			NextQuerySupportList<E> nextQuerySupportList) {
 		HttpHeaders httpHeaders = pageHeaders(totalPages, totalCount);
 		if (nextQuerySupportList.getSearchAfter() != null) {
-			httpHeaders.add(HTTPHEADER_SEARCHAFTER, nextQuerySupportList.getSearchAfter());
+			httpHeaders.add(HEADER_SEARCHAFTER, nextQuerySupportList.getSearchAfter());
 		}
 		return httpHeaders;
 	}
 
 	public static int getTotalPages(ResponseEntity<?> re) {
-		String first = re.getHeaders().getFirst(HTTPHEADER_TOTALPAGES);
+		String first = re.getHeaders().getFirst(HEADER_TOTALPAGES);
 		if (first == null) {
 			return 0;
 		}
@@ -101,7 +110,7 @@ public class WebUtils {
 		HttpServletRequest request = getRequest();
 		if (request != null) {
 			String bearerToken = createBearerToken(jwt, " ");
-			request.setAttribute(AUTHORIZATION_HEADER, bearerToken);// use for rpc
+			request.setAttribute(HEADER_AUTHORIZATION, bearerToken);// use for rpc
 		}
 	}
 
@@ -147,8 +156,8 @@ public class WebUtils {
 		if (request == null) {
 			return null;
 		}
-		String authorizationToken = (String) request.getAttribute(AUTHORIZATION_HEADER);
-		return authorizationToken != null ? authorizationToken : request.getHeader(AUTHORIZATION_HEADER);
+		String authorizationToken = (String) request.getAttribute(HEADER_AUTHORIZATION);
+		return authorizationToken != null ? authorizationToken : request.getHeader(HEADER_AUTHORIZATION);
 	}
 
 	public static boolean isInternalRpc() {
@@ -157,7 +166,7 @@ public class WebUtils {
 			return false;
 		}
 
-		String header = request.getHeader(HTTPHEADER_INTERNAL_RPC);
+		String header = request.getHeader(HEADER_INTERNAL_RPC);
 		return header != null && Boolean.valueOf(header);
 	}
 	
@@ -167,12 +176,12 @@ public class WebUtils {
 			return null;
 		}
 
-		return request.getHeader(HTTPHEADER_REQUEST_ID);
+		return request.getHeader(HEADER_REQUEST_ID);
 	}
 
 	public static void responseJWT(String jwt, HttpServletResponse response) {
 		String bearerToken = createBearerToken(jwt, " ");
-		response.setHeader(AUTHORIZATION_HEADER, bearerToken);
+		response.setHeader(HEADER_AUTHORIZATION, bearerToken);
 	}
 
 //	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {

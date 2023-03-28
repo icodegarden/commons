@@ -14,41 +14,15 @@ spring:
       routes:
 #--------------------------------------------------------------------------------------      
       - id: metadatas_system_route
-        uri: lb://gddc-admin
+        uri: lb://commons-test-web
         predicates:
         - Path=/openapi/v1/biz/methods
         - BodyMethod=consumer.metadata.system
         filters: 
         - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/system
-      - id: metadatas_kafka_route
-        uri: lb://gddc-admin
-        predicates:
-        - Path=/openapi/v1/biz/methods
-        - BodyMethod=consumer.metadata.kafka
-        filters: 
-        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/kafka  
-      - id: metadatas_datafilters_route
-        uri: lb://gddc-admin
-        predicates:
-        - Path=/openapi/v1/biz/methods
-        - BodyMethod=consumer.metadata.datafilters
-        filters: 
-        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/datafilters  
-        
-      - id: vehicle_data_requestResend_route
-        uri: lb://gddc-esb
-        predicates:
-        - Path=/openapi/v1/biz/methods
-        - BodyMethod=vehicle.data.requestResend
-        filters: 
-        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/vehicleDatas/requestResend
-      - id: software_url_receive_route
-        uri: lb://gddc-ota
-        predicates:
-        - Path=/openapi/v1/biz/methods
-        - BodyMethod=software.url.receive
-        filters: 
-        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/updateSoftwareVbfUrl        
+#        - RewritePath=/openapi/v1/biz/methods,/openapi/v1/metadatas/system_biz_content2 #这个接口后端只接收biz_content，只返回biz_content
+#        - OpenApiModifyRequestBody #后端只接收biz_content时需要
+#        - OpenApiModifyResponseBody #后端只返回biz_content时需要
 #--------------------------------------------------------------------------------------
       - id: route_tc
         uri: lb://gddc-tc
@@ -75,7 +49,7 @@ commons:
         apps:
         - appId: dev_sample_appid
           appKey: dev_sample_appkey
-          appName: 演示消费者系统
+          appName: sample_sys #演示消费者系统 中文header ASCII乱码
           methods:
           - consumer.metadata.system
           - consumer.metadata.kafka

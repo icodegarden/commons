@@ -15,7 +15,7 @@ class OpenapiUtils {
 		String app_id = "dev_sample_appid";
 		String app_key = "dev_sample_appkey";
 		String biz_code = "consumer.metadata.system";
-		String biz_content = "{}";
+		String biz_content = "{\"name\":\"中国\"}";
 
 		baseOpenApiRequestBody(app_id, biz_code, biz_content, app_key);
 	}

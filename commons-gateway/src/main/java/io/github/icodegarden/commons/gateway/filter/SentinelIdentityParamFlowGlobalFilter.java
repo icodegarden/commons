@@ -9,7 +9,7 @@ import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphU;
 
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
+import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import reactor.core.publisher.Mono;
 
 /**
@@ -26,7 +26,7 @@ public class SentinelIdentityParamFlowGlobalFilter implements GlobalFilter, Orde
 	private final int order;
 
 	public SentinelIdentityParamFlowGlobalFilter() {
-		this(-2);
+		this(-200);
 	}
 
 	public SentinelIdentityParamFlowGlobalFilter(int order) {
@@ -39,10 +39,10 @@ public class SentinelIdentityParamFlowGlobalFilter implements GlobalFilter, Orde
 		 * 认证通过时设置的
 		 */
 		String identityId = exchange.getRequest().getHeaders()
-				.getFirst(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERID);
+				.getFirst(WebUtils.HEADER_USERID);
 		if (identityId == null) {
 			identityId = exchange.getRequest().getHeaders()
-					.getFirst(GatewayPreAuthenticatedAuthenticationFilter.HEADER_APPID);
+					.getFirst(WebUtils.HEADER_APPID);
 		}
 		
 		final String param = identityId;

@@ -38,11 +38,6 @@ import io.github.icodegarden.commons.springboot.web.util.WebUtils;
  */
 public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBean {
 
-	public static final String HEADER_APPID = "X-Auth-AppId";
-	public static final String HEADER_APPNAME = "X-Auth-Appname";
-	public static final String HEADER_USERID = "X-Auth-UserId";
-	public static final String HEADER_USERNAME = "X-Auth-Username";
-
 //	private ResponseType responseType = ResponseType.ApiResponse;
 
 	private OrRequestMatcher shouldAuthOpenapiMatcher;
@@ -129,7 +124,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-		String appId = request.getHeader(HEADER_APPID);
+		String appId = request.getHeader(WebUtils.HEADER_APPID);
 		if (appId == null && shouldAuthOpenapi(request)) {
 			/**
 			 * 不需要以ApiResponse返回，因为这是gateway犯的错
@@ -140,7 +135,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 
 		String userId = null;
 		if (appId == null) {
-			userId = request.getHeader(HEADER_USERID);
+			userId = request.getHeader(WebUtils.HEADER_USERID);
 			if (userId == null && shouldAuthInternalApi(request)) {
 				/**
 				 * 不需要以ApiResponse返回，因为这是gateway犯的错
@@ -152,14 +147,14 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 
 		try {
 			if (appId != null) {
-				String appName = request.getHeader(HEADER_APPNAME);
+				String appName = request.getHeader(WebUtils.HEADER_APPNAME);
 
 				SimpleUser user = new SimpleUser(appId, appName, "", Collections.emptyList());
 				SimpleAuthentication simpleAuthentication = new SimpleAuthentication(user, Collections.emptyList());
 
 				SecurityUtils.setAuthentication(simpleAuthentication);
 			} else if (userId != null) {
-				String userName = request.getHeader(HEADER_USERNAME);
+				String userName = request.getHeader(WebUtils.HEADER_USERNAME);
 
 				SimpleUser user = new SimpleUser(userId, userName, "", Collections.emptyList());
 				SimpleAuthentication simpleAuthentication = new SimpleAuthentication(user, Collections.emptyList());

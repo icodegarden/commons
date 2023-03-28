@@ -24,7 +24,7 @@ https://juejin.cn/post/6938699087931768839
 * SignAuthenticationWebFilter.java 签名认证方式，选1
 
 ## io.github.icodegarden.commons.gateway.filter
-* OpenapiResponseSignGlobalFilter.java 对openapi的响应结果补充签名字段
+* OpenApiResponseSignGlobalFilter.java 对openapi的响应结果补充签名字段
 * SentinelIdentityParamFlowGlobalFilter.java 支持以身份方式（userId/appId）进行限流
 * ServerErrorGlobalFilter.java 对网关发生的异常进行处理
 

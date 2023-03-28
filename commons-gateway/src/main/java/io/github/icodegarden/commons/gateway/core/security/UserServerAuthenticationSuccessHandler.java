@@ -11,7 +11,7 @@ import org.springframework.web.server.WebFilterChain;
 
 import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
 import io.github.icodegarden.commons.springboot.security.User;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
+import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import reactor.core.publisher.Mono;
 
 /**
@@ -31,8 +31,8 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
 			Map<String, Object> details = (Map) authentication.getDetails();
 
 			ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
-				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERID, principal.getUserId());
-				httpHeaders.add(GatewayPreAuthenticatedAuthenticationFilter.HEADER_USERNAME, principal.getUsername());
+				httpHeaders.add(WebUtils.HEADER_USERID, principal.getUserId());
+				httpHeaders.add(WebUtils.HEADER_USERNAME, principal.getUsername());
 				if (details != null) {
 					String flowTagRequired = (String) details.get(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_REQUIRED);
 					String flowTagFirst = (String) details.get(FlowTagLoadBalancer.HTTPHEADER_FLOWTAG_FIRST);
