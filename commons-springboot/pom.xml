@@ -10,7 +10,7 @@
 		<version>2.0.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>commons-springboot_2.5.5</artifactId>
+	<artifactId>commons-springboot2</artifactId>
 	<name>${project.artifactId}</name>
 
 	<properties>
