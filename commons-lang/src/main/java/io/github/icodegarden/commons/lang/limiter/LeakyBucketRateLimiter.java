@@ -46,7 +46,6 @@ public class LeakyBucketRateLimiter implements RateLimiter {
 		long cost = now - lastResetTime;
 		double rate = cost * 1.0 / outflowDuration.toMillis();
 		int shouldOutflow = (int) (outflowSize * rate);
-		System.out.println("shouldOutflow=" + shouldOutflow);
 		if (shouldOutflow == 0) {
 			return;
 		}
