@@ -22,6 +22,10 @@ server:
 #      minSpare: 10 #默认10. 最小工作线程数
 #    maxConnections: 8192 #默认8192. 同时可接受的最大连接数（即work处理中的 + 等待work处理的），当这里满了进入acceptCount，0表示不限制
 #    acceptCount: 100 #默认100. 额外可接受的部分，当maxConnections满了之后，开始进入这里，0表示不限制
+#    keepAliveTimeout:  #默认无设置即使用connectionTimeout. 长连接超时时间，当设置-1时无限
+#    maxKeepAliveRequests: 100 #默认100. 请求多少次后关闭连接，当设置0或1时，keep-alive被disabled，当设置-1则无限
+#    connectionTimeout:  #默认无设置应该等于默认几十秒
+
 
 #验证各参数作用，代码中每次请求无限阻塞，观察请求是否继续被接受
 ##maxConnections=1 acceptCount=1 treads.max=1 可接受2个请求（1个进入work线程，此时maxConnections就满了，1个进入acceptCount），然后开始拒绝

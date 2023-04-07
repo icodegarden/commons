@@ -38,6 +38,7 @@ public class CommonsGatewayApplication {
 	public static void initServerConfig(String[] args) {
 		int availableProcessors = Runtime.getRuntime().availableProcessors();
 
+		//--------------------------------------------------------------------
 		String ioSelectCount = System.getProperty(ReactorNetty.IO_SELECT_COUNT);// 默认无
 		log.info("found config IO_SELECT_COUNT is {}", ioSelectCount);
 		if (!StringUtils.hasText(ioSelectCount)) {
@@ -46,14 +47,42 @@ public class CommonsGatewayApplication {
 		log.info("use IO_SELECT_COUNT:{}", ioSelectCount);
 		System.setProperty(ReactorNetty.IO_SELECT_COUNT, ioSelectCount);
 
+		//--------------------------------------------------------------------
 		String ioWorkerCount = System.getProperty(ReactorNetty.IO_WORKER_COUNT);// 默认等于cpu线程数，但最少4
 		log.info("found config IO_WORKER_COUNT is {}", ioWorkerCount);
 		if (!StringUtils.hasText(ioWorkerCount)) {
-			ioWorkerCount = "500";// 网关不是计算密集型，数量大比较好，配置成等于pool.max-connections
+			ioWorkerCount = "500";// 网关不是计算密集型，数量大比较好，配置成等于xxx.httpclient.pool.max-connections
 		}
 		log.info("use IO_WORKER_COUNT:{}", ioWorkerCount);
 		System.setProperty(ReactorNetty.IO_WORKER_COUNT, ioWorkerCount);
 
+		//--------------------------------------------------------------------		
+		String poolMaxConnections = System.getProperty(ReactorNetty.POOL_MAX_CONNECTIONS);// 默认等于2*cpu线程数，但最少16
+		log.info("found config POOL_MAX_CONNECTIONS is {}", poolMaxConnections);
+		if (!StringUtils.hasText(poolMaxConnections)) {
+			poolMaxConnections = "500";
+		}
+		log.info("use POOL_MAX_CONNECTIONS:{}", poolMaxConnections);
+		System.setProperty(ReactorNetty.POOL_MAX_CONNECTIONS, poolMaxConnections);
+		
+		//--------------------------------------------------------------------
+		String poolMaxIdleTime = System.getProperty(ReactorNetty.POOL_MAX_IDLE_TIME);// 默认无配置
+		log.info("found config POOL_MAX_IDLE_TIME is {}", poolMaxIdleTime);
+		if (!StringUtils.hasText(poolMaxIdleTime)) {
+			poolMaxIdleTime = "0";//网关使用短连接
+		}
+		log.info("use POOL_MAX_IDLE_TIME:{}", poolMaxIdleTime);
+		System.setProperty(ReactorNetty.POOL_MAX_IDLE_TIME, poolMaxIdleTime);
+		
+		//--------------------------------------------------------------------
+		String poolMaxLifeTime = System.getProperty(ReactorNetty.POOL_MAX_LIFE_TIME);// 默认无配置
+		log.info("found config POOL_MAX_LIFE_TIME is {}", poolMaxLifeTime);
+		if (!StringUtils.hasText(poolMaxLifeTime)) {
+			poolMaxLifeTime = "0";//网关使用短连接
+		}
+		log.info("use POOL_MAX_LIFE_TIME:{}", poolMaxLifeTime);
+		System.setProperty(ReactorNetty.POOL_MAX_LIFE_TIME, poolMaxLifeTime);
+		
 //        String poolLeasingStrategy = System.getProperty(ReactorNetty.POOL_LEASING_STRATEGY);
 
 	}
