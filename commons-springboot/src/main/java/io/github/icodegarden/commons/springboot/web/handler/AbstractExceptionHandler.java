@@ -107,24 +107,11 @@ public abstract class AbstractExceptionHandler<T> {
 	@ExceptionHandler(Exception.class)
 	public abstract ResponseEntity<T> onException(HttpServletRequest request, Exception cause);
 
-	protected ErrorCodeException convertErrorCodeException(Exception cause, @Nullable Object requestBody) {
+	protected ErrorCodeException convertErrorCodeException(Exception e, @Nullable Object requestBody) {
 		ErrorCodeException ece = null;
-		try {
-			throw cause;
-		} catch (ServerErrorCodeException e) {
-			log.error("{} ex of ServerErrorCodeException on handle request, requestBody:{}", EXCEPTION_LOG_MODULE,
-					requestBody, e);
-			ece = e;
-		} catch (ErrorCodeException e) {
-			if (log.isWarnEnabled()) {
-				if (printErrorStackOnWarn) {
-					log.warn("request has a Client Exception:{}, requestBody:{}", e.getMessage(), requestBody, e);
-				} else {
-					log.warn("request has a Client Exception:{}, requestBody:{}", e.getMessage(), requestBody);
-				}
-			}
-			ece = e;
-		} catch (Throwable e) {
+		if (e instanceof ErrorCodeException) {
+			ece = (ErrorCodeException) e;
+		} else {
 			/**
 			 * 可能的Client ex
 			 */
@@ -144,28 +131,27 @@ public abstract class AbstractExceptionHandler<T> {
 								e.getMessage());
 					}
 				}
-
-				if (ece != null) {
-					if (log.isWarnEnabled()) {
-						if (printErrorStackOnWarn) {
-							log.warn("{} request has a Client Exception:{}", PARAMETER_INVALID_LOG_MODULE,
-									ece.getMessage(), e);
-						} else {
-							log.warn("{} request has a Client Exception:{}", PARAMETER_INVALID_LOG_MODULE,
-									ece.getMessage());
-						}
-					}
-				}
 			}
 
 			/**
 			 * 其他的一律视为 服务异常
 			 */
 			if (ece == null) {
-				log.error("{} ex on handle request, requestBody:{}", EXCEPTION_LOG_MODULE, requestBody, e);
 				ece = causeErrorCodeException(e);
 				if (ece == null) {
 					ece = new ServerErrorCodeException(e);
+				}
+			}
+		}
+
+		if (ece instanceof ServerErrorCodeException) {
+			log.error("{} ex on handle request, requestBody:{}", EXCEPTION_LOG_MODULE, requestBody, ece);
+		} else {
+			if (log.isWarnEnabled()) {
+				if (printErrorStackOnWarn) {
+					log.warn("request has a Client Exception:{}, requestBody:{}", ece.getMessage(), requestBody, ece);
+				} else {
+					log.warn("request has a Client Exception:{}, requestBody:{}", ece.getMessage(), requestBody);
 				}
 			}
 		}
