@@ -66,22 +66,28 @@ public class CommonsGatewayApplication {
 		System.setProperty(ReactorNetty.POOL_MAX_CONNECTIONS, poolMaxConnections);
 		
 		//--------------------------------------------------------------------
-		String poolMaxIdleTime = System.getProperty(ReactorNetty.POOL_MAX_IDLE_TIME);// 默认无配置
-		log.info("found config POOL_MAX_IDLE_TIME is {}", poolMaxIdleTime);
-		if (!StringUtils.hasText(poolMaxIdleTime)) {
-			poolMaxIdleTime = "0";//网关使用短连接
-		}
-		log.info("use POOL_MAX_IDLE_TIME:{}", poolMaxIdleTime);
-		System.setProperty(ReactorNetty.POOL_MAX_IDLE_TIME, poolMaxIdleTime);
+		/**
+		 * 由server.netty.xxx配置
+		 */
+//		String poolMaxIdleTime = System.getProperty(ReactorNetty.POOL_MAX_IDLE_TIME);// 默认无配置
+//		log.info("found config POOL_MAX_IDLE_TIME is {}", poolMaxIdleTime);
+//		if (!StringUtils.hasText(poolMaxIdleTime)) {
+//			poolMaxIdleTime = "";
+//		}
+//		log.info("use POOL_MAX_IDLE_TIME:{}", poolMaxIdleTime);
+//		System.setProperty(ReactorNetty.POOL_MAX_IDLE_TIME, poolMaxIdleTime);
 		
 		//--------------------------------------------------------------------
-		String poolMaxLifeTime = System.getProperty(ReactorNetty.POOL_MAX_LIFE_TIME);// 默认无配置
-		log.info("found config POOL_MAX_LIFE_TIME is {}", poolMaxLifeTime);
-		if (!StringUtils.hasText(poolMaxLifeTime)) {
-			poolMaxLifeTime = "0";//网关使用短连接
-		}
-		log.info("use POOL_MAX_LIFE_TIME:{}", poolMaxLifeTime);
-		System.setProperty(ReactorNetty.POOL_MAX_LIFE_TIME, poolMaxLifeTime);
+		/**
+		 * 由server.netty.xxx配置
+		 */
+//		String poolMaxLifeTime = System.getProperty(ReactorNetty.POOL_MAX_LIFE_TIME);// 默认无配置
+//		log.info("found config POOL_MAX_LIFE_TIME is {}", poolMaxLifeTime);
+//		if (!StringUtils.hasText(poolMaxLifeTime)) {
+//			poolMaxLifeTime = "";
+//		}
+//		log.info("use POOL_MAX_LIFE_TIME:{}", poolMaxLifeTime);
+//		System.setProperty(ReactorNetty.POOL_MAX_LIFE_TIME, poolMaxLifeTime);
 		
 //        String poolLeasingStrategy = System.getProperty(ReactorNetty.POOL_LEASING_STRATEGY);
 

@@ -8,10 +8,15 @@ commons.web.webfilter.processingRequestCount.enabled: false #网关不需要这�
 server: #org.springframework.boot.autoconfigure.web.ServerProperties , gateway使用的是 NettyReactiveWebServerFactory来创建WebServer
   port: 8080
   shutdown: graceful
-  netty:
+  netty: 
+  #为了使网关不会出现大量的TIME_WAIT（主动关闭方出现）且不会有大量的空闲连接，需要配置合理的maxKeepAliveRequests、keepAliveTimeout。不区分api还是openapi。
+  #对maxKeepAliveRequests建议并发低的场景给几十-几百，高的场景数千，一般往较大数值考虑避免高并发时频繁关闭连接。如果前置有类似nginx则不配，信任它。
+  #对idle-timeout建议并发低的场景60s，高的场景10s，避免空闲连接长时间占用。如果前置有类似nginx则配置600s。
+  #网关这样的接入层需要考虑攻击防御，见DDoS防御 https://help.aliyun.com/document_detail/28401.html?spm=a2c4g.65932.0.0.69f46c81FR8AeE
     connection-timeout: 1000 # 客户端连接超时时间，默认无
-    maxKeepAliveRequests: 1 #长连接最多请求几次则关闭，默认无限。如果配置则必须>0。网关使用短连接避免恶意连接大量占用
-    idle-timeout: 0 # 客户端长连接超时会被自动关闭。默认无限，由客户端关闭。网关使用短连接避免恶意连接大量占用
+#    maxKeepAliveRequests:  #长连接最多请求几次则关闭，默认无限。如果配置则必须>0，设置1就相当于禁用KeepAlive成为短连接，这时主动关闭方是服务端，会有大量的TIME_WAIT。
+#    idle-timeout:  # 相当于nginx/tomcat的keepAliveTimeout，客户端长连接超时会被自动关闭。默认无限，由客户端关闭。
+
 spring:
   lifecycle.timeout-per-shutdown-phase: 20s
   application:
