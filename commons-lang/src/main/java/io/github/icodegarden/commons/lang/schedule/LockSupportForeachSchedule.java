@@ -88,7 +88,7 @@ public abstract class LockSupportForeachSchedule extends LockSupportSchedule {
 	/**
 	 * 整个Foreach成功结束后
 	 */
-	protected void postForeach(long loop) throws Throwable {
+	protected void postForeach(long totalLoop) throws Throwable {
 		// 有需要就覆盖
 	}
 

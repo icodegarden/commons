@@ -25,6 +25,7 @@
 		<spring-cloud.version>2020.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.1</spring-cloud-alibaba.version>
         <hbase.version>2.4.12</hbase.version>
+        <commons-version>2.0.0</commons-version>
         
 		<maven.package.skip>true</maven.package.skip> 
 		<maven.install.skip>true</maven.install.skip>
@@ -35,41 +36,41 @@
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-springboot2</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-mybatis</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-elasticsearch</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-redis</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <artifactId>spring-boot-starter-data-redis</artifactId><!-- 非必须 -->
         </dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-hbase</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-kafka</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-zookeeper</artifactId>
-			<version>2.0.0</version>
+			<version>${commons-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
