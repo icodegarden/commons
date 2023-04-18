@@ -47,9 +47,8 @@
 		<dependency>
             <groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-redis</artifactId>
-<!-- 			<version>2.5.2</version> -->
-			<version>2.6.2</version><!-- 不能兼容jedis 4.0以上，因为内部依赖的GeoUnit类的package是不同的 -->
-            <optional>true</optional><!--spring redis是可选的，包含了同步通讯方式 -->
+			<version>2.5.5</version>
+            <optional>true</optional>
         </dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>

@@ -35,14 +35,19 @@
 		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
-			<version>3.8.0</version><!-- redis自动依赖，尽管不是必须的，包含了同步通讯方式 -->
+			<version>4.3.2</version><!--默认选择，二选一 -->
 		</dependency>
+		<dependency>
+        	<groupId>io.lettuce</groupId>
+  			<artifactId>lettuce-core</artifactId>
+ 			<version>6.1.5.RELEASE</version>
+ 			<optional>true</optional><!--可选的，二选一 -->
+        </dependency>
 		<dependency>
             <groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-redis</artifactId>
-<!-- 			<version>2.5.2</version> -->
-			<version>2.6.2</version><!-- 不能兼容jedis 4.0以上，因为内部依赖的GeoUnit类的package是不同的 -->
-            <optional>true</optional><!--spring redis是可选的，包含了同步通讯方式 -->
+			<version>2.5.5</version><!-- 不能兼容jedis 4.0以上，因为内部依赖的GeoUnit类的package是不同的，可以与jedis3.8.0或lettuce-core搭配 -->
+            <optional>true</optional><!--可选的，需要jedis或lettuce -->
         </dependency>
 
 		<dependency>
