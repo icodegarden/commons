@@ -35,12 +35,14 @@
 		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
-			<version>4.3.2</version><!--默认选择，二选一 -->
+			<version>4.3.2</version>
+			<optional>true</optional><!--可选的，二选一 -->
 		</dependency>
 		<dependency>
         	<groupId>io.lettuce</groupId>
   			<artifactId>lettuce-core</artifactId>
  			<version>6.1.5.RELEASE</version>
+<!--  			<version>6.2.4.RELEASE</version> -->
  			<optional>true</optional><!--可选的，二选一 -->
         </dependency>
 		<dependency>
