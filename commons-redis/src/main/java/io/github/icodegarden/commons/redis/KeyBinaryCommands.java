@@ -3,12 +3,12 @@ package io.github.icodegarden.commons.redis;
 import java.util.List;
 import java.util.Set;
 
-import redis.clients.jedis.args.ExpiryOption;
-import redis.clients.jedis.params.MigrateParams;
-import redis.clients.jedis.params.RestoreParams;
-import redis.clients.jedis.params.ScanParams;
-import redis.clients.jedis.params.SortingParams;
-import redis.clients.jedis.resps.ScanResult;
+import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.RestoreParams;
+import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.SortArgs;
 
 /**
  * 
@@ -182,7 +182,7 @@ public interface KeyBinaryCommands {
 	long expireAt(byte[] key, long unixTime);
 
 	/**
-	 * <h1>设置key在什么时间过期，UNIX时间</h1><br>
+	 * <h1>设置key在什么时间过期， Unix timestamp (seconds since January 1, 1970).</h1><br>
 	 * 
 	 * EXPIREAT has the same effect and semantic as EXPIRE, but instead of
 	 * specifying the number of seconds representing the TTL (time to live), it
@@ -210,7 +210,7 @@ public interface KeyBinaryCommands {
 	long expireAt(byte[] key, long unixTime, ExpiryOption expiryOption);
 
 	/**
-	 * <h1>返回key的过期时间，UNIX时间</h1><br>
+	 * <h1>返回key的过期时间， Unix timestamp (seconds since January 1, 1970).</h1><br>
 	 * 
 	 * Returns the absolute Unix timestamp (since January 1, 1970) in seconds at
 	 * which the given key will expire.
@@ -657,12 +657,13 @@ public interface KeyBinaryCommands {
 	 */
 	String restore(byte[] key, long ttl, byte[] serializedValue, RestoreParams params);
 
-	ScanResult<byte[]> scan(byte[] cursor);
+	KeyScanCursor<byte[]> scan(byte[] cursor);
 
-	ScanResult<byte[]> scan(byte[] cursor, ScanParams params);
+	KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params);
 
 	/**
 	 * <h1>遍历所有key</h1><br>
+	 * cursor 0 作为遍历的开始和结束
 	 * 
 	 * The SCAN command and the closely related commands SSCAN, HSCAN and ZSCAN are
 	 * used in order to incrementally iterate over a collection of elements.
@@ -717,13 +718,13 @@ public interface KeyBinaryCommands {
 	 * @param cursor
 	 * @param params
 	 * @param type
-	 * @return
+	 * @return cursor=0表示结束
 	 */
-	ScanResult<byte[]> scan(byte[] cursor, ScanParams params, byte[] type);
+	KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type);
 
 	List<byte[]> sort(byte[] key);
 
-	List<byte[]> sort(byte[] key, SortingParams sortingParams);
+	List<byte[]> sort(byte[] key, SortArgs params);
 
 	long sort(byte[] key, byte[] dstkey);
 
@@ -748,7 +749,7 @@ public interface KeyBinaryCommands {
 	 * @param dstkey
 	 * @return
 	 */
-	long sort(byte[] key, SortingParams sortingParams, byte[] dstkey);
+	long sort(byte[] key, SortArgs params, byte[] dstkey);
 
 	/**
 	 * <h1>返回排序结果，list、set、sorted set</h1><br>
@@ -757,7 +758,7 @@ public interface KeyBinaryCommands {
 	 * @param sortingParams
 	 * @return
 	 */
-	List<byte[]> sortReadonly(byte[] key, SortingParams sortingParams);
+	List<byte[]> sortReadonly(byte[] key, SortArgs params);
 
 	long touch(byte[] key);
 

@@ -2,9 +2,9 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
-import redis.clients.jedis.params.GetExParams;
-import redis.clients.jedis.params.LCSParams;
-import redis.clients.jedis.resps.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
+import io.github.icodegarden.commons.redis.args.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.LCSParams;
 
 /**
  * 
@@ -146,7 +146,7 @@ public interface StringBinaryCommands {
 	 * @param params
 	 * @return
 	 */
-	byte[] getEx(byte[] key, GetExParams params);
+	byte[] getEx(byte[] key, GetExArgs params);
 
 	/**
 	 * <h1>获取字符串的subString值</h1><br>

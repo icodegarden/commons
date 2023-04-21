@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import io.github.icodegarden.commons.redis.ClusterRedisExecutor;
-import io.github.icodegarden.commons.redis.PoolRedisExecutor;
 import io.github.icodegarden.commons.redis.RedisExecutor;
-import io.github.icodegarden.commons.redis.TemplateRedisExecutor;
+import io.github.icodegarden.commons.redis.jedis.JedisClusterRedisExecutor;
+import io.github.icodegarden.commons.redis.jedis.JedisPoolRedisExecutor;
+import io.github.icodegarden.commons.redis.spring.RedisTemplateRedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
@@ -68,7 +68,7 @@ public class CommonsRedisAutoConfiguration {
 					cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
 					cluster, cluster.isSsl());
 
-			return new ClusterRedisExecutor(jc);
+			return new JedisClusterRedisExecutor(jc);
 		}
 
 		Pool pool = redisProperties.getPool();
@@ -77,12 +77,12 @@ public class CommonsRedisAutoConfiguration {
 			JedisPool jp = new JedisPool(pool, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
 					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
 					pool.isSsl());
-			return new PoolRedisExecutor(jp);
+			return new JedisPoolRedisExecutor(jp);
 		}
 
 		if (redisTemplateWrap != null && redisTemplateWrap.getRedisTemplate() != null) {
 			log.info("create RedisExecutor by RedisTemplate");
-			return new TemplateRedisExecutor(redisTemplateWrap.getRedisTemplate());
+			return new RedisTemplateRedisExecutor(redisTemplateWrap.getRedisTemplate());
 		}
 
 		throw new IllegalStateException("CommonsRedisProperties config error, cluster or pool must not null");

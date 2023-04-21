@@ -1,9 +1,18 @@
 package io.github.icodegarden.commons.lang.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.util.Assert;
+
+import io.github.icodegarden.commons.lang.tuple.Tuple2;
+import io.github.icodegarden.commons.lang.tuple.Tuples;
 
 /**
  * 
@@ -19,7 +28,7 @@ public abstract class CollectionUtils {
 	 * @param <T>
 	 * @param elements
 	 * @param fromIndex 包含该位置
-	 * @param maxNum 最多截取个数，如果元素个数是10，maxNum是20，最多只返回10个
+	 * @param maxNum    最多截取个数，如果元素个数是10，maxNum是20，最多只返回10个
 	 * @return
 	 */
 	public static <T> List<T> nextElements(List<T> elements, int fromIndex, int maxNum) {
@@ -50,12 +59,14 @@ public abstract class CollectionUtils {
 		arrayList.addAll(subList2);
 		return arrayList;
 	}
+
 	/**
-	 * 安全截取，不会越界
+	 * 安全截取，不会越界，最多截到最后一位
+	 * 
 	 * @param <T>
 	 * @param elements
 	 * @param fromIndex
-	 * @param maxNum 
+	 * @param maxNum
 	 * @return
 	 */
 	public static <T> List<T> subSafely(List<T> elements, int fromIndex, int maxNum) {
@@ -76,15 +87,127 @@ public abstract class CollectionUtils {
 	}
 
 	/**
-	 * 每个String转byte[]，并把集合转数组
-	 * 不会去重
+	 * 每个String按UTF8转byte[]，并把集合转数组，不会去重
 	 * 
 	 * @param values
 	 * @return
 	 */
 	public static byte[][] toBytesArray(Collection<String> values) {
-		List<byte[]> vBytes = values.stream().map(v -> v.getBytes()).collect(Collectors.toList());
+		List<byte[]> vBytes = values.stream().map(v -> v.getBytes(StandardCharsets.UTF_8)).collect(Collectors.toList());
 		byte[][] vBytesArray = vBytes.toArray(new byte[vBytes.size()][]);
 		return vBytesArray;
+	}
+
+	/**
+	 * 分组合并
+	 * 
+	 * @param <T>
+	 * @param keys   k1 k2 ...
+	 * @param values v1 v2 v3 v4 ...
+	 * @return k1 v1 v2 k2 v3 v4 ...
+	 */
+	public static <T> List<T> mergeByKeyGroup(Collection<T> keys, Collection<T> values) {
+		Assert.notEmpty(keys, "keys must not empty");
+		Assert.notEmpty(values, "values must not empty");
+		Assert.isTrue(values.size() % keys.size() == 0, "values size invalid");
+
+		List<T> result = new LinkedList<T>();
+
+		int groupSize = values.size() / keys.size();
+
+		Iterator<T> valuesIt = values.iterator();
+		for (T key : keys) {
+			/**
+			 * 每组的key
+			 */
+			result.add(key);
+			/**
+			 * 每组的value
+			 */
+			for (int i = 0; i < groupSize; i++) {
+				result.add(valuesIt.next());
+			}
+		}
+
+		return result;
+	}
+
+	public static <T> List<T> mergeByKeyGroup(T[] keys, T[] values) {
+		Assert.notEmpty(keys, "keys must not empty");
+		Assert.notEmpty(values, "values must not empty");
+		return mergeByKeyGroup(Arrays.asList(keys), Arrays.asList(values));
+
+//		Assert.isTrue(values.length % keys.length == 0, "values size invalid");
+//
+//		List<T> result = new ArrayList<T>(keys.length + values.length);
+//
+//		int groupSize = values.length / keys.length;
+//		for (int g = 0; g < keys.length; g++) {
+//			/**
+//			 * 每组的key
+//			 */
+//			result.add(keys[g]);
+//			/**
+//			 * 每组的value
+//			 */
+//			for (int i = 0; i < groupSize; i++) {
+//				result.add(values[groupSize * g + i]);
+//			}
+//		}
+//		return result;
+	}
+
+	/**
+	 * 分组拆分
+	 * 
+	 * @param <T>
+	 * @param params   k1 v1 v2 k2 v3 v4 ...
+	 * @param keyCount 2
+	 * @return k1 k2 ... , v1 v2 v3 v4 ...
+	 */
+	public static <T> Tuple2<List<T>/* keys */, List<T>/* values */> splitByKeyGroup(Collection<T> params,
+			int keyCount) {
+		Assert.notEmpty(params, "params must not empty");
+		Assert.isTrue(keyCount > 0, "keyCount must gt 0");
+		Assert.isTrue(params.size() % keyCount == 0, "params size invalid");
+
+		/**
+		 * 每组有几个参数
+		 */
+		int groupSize = params.size() / keyCount;// keyCount即共有几组
+
+		Iterator<T> paramsIt = params.iterator();
+
+		List<T> keys = new LinkedList<T>();
+		List<T> values = new LinkedList<T>();
+		for (int g = 0; g < keyCount; g++) {
+			/**
+			 * 取每组
+			 */
+			for (int i = 0; i < groupSize; i++) {
+//				byte[] param = params[groupSize * g + i];
+				T param = paramsIt.next();
+				if (i == 0) {
+					keys.add(param);/* 每组的第一个是key */
+				} else {
+					values.add(param);
+				}
+			}
+		}
+
+		return Tuples.of(keys, values);
+	}
+
+	/**
+	 * 分组拆分
+	 * 
+	 * @param <T>
+	 * @param params   k1 v1 v2 k2 v3 v4 ...
+	 * @param keyCount 2
+	 * @return k1 k2 ... , v1 v2 v3 v4 ...
+	 */
+	public static <T> Tuple2<List<T>/* keys */, List<T>/* values */> splitByKeyGroup(T[] params, int keyCount) {
+		Assert.notEmpty(params, "params must not empty");
+		return splitByKeyGroup(Arrays.asList(params), keyCount);
 	}
 }

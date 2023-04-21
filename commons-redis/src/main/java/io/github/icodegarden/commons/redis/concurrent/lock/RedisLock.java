@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.util.Assert;
@@ -73,21 +74,14 @@ public class RedisLock implements DistributedLock {
 		LocalDateTime start = SystemUtils.now();
 		for (;;) {
 			try {
-				Object obj = redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
-				// redisTemplate返回的是boolean
-				if (obj instanceof Boolean) {
-					if((Boolean) obj) {
-						return true;
-					}
-				} else {
-					// 这里返回类型是Long的原因是redis直接返回的0或1，而不是设置进去的
-					Long result = (Long) obj;
-					boolean success = result == 1;
-					if (success) {
-						return true;
-					}
+				List<Object> list = redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
+				Long result = (Long) list.get(0);
+				boolean success = result == 1;
+				
+				if (success) {
+					return true;
 				}
-
+				
 				if (SystemUtils.now().minus(timeoutMillis, ChronoUnit.MILLIS).isAfter(start)) {
 					return false;
 				}

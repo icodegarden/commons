@@ -1,6 +1,7 @@
 package io.github.icodegarden.commons.redis.limiter;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.springframework.util.Assert;
 
@@ -60,8 +61,9 @@ public class RedisCounterRateLimiter extends CounterRateLimiterSupport {
 		 */
 		
 		byte[] valuebs = Integer.valueOf(value).toString().getBytes(CHARSET);
-		//这里返回类型是bytes的原因是value是设置进去的，设置进去时是bytes
-		byte[] bs = (byte[]) redisExecutor.eval(SETBATCH_SCRIPT, 1, key, valuebs);
+		//这里返回类型是bytes的原因是value是主动设置进去的，设置进去时是bytes
+		List<Object> list = redisExecutor.eval(SETBATCH_SCRIPT, 1, key,valuebs);
+		byte[] bs = (byte[])list.get(0);
 
 		String str = new String(bs, CHARSET);
 		int v = Integer.parseInt(str);

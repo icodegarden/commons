@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import io.github.icodegarden.commons.redis.jedis.JedisClusterRedisExecutor;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
@@ -15,11 +16,11 @@ import redis.clients.jedis.JedisPoolConfig;
  *
  */
 //@RunWith(MockitoJUnitRunner.class)
-public class ClusterRedisExecutorTests extends RedisExecutorTests {
+public class JedisClusterRedisExecutorTests extends RedisExecutorTests {
 
 	@Override
 	protected RedisExecutor newInstance() {
-		return new ClusterRedisExecutor(newJedisCluster());
+		return new JedisClusterRedisExecutor(newJedisCluster());
 	}
 
 	public static JedisCluster newJedisCluster() {

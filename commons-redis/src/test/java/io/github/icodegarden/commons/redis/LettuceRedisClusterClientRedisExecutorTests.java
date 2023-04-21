@@ -1,9 +1,11 @@
 package io.github.icodegarden.commons.redis;
 
 import java.time.Duration;
+import java.util.Arrays;
 
-import io.lettuce.core.RedisClient;
+import io.github.icodegarden.commons.redis.lettuce.LettuceRedisClusterClientRedisExecutor;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.cluster.RedisClusterClient;
 
 /**
  * 
@@ -11,14 +13,14 @@ import io.lettuce.core.RedisURI;
  *
  */
 //@RunWith(MockitoJUnitRunner.class)
-public class LettuceRedisClientExecutorTests extends RedisExecutorTests {
+public class LettuceRedisClusterClientRedisExecutorTests extends RedisExecutorTests {
 
 	@Override
 	protected RedisExecutor newInstance() {
-		return new LettuceRedisClientExecutor(newRedisClient());
+		return new LettuceRedisClusterClientRedisExecutor(newRedisClusterClient());
 	}
 
-	public static RedisClient newRedisClient() {
+	public static RedisClusterClient newRedisClusterClient() {
 		RedisURI redisURI = RedisURI.builder()//
 				.withHost("172.22.122.23")//
 				.withPort(6399)//
@@ -28,7 +30,7 @@ public class LettuceRedisClientExecutorTests extends RedisExecutorTests {
 				.withTimeout(Duration.ofMillis(3000))//
 				.build();
 
-		RedisClient client = RedisClient.create(redisURI);
+		RedisClusterClient client = RedisClusterClient.create(Arrays.asList(redisURI));
 		return client;
 	}
 }

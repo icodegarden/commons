@@ -1,8 +1,6 @@
 package io.github.icodegarden.commons.redis.concurrent.lock;
 
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedReentrantLock;
-import io.github.icodegarden.commons.redis.PoolRedisExecutor;
-import io.github.icodegarden.commons.redis.PoolRedisExecutorTests;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.test.concurrent.lock.DistributedReentrantLockTests;
 
@@ -11,13 +9,12 @@ import io.github.icodegarden.commons.test.concurrent.lock.DistributedReentrantLo
  * @author Fangfang.Xu
  *
  */
-public class RedisReentrantLockTests extends DistributedReentrantLockTests {
-
-	RedisExecutor redisExecutor = new PoolRedisExecutor(PoolRedisExecutorTests.newJedisPool());
+public abstract class RedisReentrantLockTests extends DistributedReentrantLockTests {
 
 	@Override
 	protected DistributedReentrantLock newLock(String name) {
-		return new RedisReentrantLock(redisExecutor, name, 5L);
+		return new RedisReentrantLock(newRedisExecutor(), name, 5L);
 	}
 
+	protected abstract RedisExecutor newRedisExecutor();
 }

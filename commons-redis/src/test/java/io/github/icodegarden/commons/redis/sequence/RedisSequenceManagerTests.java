@@ -2,8 +2,6 @@ package io.github.icodegarden.commons.redis.sequence;
 
 import io.github.icodegarden.commons.lang.sequence.SequenceManager;
 import io.github.icodegarden.commons.lang.sequence.SequenceManagerTests;
-import io.github.icodegarden.commons.redis.PoolRedisExecutor;
-import io.github.icodegarden.commons.redis.PoolRedisExecutorTests;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 
 /**
@@ -11,7 +9,7 @@ import io.github.icodegarden.commons.redis.RedisExecutor;
  * @author Fangfang.Xu
  *
  */
-class RedisSequenceManagerTests extends SequenceManagerTests {
+abstract class RedisSequenceManagerTests extends SequenceManagerTests {
 
 	@Override
 	protected SequenceManager getForOneProcess() {
@@ -24,8 +22,8 @@ class RedisSequenceManagerTests extends SequenceManagerTests {
 	}
 
 	private SequenceManager newSequenceManager() {
-		RedisExecutor redisExecutor = new PoolRedisExecutor(PoolRedisExecutorTests.newJedisPool());
-		return new RedisSequenceManager("GLOBAL", redisExecutor, 100);
+		return new RedisSequenceManager("GLOBAL", newRedisExecutor(), 100);
 	}
 
+	protected abstract RedisExecutor newRedisExecutor();
 }

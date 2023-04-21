@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.redis;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import io.github.icodegarden.commons.redis.jedis.JedisPoolRedisExecutor;
 import redis.clients.jedis.JedisPool;
 
 /**
@@ -10,11 +11,11 @@ import redis.clients.jedis.JedisPool;
  *
  */
 //@RunWith(MockitoJUnitRunner.class)
-public class PoolRedisExecutorTests extends RedisExecutorTests {
+public class JedisPoolRedisExecutorTests extends RedisExecutorTests {
 
 	@Override
 	protected RedisExecutor newInstance() {
-		return new PoolRedisExecutor(newJedisPool());
+		return new JedisPoolRedisExecutor(newJedisPool());
 	}
 
 	public static JedisPool newJedisPool() {
