@@ -4,14 +4,19 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -20,6 +25,7 @@ import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.CopyArgs;
 import io.lettuce.core.ExpireArgs;
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
 import io.lettuce.core.ScanCursor;
@@ -340,6 +346,120 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		Object obj = syncRedisCommands.evalReadOnly(script, ScriptOutputType.MULTI,
 				keys.toArray(new byte[keys.size()][]), args.toArray(new byte[args.size()][]));
 		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public Long append(byte[] key, byte[] value) {
+		return syncRedisCommands.append(key, value);
+	}
+
+	@Override
+	public Long decr(byte[] key) {
+		return syncRedisCommands.decr(key);
+	}
+
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return syncRedisCommands.decrby(key, value);
+	}
+
+	@Override
+	public byte[] get(byte[] key) {
+		return syncRedisCommands.get(key);
+	}
+
+	@Override
+	public byte[] getDel(byte[] key) {
+		return syncRedisCommands.getdel(key);
+	}
+
+	@Override
+	public byte[] getEx(byte[] key, GetExArgs params) {
+		io.lettuce.core.GetExArgs getExArgs = LettuceUtils.convertGetExArgs(params);
+		return syncRedisCommands.getex(key, getExArgs);
+	}
+
+	@Override
+	public byte[] getrange(byte[] key, long startOffset, long endOffset) {
+		return syncRedisCommands.getrange(key, startOffset, endOffset);
+	}
+
+	@Override
+	public byte[] getSet(byte[] key, byte[] value) {
+		return syncRedisCommands.getset(key, value);
+	}
+
+	@Override
+	public Long incr(byte[] key) {
+		return syncRedisCommands.incr(key);
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long increment) {
+		return syncRedisCommands.incrby(key, increment);
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double increment) {
+		return syncRedisCommands.incrbyfloat(key, increment);
+	}
+
+	@Override
+	public LCSMatchResult lcs(byte[] keyA, byte[] keyB, LCSParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> mget(byte[]... keys) {
+		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.mget(keys);
+		return list.stream().map(KeyValue::getValue).collect(Collectors.toList());
+	}
+
+	@Override
+	public String mset(byte[]... keysvalues) {
+		Map<byte[], byte[]> map = CollectionUtils.keysValuesToMap(keysvalues);
+		return syncRedisCommands.mset(map);
+	}
+
+	@Override
+	public Long msetnx(byte[]... keysvalues) {
+		Map<byte[], byte[]> map = CollectionUtils.keysValuesToMap(keysvalues);
+		return syncRedisCommands.msetnx(map) ? 1L : 0L;
+	}
+
+	@Override
+	public String psetex(byte[] key, long milliseconds, byte[] value) {
+		return syncRedisCommands.psetex(key, milliseconds, value);
+	}
+
+	@Override
+	public String set(byte[] key, byte[] value) {
+		return syncRedisCommands.set(key, value);
+	}
+
+	@Override
+	public String setex(byte[] key, long seconds, byte[] value) {
+		return syncRedisCommands.setex(key, seconds, value);
+	}
+
+	@Override
+	public Long setnx(byte[] key, byte[] value) {
+		return syncRedisCommands.setnx(key, value) ? 1L : 0L;
+	}
+
+	@Override
+	public Long setrange(byte[] key, long offset, byte[] value) {
+		return syncRedisCommands.setrange(key, offset, value);
+	}
+
+	@Override
+	public Long strlen(byte[] key) {
+		return syncRedisCommands.strlen(key);
+	}
+
+	@Override
+	public byte[] substr(byte[] key, int start, int end) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

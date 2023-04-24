@@ -4,9 +4,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.util.Assert;
@@ -111,7 +112,7 @@ public abstract class CollectionUtils {
 		Assert.notEmpty(values, "values must not empty");
 		Assert.isTrue(values.size() % keys.size() == 0, "values size invalid");
 
-		List<T> result = new LinkedList<T>();
+		List<T> result = new ArrayList<T>(keys.size() + values.size());
 
 		int groupSize = values.size() / keys.size();
 
@@ -178,8 +179,8 @@ public abstract class CollectionUtils {
 
 		Iterator<T> paramsIt = params.iterator();
 
-		List<T> keys = new LinkedList<T>();
-		List<T> values = new LinkedList<T>();
+		List<T> keys = new ArrayList<T>(keyCount);
+		List<T> values = new ArrayList<T>(keyCount * (groupSize - 1));
 		for (int g = 0; g < keyCount; g++) {
 			/**
 			 * 取每组
@@ -209,5 +210,25 @@ public abstract class CollectionUtils {
 	public static <T> Tuple2<List<T>/* keys */, List<T>/* values */> splitByKeyGroup(T[] params, int keyCount) {
 		Assert.notEmpty(params, "params must not empty");
 		return splitByKeyGroup(Arrays.asList(params), keyCount);
+	}
+
+	public static <T> Map<T, T> keysValuesToMap(Collection<T> keysvalues) {
+		Assert.notEmpty(keysvalues, "keysvalues must not empty");
+		Assert.isTrue(keysvalues.size() % 2 == 0, "invalid keysvalues size");
+
+		Map<T, T> map = new HashMap<>(keysvalues.size(), 1);
+
+		Iterator<T> iterator = keysvalues.iterator();
+		for (int i = 0; i < keysvalues.size(); i += 2) {
+			T key = iterator.next();
+			T value = iterator.next();
+			map.put(key, value);
+		}
+		return map;
+	}
+
+	public static <T> Map<T, T> keysValuesToMap(T[] keysvalues) {
+		Assert.notEmpty(keysvalues, "keysvalues must not empty");
+		return keysValuesToMap(Arrays.asList(keysvalues));
 	}
 }

@@ -10,7 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -21,6 +24,7 @@ import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.params.GetExParams;
 import redis.clients.jedis.resps.ScanResult;
 
 /**
@@ -42,7 +46,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			boolean ssl) {
 		this.jedisPool = new JedisPool(poolConfig, host, port, timeout, password, ssl);
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		jedisPool.close();
@@ -63,16 +67,125 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public Long append(byte[] key, byte[] value) {
+		return execCommand(jedis -> jedis.append(key, value));
+	}
+
+	@Override
+	public Long decr(byte[] key) {
+		return execCommand(jedis -> jedis.decr(key));
+	}
+
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return execCommand(jedis -> jedis.decrBy(key, value));
+	}
+
+	@Override
+	public byte[] get(byte[] key) {
+		return execCommand(jedis -> jedis.get(key));
+	}
+
+	@Override
+	public byte[] getDel(byte[] key) {
+		return execCommand(jedis -> jedis.getDel(key));
+	}
+
+	@Override
+	public byte[] getEx(byte[] key, GetExArgs params) {
+		GetExParams getExParams = JedisUtils.convertGetExParams(params);
+		return execCommand(jedis -> jedis.getEx(key, getExParams));
+	}
+
+	@Override
+	public byte[] getrange(byte[] key, long startOffset, long endOffset) {
+		return execCommand(jedis -> jedis.getrange(key, startOffset, endOffset));
+	}
+
+	@Override
+	public byte[] getSet(byte[] key, byte[] value) {
+		return execCommand(jedis -> jedis.getSet(key, value));
+	}
+
+	@Override
+	public Long incr(byte[] key) {
+		return execCommand(jedis -> jedis.incr(key));
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long increment) {
+		return execCommand(jedis -> jedis.incrBy(key, increment));
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double increment) {
+		return execCommand(jedis -> jedis.incrByFloat(key, increment));
+	}
+
+	@Override
+	public LCSMatchResult lcs(byte[] keyA, byte[] keyB, LCSParams params) {
+		redis.clients.jedis.params.LCSParams lcsParams = JedisUtils.convertLCSParams(params);
+		return execCommand(jedis -> {
+			redis.clients.jedis.resps.LCSMatchResult lcsMatchResult = jedis.lcs(keyA, keyB, lcsParams);
+			return JedisUtils.convertLCSMatchResult(lcsMatchResult);
+		});
+	}
+
+	@Override
+	public List<byte[]> mget(byte[]... keys) {
+		return execCommand(jedis -> jedis.mget(keys));
+	}
+
+	@Override
+	public String mset(byte[]... keysvalues) {
+		return execCommand(jedis -> jedis.mset(keysvalues));
+	}
+
+	@Override
+	public Long msetnx(byte[]... keysvalues) {
+		return execCommand(jedis -> jedis.msetnx(keysvalues));
+	}
+
+	@Override
+	public String psetex(byte[] key, long milliseconds, byte[] value) {
+		return execCommand(jedis -> jedis.psetex(key, milliseconds, value));
+	}
+
+	@Override
+	public String set(byte[] key, byte[] value) {
+		return execCommand(jedis -> jedis.set(key, value));
+	}
+
+	@Override
+	public String setex(byte[] key, long seconds, byte[] value) {
+		return execCommand(jedis -> jedis.setex(key, seconds, value));
+	}
+
+	@Override
+	public Long setnx(byte[] key, byte[] value) {
+		return execCommand(jedis -> jedis.setnx(key, value));
+	}
+
+	@Override
+	public Long setrange(byte[] key, long offset, byte[] value) {
+		return execCommand(jedis -> jedis.setrange(key, offset, value));
+	}
+
+	@Override
+	public Long strlen(byte[] key) {
+		return execCommand(jedis -> jedis.strlen(key));
+	}
+
+	@Override
+	public byte[] substr(byte[] key, int start, int end) {
+		return execCommand(jedis -> jedis.substr(key, start, end));
+	}
+
+	@Override
 	public Set<byte[]> keys(byte[] pattern) {
 		return execCommand(jedis -> jedis.keys(pattern));
 	}
-	
-	
-	
-	
-	
-	
-	
+
 	@Override
 	public boolean copy(byte[] srcKey, byte[] dstKey, boolean replace) {
 		return execCommand(jedis -> jedis.copy(srcKey, dstKey, replace));
@@ -105,7 +218,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 
 	@Override
 	public long expire(byte[] key, long seconds) {
-		return execCommand(jedis -> jedis.expire(key,seconds));
+		return execCommand(jedis -> jedis.expire(key, seconds));
 	}
 
 	@Override
@@ -180,7 +293,8 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 
 	@Override
 	public long pexpireAt(byte[] key, long millisecondsTimestamp, ExpiryOption expiryOption) {
-		return execCommand(jedis -> jedis.pexpireAt(key, millisecondsTimestamp, JedisUtils.convertExpiryOption(expiryOption)));
+		return execCommand(
+				jedis -> jedis.pexpireAt(key, millisecondsTimestamp, JedisUtils.convertExpiryOption(expiryOption)));
 	}
 
 	@Override
@@ -229,7 +343,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
 		return execCommand(jedis -> {
-			ScanResult<byte[]> scanResult = jedis.scan(cursor,JedisUtils.convertScanParams(params));
+			ScanResult<byte[]> scanResult = jedis.scan(cursor, JedisUtils.convertScanParams(params));
 			return JedisUtils.convertKeyScanCursor(scanResult);
 		});
 	}
@@ -237,7 +351,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
 		return execCommand(jedis -> {
-			ScanResult<byte[]> scanResult = jedis.scan(cursor,JedisUtils.convertScanParams(params), type);
+			ScanResult<byte[]> scanResult = jedis.scan(cursor, JedisUtils.convertScanParams(params), type);
 			return JedisUtils.convertKeyScanCursor(scanResult);
 		});
 	}
@@ -322,23 +436,23 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			return EvalUtils.ofMultiReturnType(obj);
 		});
 	}
-	
+
 	@Override
 	public List<Object> eval(byte[] script, List<byte[]> keys, List<byte[]> args) {
 		return execCommand(jedis -> {
-			Object obj = jedis.eval(script,keys,args);
+			Object obj = jedis.eval(script, keys, args);
 			return EvalUtils.ofMultiReturnType(obj);
 		});
 	}
-	
+
 	@Override
 	public List<Object> evalReadonly(byte[] script, List<byte[]> keys, List<byte[]> args) {
 		return execCommand(jedis -> {
-			Object obj = jedis.eval(script,keys,args);
+			Object obj = jedis.eval(script, keys, args);
 			return EvalUtils.ofMultiReturnType(obj);
 		});
 	}
-	
+
 //	@Override
 //	public void subscribe(byte[] channel, BinaryJedisPubSub jedisPubSub, Consumer<Unsubscribe> unsubscribeReceiver) {
 //		execCommand(jedis -> {

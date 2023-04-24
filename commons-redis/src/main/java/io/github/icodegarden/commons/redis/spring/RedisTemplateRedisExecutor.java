@@ -19,12 +19,16 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
 
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -105,7 +109,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long expire(byte[] key, long seconds) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().expire(key, seconds) ? 1 : 0;
+			return connection.keyCommands().expire(key, seconds) ? 1L : 0L;
 		});
 	}
 
@@ -451,6 +455,160 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 //	}
 
 	@Override
+	public Long append(byte[] key, byte[] value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.append(key, value);
+		});
+	}
+
+	@Override
+	public Long decr(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.decr(key);
+		});
+	}
+
+	@Override
+	public Long decrBy(byte[] key, long value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.decrBy(key, value);
+		});
+	}
+
+	@Override
+	public byte[] get(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.get(key);
+		});
+	}
+
+	@Override
+	public byte[] getDel(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.getDel(key);
+		});
+	}
+
+	@Override
+	public byte[] getEx(byte[] key, GetExArgs params) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			Expiration expiration = RedisTemplateUtils.convertExpiration(params);
+			return connection.getEx(key, expiration);
+		});
+	}
+
+	@Override
+	public byte[] getrange(byte[] key, long startOffset, long endOffset) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.getRange(key, startOffset, endOffset);
+		});
+	}
+
+	@Override
+	public byte[] getSet(byte[] key, byte[] value) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.getSet(key, value);
+		});
+	}
+
+	@Override
+	public Long incr(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incr(key);
+		});
+	}
+
+	@Override
+	public Long incrBy(byte[] key, long increment) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incrBy(key, increment);
+		});
+	}
+
+	@Override
+	public Double incrByFloat(byte[] key, double increment) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.incrBy(key, increment);
+		});
+	}
+
+	@Override
+	public LCSMatchResult lcs(byte[] keyA, byte[] keyB, LCSParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> mget(byte[]... keys) {
+		return (List<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.mGet(keys);
+		});
+	}
+
+	@Override
+	public String mset(byte[]... keysvalues) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			Map<byte[], byte[]> map = CollectionUtils.keysValuesToMap(keysvalues);
+			return connection.mSet(map) ? "OK" : null;
+		});
+	}
+
+	@Override
+	public Long msetnx(byte[]... keysvalues) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			Map<byte[], byte[]> map = CollectionUtils.keysValuesToMap(keysvalues);
+			return connection.mSetNX(map) ? 1L : 0L;
+		});
+	}
+
+	@Override
+	public String psetex(byte[] key, long milliseconds, byte[] value) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.pSetEx(key, milliseconds, value) ? "OK" : null;
+		});
+	}
+
+	@Override
+	public String set(byte[] key, byte[] value) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.set(key, value) ? "OK" : null;
+		});
+	}
+
+	@Override
+	public String setex(byte[] key, long seconds, byte[] value) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setEx(key, seconds, value) ? "OK" : null;
+		});
+	}
+
+	@Override
+	public Long setnx(byte[] key, byte[] value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setNX(key, value) ? 1L : 0L;
+		});
+	}
+
+	@Override
+	public Long setrange(byte[] key, long offset, byte[] value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			connection.setRange(key, value, offset);
+			return 1L;// 仅表示任何时候都成功
+		});
+	}
+
+	@Override
+	public Long strlen(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.strLen(key);
+		});
+	}
+
+	@Override
+	public byte[] substr(byte[] key, int start, int end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void subscribe(byte[] channel, RedisPubSubListener<byte[], byte[]> listener) {
 		Thread thread = new Thread("Jedis-Sub-" + new String(channel, StandardCharsets.UTF_8)) {
 			@Override
@@ -468,9 +626,9 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 		RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
 		if (connectionFactory instanceof JedisConnectionFactory) {
-			thread.start();
+			thread.start();//jedis是阻塞的
 		} else {
-			thread.run();
+			thread.run();//lettuce不阻塞
 		}
 	}
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
@@ -12,6 +13,7 @@ import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
+import redis.clients.jedis.params.GetExParams;
 import redis.clients.jedis.params.SortingParams;
 import redis.clients.jedis.resps.ScanResult;
 
@@ -97,6 +99,27 @@ public class JedisUtils {
 		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor(),
 				"0".equals(scanResult.getCursor()), scanResult.getResult());
 		return keyScanCursor;
+	}
+
+	public static GetExParams convertGetExParams(GetExArgs params) {
+		GetExParams getExParams = new GetExParams();
+		if (params.getEx() != null) {
+			getExParams.ex(params.getEx());
+		}
+		if (params.getExAt() != null) {
+			getExParams.exAt(params.getExAt());
+		}
+		if (params.getPx() != null) {
+			getExParams.px(params.getPx());
+		}
+		if (params.getPxAt() != null) {
+			getExParams.pxAt(params.getPxAt());
+		}
+		if (params.isPersist()) {
+			getExParams.persist();
+		}
+
+		return getExParams;
 	}
 
 	public static redis.clients.jedis.params.LCSParams convertLCSParams(LCSParams params) {

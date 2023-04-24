@@ -3,6 +3,7 @@ package io.github.icodegarden.commons.redis.util;
 import java.nio.charset.StandardCharsets;
 
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
@@ -116,5 +117,26 @@ public class LettuceUtils {
 		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor(), scanResult.isFinished(),
 				scanResult.getKeys());
 		return keyScanCursor;
+	}
+
+	public static io.lettuce.core.GetExArgs convertGetExArgs(GetExArgs params) {
+		io.lettuce.core.GetExArgs getExArgs = new io.lettuce.core.GetExArgs();
+		if (params.getEx() != null) {
+			getExArgs.ex(params.getEx());
+		}
+		if (params.getExAt() != null) {
+			getExArgs.exAt(params.getExAt());
+		}
+		if (params.getPx() != null) {
+			getExArgs.px(params.getPx());
+		}
+		if (params.getPxAt() != null) {
+			getExArgs.pxAt(params.getPxAt());
+		}
+		if (params.isPersist()) {
+			getExArgs.persist();
+		}
+
+		return getExArgs;
 	}
 }

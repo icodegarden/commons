@@ -321,24 +321,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 
 	@Override
 	public byte[] getEx(byte[] key, GetExArgs params) {
-
-		GetExParams getExParams = new GetExParams();
-		if (params.getEx() != null) {
-			getExParams.ex(params.getEx());
-		}
-		if (params.getExAt() != null) {
-			getExParams.exAt(params.getExAt());
-		}
-		if (params.getPx() != null) {
-			getExParams.px(params.getPx());
-		}
-		if (params.getPxAt() != null) {
-			getExParams.pxAt(params.getPxAt());
-		}
-		if (params.isPersist()) {
-			getExParams.persist();
-		}
-
+		GetExParams getExParams = JedisUtils.convertGetExParams(params);
 		return jc.getEx(key, getExParams);
 	}
 

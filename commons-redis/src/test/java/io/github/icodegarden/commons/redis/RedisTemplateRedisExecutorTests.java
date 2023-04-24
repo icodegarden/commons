@@ -44,7 +44,7 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 		redisConfig.setPort(6399);
 
 		JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(redisConfig, clientConfig);
-		jedisConnectionFactory.afterPropertiesSet();// 需要调用一下，不然pool不会生效，内部总是创建一个新链接
+		jedisConnectionFactory.afterPropertiesSet();// 需要调用一下
 		return jedisConnectionFactory;
 	}
 	
@@ -55,7 +55,8 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 		redisConfig.setPort(6399);
 		
 		LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfig);
-		lettuceConnectionFactory.afterPropertiesSet();// 需要调用一下，不然pool不会生效，内部总是创建一个新链接
+		lettuceConnectionFactory.afterPropertiesSet();// 需要调用一下
 		return lettuceConnectionFactory;
 	}
+	
 }
