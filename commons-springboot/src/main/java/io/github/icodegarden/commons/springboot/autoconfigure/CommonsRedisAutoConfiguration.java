@@ -1,8 +1,5 @@
 package io.github.icodegarden.commons.springboot.autoconfigure;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -11,19 +8,16 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import io.github.icodegarden.commons.redis.RedisExecutor;
-import io.github.icodegarden.commons.redis.jedis.JedisClusterRedisExecutor;
-import io.github.icodegarden.commons.redis.jedis.JedisPoolRedisExecutor;
 import io.github.icodegarden.commons.redis.spring.RedisTemplateRedisExecutor;
+import io.github.icodegarden.commons.springboot.build.JedisRedisExecutorBuilder;
+import io.github.icodegarden.commons.springboot.build.LettuceRedisExecutorBuilder;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
-import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
-import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPool;
 
 /**
  * 
@@ -38,6 +32,7 @@ public class CommonsRedisAutoConfiguration {
 
 	/**
 	 * 为了让创建RedisExecutor bean时能识别是否有RedisTemplate设立这个类，否则不引RedisTemplate包时报类找不到的
+	 * 
 	 * @author Fangfang.Xu
 	 *
 	 */
@@ -55,29 +50,26 @@ public class CommonsRedisAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	@Bean
-	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
+	public RedisExecutor lettuceRedisExecutor(CommonsRedisProperties redisProperties) {
 		log.info("commons init bean of RedisExecutor");
 
-		Cluster cluster = redisProperties.getCluster();
-		if (cluster != null) {
-			log.info("create RedisExecutor by Cluster");
-			Set<HostAndPort> clusterNodes = cluster.getNodes().stream()
-					.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
+		/**
+		 * 必须依赖项
+		 */
+		boolean lettucePresent = ClassUtils.isPresent("io.lettuce.core.cluster.RedisClusterClient", null);
+		boolean jedisPresent = ClassUtils.isPresent("redis.clients.jedis.JedisCluster", null);
+		Assert.isTrue(lettucePresent || jedisPresent, "lettuce or jedis dependency must present");
 
-			JedisCluster jc = new JedisCluster(clusterNodes, cluster.getConnectionTimeout(), cluster.getSoTimeout(),
-					cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
-					cluster, cluster.isSsl());
-
-			return new JedisClusterRedisExecutor(jc);
-		}
-
-		Pool pool = redisProperties.getPool();
-		if (pool != null) {
-			log.info("create RedisExecutor by Pool");
-			JedisPool jp = new JedisPool(pool, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
-					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
-					pool.isSsl());
-			return new JedisPoolRedisExecutor(jp);
+		if (lettucePresent) {
+			RedisExecutor redisExecutor = LettuceRedisExecutorBuilder.create(redisProperties);
+			if (redisExecutor != null) {
+				return redisExecutor;
+			}
+		} else if (jedisPresent) {
+			RedisExecutor redisExecutor = JedisRedisExecutorBuilder.create(redisProperties);
+			if (redisExecutor != null) {
+				return redisExecutor;
+			}
 		}
 
 		if (redisTemplateWrap != null && redisTemplateWrap.getRedisTemplate() != null) {
@@ -87,4 +79,5 @@ public class CommonsRedisAutoConfiguration {
 
 		throw new IllegalStateException("CommonsRedisProperties config error, cluster or pool must not null");
 	}
+
 }

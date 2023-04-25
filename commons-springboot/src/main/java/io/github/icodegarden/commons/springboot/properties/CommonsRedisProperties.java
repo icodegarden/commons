@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * 
@@ -26,7 +25,7 @@ public class CommonsRedisProperties {
 	@Getter
 	@Setter
 	@ToString
-	public static class Cluster extends JedisPoolConfig {
+	public static class Cluster {
 		private List<Node> nodes;
 		private int connectionTimeout = 2000;
 		private int soTimeout = 2000;
@@ -48,7 +47,7 @@ public class CommonsRedisProperties {
 	@Getter
 	@Setter
 	@ToString
-	public static class Pool extends JedisPoolConfig {
+	public static class Pool {
 		private String host;
 		private int port;
 		private int connectionTimeout = 2000;

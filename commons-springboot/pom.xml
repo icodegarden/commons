@@ -45,11 +45,26 @@
 			<optional>true</optional><!-- 可选 -->
 		</dependency>
 		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>4.3.2</version>
+			<optional>true</optional><!--可选的，二选一 -->
+		</dependency>
+		<dependency>
+        	<groupId>io.lettuce</groupId>
+  			<artifactId>lettuce-core</artifactId>
+<!--  			<version>6.1.5.RELEASE</version> -->
+ 			<version>6.2.4.RELEASE</version>
+ 			<optional>true</optional><!--可选的，二选一 -->
+        </dependency>
+		<dependency>
             <groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-redis</artifactId>
-			<version>2.5.5</version>
-            <optional>true</optional>
+			<!--  不能高于2.6.2，否则相同代码pubsub收不到，可能spring有bug -->
+			<version>2.6.2</version><!-- 不能兼容jedis 4.0以上，因为内部依赖的GeoUnit类的package是不同的，可以与jedis3.8.0或lettuce-core搭配 -->
+            <optional>true</optional><!--可选的，需要jedis或lettuce -->
         </dependency>
+        
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
 			<artifactId>commons-elasticsearch</artifactId>
