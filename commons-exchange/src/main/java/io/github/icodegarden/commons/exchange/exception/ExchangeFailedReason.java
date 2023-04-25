@@ -34,6 +34,9 @@ public class ExchangeFailedReason implements Serializable {
 	private ExchangeFailedReason(String keyword, String desc) {
 		this.keyword = keyword;
 		this.desc = desc;
+		if(desc != null && desc.length() > 200) {
+			this.desc = new StringBuilder(203).append(desc.substring(0, 200)).append("...").toString();
+		}
 	}
 
 	public static ExchangeFailedReason clientConnectFailed(String desc, Exception e) {
