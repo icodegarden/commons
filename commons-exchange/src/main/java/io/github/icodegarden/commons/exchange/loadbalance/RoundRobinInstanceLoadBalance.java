@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
@@ -21,7 +22,7 @@ public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 
 	private final InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery;
 
-	private Map<String, Integer> serviceName_fromIndex = new HashMap<String, Integer>();
+	private Map<String, AtomicInteger> serviceName_fromIndex = new HashMap<String, AtomicInteger>();
 
 	public RoundRobinInstanceLoadBalance(InstanceDiscovery<? extends RegisteredInstance> instanceDiscovery) {
 		this.instanceDiscovery = instanceDiscovery;
@@ -39,33 +40,26 @@ public class RoundRobinInstanceLoadBalance implements InstanceLoadBalance {
 		}
 
 		/**
-		 * 目前在并发时可能出现不严格的轮询
-		 */
-
-		/**
 		 * 有则直接取，没有则从0开始
 		 */
-		Integer fromIndex = serviceName_fromIndex.compute(serviceName, (k, v) -> {
-			return v != null ? v : 0;
+		AtomicInteger count = serviceName_fromIndex.compute(serviceName, (k, v) -> {
+			return v != null ? v : new AtomicInteger();
 		});
+
+		/**
+		 * 增加轮询的索引位置
+		 */
+//		fromIndex += maxCandidate;
+//		if (fromIndex > candidates.size()) {
+//			fromIndex = 0;
+//		}
+//		serviceName_fromIndex.put(serviceName, fromIndex);
+		int fromIndex = count.getAndIncrement();
 
 		candidates = CollectionUtils.nextElements(candidates, fromIndex, maxCandidate);
 		List<MetricsInstance> list = candidates.stream().map(candidate -> {
 			return new DefaultMetricsInstance(candidate, Constants.IGNORE_METRICS);
 		}).collect(Collectors.toList());
-
-		/**
-		 * 增加轮询的索引位置
-		 */
-		fromIndex += maxCandidate;
-		/**
-		 * 
-		 */
-		if (fromIndex > candidates.size()) {
-			fromIndex = 0;
-		}
-
-		serviceName_fromIndex.put(serviceName, fromIndex);
 
 		return new LinkedList<MetricsInstance>(list);
 	}
