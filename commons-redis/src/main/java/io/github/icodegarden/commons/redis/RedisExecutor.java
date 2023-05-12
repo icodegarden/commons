@@ -1,25 +1,16 @@
 package io.github.icodegarden.commons.redis;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-public interface RedisExecutor extends KeyBinaryCommands, StringBinaryCommands, ScriptingKeyBinaryCommands {
+public interface RedisExecutor
+		extends KeyBinaryCommands, StringBinaryCommands,HashBinaryCommands, ScriptingKeyBinaryCommands {
 
 	void close() throws IOException;
-	
-	
-	
-	
-	
-	
-	
-	
 
 //	Set<byte[]> keys(byte[] pattern);
 //
@@ -52,15 +43,6 @@ public interface RedisExecutor extends KeyBinaryCommands, StringBinaryCommands, 
 //	Long decr(byte[] key);
 //
 //	Long decrBy(byte[] key, long value);
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	/**
 	 * 该动作是一直阻塞的，直到unsubscribe

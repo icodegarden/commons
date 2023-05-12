@@ -1,6 +1,8 @@
 package io.github.icodegarden.commons.redis.util;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
@@ -8,6 +10,7 @@ import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -99,6 +102,15 @@ public class JedisUtils {
 		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor(),
 				"0".equals(scanResult.getCursor()), scanResult.getResult());
 		return keyScanCursor;
+	}
+
+	public static <T> MapScanCursor<T, T> convertMapScanCursor(ScanResult<Entry<T, T>> scanResult) {
+		Map<T, T> map = scanResult.getResult().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
+
+		MapScanCursor<T, T> mapScanCursor = new MapScanCursor<T, T>(scanResult.getCursor(),
+				"0".equals(scanResult.getCursor()), map);
+		return mapScanCursor;
 	}
 
 	public static GetExParams convertGetExParams(GetExArgs params) {

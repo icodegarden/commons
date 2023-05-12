@@ -17,6 +17,7 @@ import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -212,8 +213,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor) {
-		ScanCursor scanCursor = new ScanCursor();
-		scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.KeyScanCursor<byte[]> scanResult = syncRedisCommands.scan(scanCursor);
 		return LettuceUtils.convertKeyScanCursor(scanResult);
@@ -221,8 +221,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
-		ScanCursor scanCursor = new ScanCursor();
-		scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
 
@@ -232,8 +231,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
-		ScanCursor scanCursor = new ScanCursor();
-		scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.KeyScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
 		scanArgs.type(new String(type, StandardCharsets.UTF_8));
@@ -315,6 +313,117 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	public Set<byte[]> keys(byte[] pattern) {
 		List<byte[]> list = syncRedisCommands.keys(pattern);
 		return new HashSet<byte[]>(list);
+	}
+
+	@Override
+	public Long hdel(byte[] key, byte[]... fields) {
+		return syncRedisCommands.hdel(key, fields);
+	}
+
+	@Override
+	public Boolean hexists(byte[] key, byte[] field) {
+		return syncRedisCommands.hexists(key, field);
+	}
+
+	@Override
+	public byte[] hget(byte[] key, byte[] field) {
+		return syncRedisCommands.hget(key, field);
+	}
+
+	@Override
+	public Map<byte[], byte[]> hgetAll(byte[] key) {
+		return syncRedisCommands.hgetall(key);
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return syncRedisCommands.hincrby(key, field, value);
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return syncRedisCommands.hincrbyfloat(key, field, value);
+	}
+
+	@Override
+	public Set<byte[]> hkeys(byte[] key) {
+		List<byte[]> list = syncRedisCommands.hkeys(key);
+		return new HashSet<>(list);
+	}
+
+	@Override
+	public Long hlen(byte[] key) {
+		return syncRedisCommands.hlen(key);
+	}
+
+	@Override
+	public List<byte[]> hmget(byte[] key, byte[]... fields) {
+		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.hmget(key, fields);
+		return list.stream().map(KeyValue::getValue).collect(Collectors.toList());
+	}
+
+	@Override
+	public String hmset(byte[] key, Map<byte[], byte[]> hash) {
+		return syncRedisCommands.hmset(key, hash);
+	}
+
+	@Override
+	public byte[] hrandfield(byte[] key) {
+		return syncRedisCommands.hrandfield(key);
+	}
+
+	@Override
+	public List<byte[]> hrandfield(byte[] key, long count) {
+		return syncRedisCommands.hrandfield(key, count);
+	}
+
+	@Override
+	public Map<byte[], byte[]> hrandfieldWithValues(byte[] key, long count) {
+		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.hrandfieldWithvalues(key, count);
+		return list.stream().collect(Collectors.toMap(KeyValue::getKey, KeyValue::getValue, (a, b) -> a));
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.MapScanCursor<byte[], byte[]> scanResult = syncRedisCommands.hscan(key, scanCursor);
+		return LettuceUtils.convertMapScanCursor(scanResult);
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
+
+		io.lettuce.core.MapScanCursor<byte[], byte[]> scanResult = syncRedisCommands.hscan(key, scanCursor, scanArgs);
+		return LettuceUtils.convertMapScanCursor(scanResult);
+	}
+
+	@Override
+	public Long hset(byte[] key, byte[] field, byte[] value) {
+		return syncRedisCommands.hset(key, field, value) ? 1L : 0;
+	}
+
+	@Override
+	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
+		return syncRedisCommands.hset(key, hash);
+	}
+
+	@Override
+	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
+		return syncRedisCommands.hsetnx(key, field, value) ? 1L : 0;
+	}
+
+	@Override
+	public Long hstrlen(byte[] key, byte[] field) {
+		return syncRedisCommands.hstrlen(key, field);
+	}
+
+	@Override
+	public List<byte[]> hvals(byte[] key) {
+		return syncRedisCommands.hvals(key);
 	}
 
 	@Override

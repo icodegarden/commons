@@ -1,10 +1,12 @@
 package io.github.icodegarden.commons.redis.util;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -13,6 +15,7 @@ import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
 import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
+import io.lettuce.core.ScanCursor;
 
 /**
  * 
@@ -119,6 +122,12 @@ public class LettuceUtils {
 		return keyScanCursor;
 	}
 
+	public static <T> MapScanCursor<T, T> convertMapScanCursor(io.lettuce.core.MapScanCursor<T, T> scanResult) {
+		MapScanCursor<T, T> mapScanCursor = new MapScanCursor<T, T>(scanResult.getCursor(), scanResult.isFinished(),
+				scanResult.getMap());
+		return mapScanCursor;
+	}
+
 	public static io.lettuce.core.GetExArgs convertGetExArgs(GetExArgs params) {
 		io.lettuce.core.GetExArgs getExArgs = new io.lettuce.core.GetExArgs();
 		if (params.getEx() != null) {
@@ -138,5 +147,17 @@ public class LettuceUtils {
 		}
 
 		return getExArgs;
+	}
+
+	public static ScanCursor convertScanCursor(byte[] cursor) {
+		ScanCursor scanCursor;
+
+		if (Arrays.equals("0".getBytes(StandardCharsets.UTF_8), cursor)) {
+			scanCursor = ScanCursor.INITIAL;// redis集群lettuce的首次得这样，不然报错
+		} else {
+			scanCursor = new ScanCursor();
+			scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+		}
+		return scanCursor;
 	}
 }

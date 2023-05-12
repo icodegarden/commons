@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import redis.clients.jedis.resps.ScanResult;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
+import io.github.icodegarden.commons.redis.args.ScanArgs;
 
 /**
  * 
@@ -290,6 +291,7 @@ public interface HashBinaryCommands {
 	 */
 	Map<byte[], byte[]> hrandfieldWithValues(final byte[] key, final long count);
 
+	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor);
 	/**
 	 * <h1>迭代所有field的值</h1><br>
 	 * 
@@ -300,7 +302,7 @@ public interface HashBinaryCommands {
 	 * @param cursor
 	 * @return
 	 */
-	ScanResult<Map.Entry<byte[], byte[]>> hscan(final byte[] key, final byte[] cursor);
+	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params);
 
 	Long hset(final byte[] key, final byte[] field, final byte[] value);
 

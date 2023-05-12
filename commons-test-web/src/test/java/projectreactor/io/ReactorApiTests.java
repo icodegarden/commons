@@ -3,6 +3,8 @@ package projectreactor.io;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +24,6 @@ import reactor.core.publisher.Sinks.EmitFailureHandler;
 import reactor.core.publisher.Sinks.EmitResult;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple3;
 import reactor.util.retry.Retry;
 
 /**
@@ -561,5 +562,61 @@ public class ReactorApiTests {
 		// 方法二zip
 		Flux.zip(stringFlux1, stringFlux2, stringFlux3)//
 				.subscribe(i -> System.out.println(i + "(" + Thread.currentThread().getName() + ")"));
+	}
+	
+	@Test
+	void merge() throws InterruptedException, ExecutionException {
+		Mono<String> mono1 = Mono.fromCallable(()->{
+			System.out.println("run mono1"+System.currentTimeMillis());
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			}
+			return "abc";
+		});
+		
+		Mono<String> mono2 = Mono.fromCallable(()->{
+			System.out.println("run mono2"+System.currentTimeMillis());
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			}
+			return "def";
+		});
+		
+//		Flux<String> flux = Flux.merge(mono1,mono2);
+		
+		Flux<Object> flux = Flux.empty();
+		
+//		Flux<String> flux = Flux.from(mono1);
+		flux = flux.mergeWith(mono1);
+		System.out.println(flux);
+		
+		flux = flux.mergeWith(mono2);
+		
+		flux.subscribeOn(Schedulers.parallel()).subscribe();
+		
+		
+//		mono1.subscribeOn(Schedulers.newSingle("")).subscribe(s->{
+//			System.out.println(s);
+//		});
+//		mono2.subscribeOn(Schedulers.newSingle("")).subscribe(s->{
+//			System.out.println(s);
+//		});
+		
+//		CompletableFuture<String> f1 = mono1.subscribeOn(Schedulers.newSingle("")).toFuture();
+//		CompletableFuture<String> f2 = mono2.subscribeOn(Schedulers.newSingle("")).toFuture();
+//		
+//		Thread.sleep(3000);
+//		System.out.println(".....");
+//		
+//		long start = System.currentTimeMillis();
+//		System.out.println(f1.get());
+//		System.out.println(f2.get());
+//		
+//		
+//		System.out.println(System.currentTimeMillis()-start);
+////		System.out.println(block);
+		
 	}
 }

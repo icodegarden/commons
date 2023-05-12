@@ -858,8 +858,9 @@ public interface KeyBinaryCommands {
 	 */
 	long unlink(byte[]... keys);
 
+	@Deprecated //lettuce返回null
 	Long memoryUsage(byte[] key);
-
+	@Deprecated //lettuce返回null
 	Long memoryUsage(byte[] key, int samples);
 
 }

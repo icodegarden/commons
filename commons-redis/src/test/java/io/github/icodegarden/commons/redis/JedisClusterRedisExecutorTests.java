@@ -26,7 +26,7 @@ public class JedisClusterRedisExecutorTests extends RedisExecutorTests {
 	public static JedisCluster newJedisCluster() {
 		Set<HostAndPort> jedisClusterNode = new HashSet<HostAndPort>() {
 			{
-				add(new HostAndPort("172.22.122.23", 6399));
+				add(new HostAndPort("192.168.80.130", 6379));
 			}
 		};
 		int connectionTimeout = 3000;

@@ -3,10 +3,14 @@ package io.github.icodegarden.commons.redis.spring;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.data.redis.connection.DefaultSortParameters;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -16,9 +20,12 @@ import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.connection.SortParameters;
 import org.springframework.data.redis.connection.ValueEncoding;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.ScanOptions.ScanOptionsBuilder;
 import org.springframework.data.redis.core.types.Expiration;
 
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
@@ -29,6 +36,7 @@ import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -116,14 +124,14 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long expire(byte[] key, long seconds, ExpiryOption expiryOption) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().expire(key, seconds);
+			return connection.keyCommands().expire(key, seconds) ? 1L : 0L;
 		});
 	}
 
 	@Override
 	public long expireAt(byte[] key, long unixTime) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().expireAt(key, unixTime);
+			return connection.keyCommands().expireAt(key, unixTime) ? 1L : 0;
 		});
 	}
 
@@ -195,35 +203,35 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long persist(byte[] key) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().persist(key) ? 1 : 0;
+			return connection.keyCommands().persist(key) ? 1L : 0;
 		});
 	}
 
 	@Override
 	public long pexpire(byte[] key, long milliseconds) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpire(key, milliseconds) ? 1 : 0;
+			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0;
 		});
 	}
 
 	@Override
 	public long pexpire(byte[] key, long milliseconds, ExpiryOption expiryOption) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpire(key, milliseconds) ? 1 : 0;
+			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0;
 		});
 	}
 
 	@Override
 	public long pexpireAt(byte[] key, long millisecondsTimestamp) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1 : 0;
+			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0;
 		});
 	}
 
 	@Override
 	public long pexpireAt(byte[] key, long millisecondsTimestamp, ExpiryOption expiryOption) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1 : 0;
+			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0;
 		});
 	}
 
@@ -257,7 +265,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long renamenx(byte[] oldkey, byte[] newkey) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().renameNX(oldkey, newkey) ? 1 : 0;
+			return connection.keyCommands().renameNX(oldkey, newkey) ? 1L : 0;
 		});
 	}
 
@@ -279,17 +287,43 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor) {
-		throw new UnsupportedOperationException();
+		return scan(cursor, null);
 	}
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
-		throw new UnsupportedOperationException();
+		return scan(cursor, params, null);
 	}
 
 	@Override
 	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
-		throw new UnsupportedOperationException();
+		return (KeyScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
+
+			ScanOptionsBuilder builder = ScanOptions.scanOptions();
+			if (params != null) {
+				params.match(params.getMatch());
+				if (params.getCount() != null) {
+					builder.count(params.getCount());
+				}
+			}
+
+			if (type != null) {
+				builder.type(new String(type, StandardCharsets.UTF_8));
+			}
+			ScanOptions scanOptions = builder.build();
+
+			try (Cursor<byte[]> scan = connection.scan(scanOptions);) {
+				List<byte[]> keys = new LinkedList<byte[]>();
+
+				while (scan.hasNext()) {
+					keys.add(scan.next());
+				}
+
+				String cursorId = Long.toString(scan.getCursorId());
+
+				return new KeyScanCursor<byte[]>(cursorId, "0".equals(cursorId), keys);
+			}
+		});
 	}
 
 	@Override
@@ -380,6 +414,157 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public Long memoryUsage(byte[] key, int samples) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Long hdel(byte[] key, byte[]... fields) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hDel(key, fields);
+		});
+	}
+
+	@Override
+	public Boolean hexists(byte[] key, byte[] field) {
+		return (Boolean) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hExists(key, field);
+		});
+	}
+
+	@Override
+	public byte[] hget(byte[] key, byte[] field) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hGet(key, field);
+		});
+	}
+
+	@Override
+	public Map<byte[], byte[]> hgetAll(byte[] key) {
+		return (Map) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hGetAll(key);
+		});
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hIncrBy(key, field, value);
+		});
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hIncrBy(key, field, value);
+		});
+	}
+
+	@Override
+	public Set<byte[]> hkeys(byte[] key) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hKeys(key);
+		});
+	}
+
+	@Override
+	public Long hlen(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hLen(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> hmget(byte[] key, byte[]... fields) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hMGet(key, fields);
+		});
+	}
+
+	@Override
+	public String hmset(byte[] key, Map<byte[], byte[]> hash) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.hashCommands().hMSet(key, hash);
+			return "OK";
+		});
+	}
+
+	@Override
+	public byte[] hrandfield(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hRandField(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> hrandfield(byte[] key, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hRandField(key, count);
+		});
+	}
+
+	@Override
+	public Map<byte[], byte[]> hrandfieldWithValues(byte[] key, long count) {
+		return (Map) redisTemplate.execute((RedisCallback) connection -> {
+			List<Entry<byte[], byte[]>> list = connection.hashCommands().hRandFieldWithValues(key, count);
+			return list.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a));
+		});
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
+		return hscan(key, cursor, null);
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
+		return (MapScanCursor<byte[], byte[]>) redisTemplate.execute((RedisCallback) connection -> {
+
+			ScanOptionsBuilder builder = ScanOptions.scanOptions();
+			if (params != null) {
+				params.match(params.getMatch());
+				if (params.getCount() != null) {
+					builder.count(params.getCount());
+				}
+			}
+
+			ScanOptions scanOptions = builder.build();
+
+			try (Cursor<Map.Entry<byte[], byte[]>> scan = connection.hScan(key, scanOptions);) {
+				Map<byte[], byte[]> map = new HashMap<byte[], byte[]>();
+
+				while (scan.hasNext()) {
+					Entry<byte[], byte[]> entry = scan.next();
+					map.put(entry.getKey(), entry.getValue());
+				}
+
+				String cursorId = Long.toString(scan.getCursorId());
+				return new MapScanCursor<byte[], byte[]>(cursorId, "0".equals(cursorId), map);
+			}
+		});
+	}
+
+	@Override
+	public Long hset(byte[] key, byte[] field, byte[] value) {
+		return execCommand(jedis -> jedis.hset(key, field, value));
+	}
+
+	@Override
+	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
+		return execCommand(jedis -> jedis.hset(key, hash));
+	}
+
+	@Override
+	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
+		return execCommand(jedis -> jedis.hsetnx(key, field, value));
+	}
+
+	@Override
+	public Long hstrlen(byte[] key, byte[] field) {
+		return execCommand(jedis -> jedis.hstrlen(key, field));
+	}
+
+	@Override
+	public List<byte[]> hvals(byte[] key) {
+		return execCommand(jedis -> jedis.hvals(key));
 	}
 
 	@Override
@@ -592,7 +777,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	public Long setrange(byte[] key, long offset, byte[] value) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
 			connection.setRange(key, value, offset);
-			return 1L;// 仅表示任何时候都成功
+			return null;// 返回值不兼容redis api
 		});
 	}
 
@@ -626,9 +811,9 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 		RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
 		if (connectionFactory instanceof JedisConnectionFactory) {
-			thread.start();//jedis是阻塞的
+			thread.start();// jedis是阻塞的
 		} else {
-			thread.run();//lettuce不阻塞
+			thread.run();// lettuce不阻塞
 		}
 	}
 

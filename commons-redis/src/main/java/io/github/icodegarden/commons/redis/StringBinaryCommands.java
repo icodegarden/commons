@@ -634,6 +634,7 @@ public interface StringBinaryCommands {
 	 * @param end
 	 * @return
 	 */
+	@Deprecated //官方：用getrange
 	byte[] substr(final byte[] key, final int start, final int end);
 
 }

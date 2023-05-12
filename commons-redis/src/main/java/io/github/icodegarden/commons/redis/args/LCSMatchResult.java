@@ -41,7 +41,7 @@ public class LCSMatchResult {
 	 */
 	public LCSMatchResult(String matchString, List<MatchedPosition> matches, long len) {
 		this.matchString = matchString;
-		this.matches = Collections.unmodifiableList(matches);
+		this.matches = matches;
 		this.len = len;
 	}
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +15,7 @@ import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -422,6 +424,113 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public Long hdel(byte[] key, byte[]... fields) {
+		return execCommand(jedis -> jedis.hdel(key, fields));
+	}
+
+	@Override
+	public Boolean hexists(byte[] key, byte[] field) {
+		return execCommand(jedis -> jedis.hexists(key, field));
+	}
+
+	@Override
+	public byte[] hget(byte[] key, byte[] field) {
+		return execCommand(jedis -> jedis.hget(key, field));
+	}
+
+	@Override
+	public Map<byte[], byte[]> hgetAll(byte[] key) {
+		return execCommand(jedis -> jedis.hgetAll(key));
+	}
+
+	@Override
+	public Long hincrBy(byte[] key, byte[] field, long value) {
+		return execCommand(jedis -> jedis.hincrBy(key, field, value));
+	}
+
+	@Override
+	public Double hincrByFloat(byte[] key, byte[] field, double value) {
+		return execCommand(jedis -> jedis.hincrByFloat(key, field, value));
+	}
+
+	@Override
+	public Set<byte[]> hkeys(byte[] key) {
+		return execCommand(jedis -> jedis.hkeys(key));
+	}
+
+	@Override
+	public Long hlen(byte[] key) {
+		return execCommand(jedis -> jedis.hlen(key));
+	}
+
+	@Override
+	public List<byte[]> hmget(byte[] key, byte[]... fields) {
+		return execCommand(jedis -> jedis.hmget(key, fields));
+	}
+
+	@Override
+	public String hmset(byte[] key, Map<byte[], byte[]> hash) {
+		return execCommand(jedis -> jedis.hmset(key, hash));
+	}
+
+	@Override
+	public byte[] hrandfield(byte[] key) {
+		return execCommand(jedis -> jedis.hrandfield(key));
+	}
+
+	@Override
+	public List<byte[]> hrandfield(byte[] key, long count) {
+		return execCommand(jedis -> jedis.hrandfield(key, count));
+	}
+
+	@Override
+	public Map<byte[], byte[]> hrandfieldWithValues(byte[] key, long count) {
+		return execCommand(jedis -> jedis.hrandfieldWithValues(key, count));
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
+		return execCommand(jedis -> {
+			ScanResult<Entry<byte[], byte[]>> scanResult = jedis.hscan(key, cursor);
+			return JedisUtils.convertMapScanCursor(scanResult);
+		});
+	}
+
+	@Override
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
+		return execCommand(jedis -> {
+			ScanResult<Entry<byte[], byte[]>> scanResult = jedis.hscan(key, cursor,
+					JedisUtils.convertScanParams(params));
+			return JedisUtils.convertMapScanCursor(scanResult);
+		});
+	}
+
+	@Override
+	public Long hset(byte[] key, byte[] field, byte[] value) {
+		return execCommand(jedis -> jedis.hset(key, field, value));
+	}
+
+	@Override
+	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
+		return execCommand(jedis -> jedis.hset(key, hash));
+	}
+
+	@Override
+	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
+		return execCommand(jedis -> jedis.hsetnx(key, field, value));
+	}
+
+	@Override
+	public Long hstrlen(byte[] key, byte[] field) {
+		return execCommand(jedis -> jedis.hstrlen(key, field));
+	}
+
+	@Override
+	public List<byte[]> hvals(byte[] key) {
+		return execCommand(jedis -> jedis.hvals(key));
+	}
+
+	@Override
 	public List<Object> eval(byte[] script) {
 		return execCommand(jedis -> {
 			Object obj = jedis.eval(script);
@@ -529,4 +638,5 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			return null;
 		});
 	}
+
 }

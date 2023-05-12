@@ -39,9 +39,9 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 				.build();
 
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-		redisConfig.setHostName("172.22.122.23");
+		redisConfig.setHostName("192.168.80.130");
 //		redisConfig.setPassword(RedisPassword.of("8q9P&ZF5SQ@Fv49x"));
-		redisConfig.setPort(6399);
+		redisConfig.setPort(6379);
 
 		JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(redisConfig, clientConfig);
 		jedisConnectionFactory.afterPropertiesSet();// 需要调用一下
@@ -50,9 +50,9 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 	
 	static RedisConnectionFactory lettuceConnectionFactory() {
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-		redisConfig.setHostName("172.22.122.23");
+		redisConfig.setHostName("192.168.80.130");
 //		redisConfig.setPassword(RedisPassword.of("8q9P&ZF5SQ@Fv49x"));
-		redisConfig.setPort(6399);
+		redisConfig.setPort(6379);
 		
 		LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfig);
 		lettuceConnectionFactory.afterPropertiesSet();// 需要调用一下

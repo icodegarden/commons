@@ -21,8 +21,8 @@ public class LettuceRedisClientRedisExecutorTests extends RedisExecutorTests {
 
 	public static RedisClient newRedisClient() {
 		RedisURI redisURI = RedisURI.builder()//
-				.withHost("172.22.122.23")//
-				.withPort(6399)//
+				.withHost("192.168.80.130")//
+				.withPort(6379)//
 //				.withPassword("".toCharArray())//
 				.withDatabase(0)//
 				.withSsl(false)//
