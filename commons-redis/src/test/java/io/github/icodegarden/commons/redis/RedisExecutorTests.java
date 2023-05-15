@@ -1,7 +1,11 @@
 package io.github.icodegarden.commons.redis;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -13,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.spring.RedisTemplateRedisExecutor;
 
@@ -602,13 +607,13 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void sort() throws Exception {
-		// TODO
+		// TODO 等list好了以后测
 		throw new RuntimeException();
 	}
 
 	@Test
 	public void sortRO() throws Exception {
-		// TODO
+		// TODO 等list好了以后测
 		throw new RuntimeException();
 	}
 
@@ -651,6 +656,235 @@ public abstract class RedisExecutorTests {
 //		redisExecutor.set(key, "abc".getBytes());
 //		Long l = redisExecutor.memoryUsage(key);
 //		Assertions.assertThat(l).isGreaterThan(0);
+	}
+
+	@Test
+	public void hdel() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "b".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "c".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "d".getBytes(), "1".getBytes());
+
+		Long l = redisExecutor.hdel(key, "nokey".getBytes());
+		Assertions.assertThat(l).isEqualTo(0);
+
+		l = redisExecutor.hdel(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+
+		l = redisExecutor.hdel(key, "b".getBytes(), "c".getBytes());
+		Assertions.assertThat(l).isEqualTo(2);
+
+		Map<byte[], byte[]> map = redisExecutor.hgetAll(key);
+		Assertions.assertThat(map.size()).isEqualTo(1);
+		Assertions.assertThat(Arrays.equals(map.keySet().iterator().next(), "d".getBytes())).isNotNull();
+	}
+
+	@Test
+	public void hexists() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+
+		Boolean b = redisExecutor.hexists(key, "a".getBytes());
+		Assertions.assertThat(b).isTrue();
+
+		b = redisExecutor.hexists(key, "nokey".getBytes());
+		Assertions.assertThat(b).isFalse();
+	}
+
+	@Test
+	public void hget() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+
+		byte[] bs = redisExecutor.hget(key, "a".getBytes());
+		Assertions.assertThat(new String(bs)).isEqualTo("1");
+
+		bs = redisExecutor.hget(key, "nokey".getBytes());
+		Assertions.assertThat(bs).isNull();
+	}
+
+	@Test
+	public void hgetAll() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "b".getBytes(), "1".getBytes());
+
+		Map<byte[], byte[]> map = redisExecutor.hgetAll(key);
+		Assertions.assertThat(map.size()).isEqualTo(2);
+	}
+
+	@Test
+	public void hincrBy() throws Exception {
+		Long l = redisExecutor.hincrBy(key, "a".getBytes(), 10);
+		Assertions.assertThat(l).isEqualTo(10);
+
+		l = redisExecutor.hincrBy(key, "a".getBytes(), 10);
+		Assertions.assertThat(l).isEqualTo(20);
+	}
+
+	@Test
+	public void hincrByFloat() throws Exception {
+		Double l = redisExecutor.hincrByFloat(key, "a".getBytes(), 10.01);
+		Assertions.assertThat(l).isEqualTo(10.01);
+
+		l = redisExecutor.hincrByFloat(key, "a".getBytes(), 10.01);
+		Assertions.assertThat(l).isEqualTo(20.02);
+	}
+
+	@Test
+	public void hkeys() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "b".getBytes(), "1".getBytes());
+
+		Set<byte[]> set = redisExecutor.hkeys(key);
+		Assertions.assertThat(set.size()).isEqualTo(2);
+	}
+
+	@Test
+	public void hlen() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "b".getBytes(), "1".getBytes());
+
+		Long l = redisExecutor.hlen(key);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void hmget() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, "b".getBytes(), "2".getBytes());
+
+		List<byte[]> list = redisExecutor.hmget(key, "a".getBytes(), "b".getBytes());
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(new String(list.get(0))).isEqualTo("1");
+		Assertions.assertThat(new String(list.get(1))).isEqualTo("2");
+	}
+
+	@Test
+	public void hmset() throws Exception {
+		HashMap<byte[], byte[]> map = new HashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "1".getBytes());
+		String s = redisExecutor.hmset(key, map);
+		Assertions.assertThat(s).isEqualTo("OK");
+
+		Map<byte[], byte[]> hgetAll = redisExecutor.hgetAll(key);
+		Assertions.assertThat(hgetAll.size()).isEqualTo(2);
+	}
+
+	@Test
+	public void hrandfield() throws Exception {
+		HashMap<byte[], byte[]> map = new HashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "1".getBytes());
+		map.put("c".getBytes(), "1".getBytes());
+		map.put("d".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, map);
+
+		byte[] field = redisExecutor.hrandfield(key);
+		Assertions.assertThat(map.keySet().stream().anyMatch(k -> Arrays.equals(k, field))).isTrue();
+
+		List<byte[]> list = redisExecutor.hrandfield(key, 2);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+
+		list = redisExecutor.hrandfield(key, 4);
+		Assertions.assertThat(list.size()).isEqualTo(4);
+	}
+
+	@Test
+	public void hrandfieldWithValues() throws Exception {
+		Map<byte[], byte[]> map = new HashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "1".getBytes());
+		map.put("c".getBytes(), "1".getBytes());
+		map.put("d".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, map);
+
+		map = redisExecutor.hrandfieldWithValues(key, 2);
+		Assertions.assertThat(map.size()).isEqualTo(2);
+		Assertions.assertThat(new String(map.values().iterator().next())).isEqualTo("1");
+
+		map = redisExecutor.hrandfieldWithValues(key, 4);
+		Assertions.assertThat(map.size()).isEqualTo(4);
+		Assertions.assertThat(new String(map.values().iterator().next())).isEqualTo("1");
+	}
+
+	@Test
+	public void hscan() throws Exception {
+		Map<byte[], byte[]> map = new HashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "1".getBytes());
+		map.put("c".getBytes(), "1".getBytes());
+		map.put("d".getBytes(), "1".getBytes());
+		redisExecutor.hset(key, map);
+
+		byte[] cursorbytes = "0".getBytes();
+		MapScanCursor<byte[], byte[]> cursor = null;
+		do {
+			cursor = redisExecutor.hscan(key, cursorbytes);
+
+			cursor.getMap().forEach((kbs, vbs) -> {
+				System.out.println(new String(kbs) + ":" + new String(vbs));
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+
+		// -----------------------------------------------------------------
+
+		ScanArgs scanArgs = new ScanArgs();
+		scanArgs.match("*".getBytes());
+
+		cursorbytes = "0".getBytes();
+		cursor = null;
+		do {
+			cursor = redisExecutor.hscan(key, cursorbytes, scanArgs);
+
+			cursor.getMap().forEach((kbs, vbs) -> {
+				System.out.println(new String(kbs) + ":" + new String(vbs));
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+	}
+
+	@Test
+	public void hset() throws Exception {
+		Map<byte[], byte[]> map = new HashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "1".getBytes());
+		Long l = redisExecutor.hset(key, map);
+
+		if (!(redisExecutor instanceof RedisTemplateRedisExecutor)) {
+			Assertions.assertThat(l).isEqualTo(map.size());
+		}
+	}
+
+	@Test
+	public void hsetnx() throws Exception {
+		Long l = redisExecutor.hsetnx(key, "a".getBytes(), "1".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+
+		l = redisExecutor.hsetnx(key, "a".getBytes(), "1".getBytes());
+		Assertions.assertThat(l).isEqualTo(0);
+	}
+
+	@Test
+	public void hstrlen() throws Exception {
+		redisExecutor.hset(key, "a".getBytes(), "123456".getBytes());
+
+		Long l = redisExecutor.hstrlen(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(6);
+	}
+
+	@Test
+	public void hvals() throws Exception {
+		Map<byte[], byte[]> map = new LinkedHashMap<>();
+		map.put("a".getBytes(), "1".getBytes());
+		map.put("b".getBytes(), "2".getBytes());
+		redisExecutor.hset(key, map);
+
+		List<byte[]> hvals = redisExecutor.hvals(key);
+		Assertions.assertThat(hvals.size()).isEqualTo(2);
+		Assertions.assertThat(new String(hvals.get(0))).isEqualTo("1");
+		Assertions.assertThat(new String(hvals.get(1))).isEqualTo("2");
 	}
 
 	@Test

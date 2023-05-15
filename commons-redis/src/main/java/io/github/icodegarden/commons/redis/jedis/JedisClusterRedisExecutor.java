@@ -410,7 +410,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public byte[] substr(byte[] key, int start, int end) {
 		return jc.substr(key, start, end);
 	}
-	
+
 	@Override
 	public Long hdel(byte[] key, byte[]... fields) {
 		return jc.hdel(key, fields);
@@ -481,7 +481,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, cursor);
 		return JedisUtils.convertMapScanCursor(scanResult);
 	}
-		
+
 	@Override
 	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
 		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, cursor, JedisUtils.convertScanParams(params));
@@ -512,9 +512,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public List<byte[]> hvals(byte[] key) {
 		return jc.hvals(key);
 	}
-	
-	
-	
+
 	@Override
 	public List<Object> eval(byte[] script) {
 		Object obj = jc.eval(script);

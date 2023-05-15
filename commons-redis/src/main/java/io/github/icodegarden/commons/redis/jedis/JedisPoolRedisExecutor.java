@@ -509,12 +509,10 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	public Long hset(byte[] key, byte[] field, byte[] value) {
 		return execCommand(jedis -> jedis.hset(key, field, value));
 	}
-
 	@Override
 	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
 		return execCommand(jedis -> jedis.hset(key, hash));
 	}
-
 	@Override
 	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
 		return execCommand(jedis -> jedis.hsetnx(key, field, value));

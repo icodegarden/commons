@@ -131,7 +131,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long expireAt(byte[] key, long unixTime) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().expireAt(key, unixTime) ? 1L : 0;
+			return connection.keyCommands().expireAt(key, unixTime) ? 1L : 0L;
 		});
 	}
 
@@ -203,35 +203,35 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long persist(byte[] key) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().persist(key) ? 1L : 0;
+			return connection.keyCommands().persist(key) ? 1L : 0L;
 		});
 	}
 
 	@Override
 	public long pexpire(byte[] key, long milliseconds) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0;
+			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0L;
 		});
 	}
 
 	@Override
 	public long pexpire(byte[] key, long milliseconds, ExpiryOption expiryOption) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0;
+			return connection.keyCommands().pExpire(key, milliseconds) ? 1L : 0L;
 		});
 	}
 
 	@Override
 	public long pexpireAt(byte[] key, long millisecondsTimestamp) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0;
+			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0L;
 		});
 	}
 
 	@Override
 	public long pexpireAt(byte[] key, long millisecondsTimestamp, ExpiryOption expiryOption) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0;
+			return connection.keyCommands().pExpireAt(key, millisecondsTimestamp) ? 1L : 0L;
 		});
 	}
 
@@ -265,7 +265,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public long renamenx(byte[] oldkey, byte[] newkey) {
 		return (long) redisTemplate.execute((RedisCallback) connection -> {
-			return connection.keyCommands().renameNX(oldkey, newkey) ? 1L : 0;
+			return connection.keyCommands().renameNX(oldkey, newkey) ? 1L : 0L;
 		});
 	}
 
@@ -544,27 +544,38 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 	@Override
 	public Long hset(byte[] key, byte[] field, byte[] value) {
-		return execCommand(jedis -> jedis.hset(key, field, value));
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hSet(key, field, value) ? 1L : 0L;
+		});
 	}
 
 	@Override
 	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
-		return execCommand(jedis -> jedis.hset(key, hash));
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			connection.hashCommands().hMSet(key, hash);
+			return null;
+		});
 	}
 
 	@Override
 	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
-		return execCommand(jedis -> jedis.hsetnx(key, field, value));
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hSetNX(key, field, value) ? 1L : 0L;
+		});
 	}
 
 	@Override
 	public Long hstrlen(byte[] key, byte[] field) {
-		return execCommand(jedis -> jedis.hstrlen(key, field));
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hStrLen(key, field);
+		});
 	}
 
 	@Override
 	public List<byte[]> hvals(byte[] key) {
-		return execCommand(jedis -> jedis.hvals(key));
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hashCommands().hVals(key);
+		});
 	}
 
 	@Override
