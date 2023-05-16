@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.RedisTemplateUtils;
 
@@ -1053,6 +1055,175 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public Long rpushx(byte[] key, byte[]... values) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Long sadd(byte[] key, byte[]... members) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sAdd(key, members);
+		});
+	}
+
+	@Override
+	public Long scard(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sCard(key);
+		});
+	}
+
+	@Override
+	public Set<byte[]> sdiff(byte[]... keys) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sDiff(keys);
+		});
+	}
+
+	@Override
+	public Long sdiffstore(byte[] dstkey, byte[]... keys) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sDiffStore(dstkey, keys);
+		});
+	}
+
+	@Override
+	public Set<byte[]> sinter(byte[]... keys) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sInter(keys);
+		});
+	}
+
+	@Override
+	public long sintercard(byte[]... keys) {
+		Set<byte[]> set = sinter(keys);// 不支持直接命令
+		return set.size();
+	}
+
+	@Override
+	public long sintercard(int limit, byte[]... keys) {
+		Set<byte[]> set = sinter(keys);// 不支持直接命令
+		if (limit == 0) {
+			return set.size();
+		}
+		return set.size() > limit ? limit : set.size();
+	}
+
+	@Override
+	public Long sinterstore(byte[] dstkey, byte[]... keys) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sInterStore(dstkey, keys);
+		});
+	}
+
+	@Override
+	public Boolean sismember(byte[] key, byte[] member) {
+		return (Boolean) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sIsMember(key, member);
+		});
+	}
+
+	@Override
+	public Set<byte[]> smembers(byte[] key) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sMembers(key);
+		});
+	}
+
+	@Override
+	public List<Boolean> smismember(byte[] key, byte[]... members) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sMIsMember(key, members);
+		});
+	}
+
+	@Override
+	public Long smove(byte[] srckey, byte[] dstkey, byte[] member) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sMove(srckey, dstkey, member) ? 1L : 0L;
+		});
+	}
+
+	@Override
+	public byte[] spop(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sPop(key);
+		});
+	}
+
+	@Override
+	public Set<byte[]> spop(byte[] key, long count) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			List<byte[]> list = connection.setCommands().sPop(key, count);
+			return new HashSet<>(list);
+		});
+	}
+
+	@Override
+	public byte[] srandmember(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sRandMember(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> srandmember(byte[] key, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sRandMember(key, count);
+		});
+	}
+
+	@Override
+	public Long srem(byte[] key, byte[]... members) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sRem(key, members);
+		});
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
+		return sscan(key, cursor, null);
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
+		return (ValueScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
+
+			ScanOptionsBuilder builder = ScanOptions.scanOptions();
+			if (params != null) {
+				params.match(params.getMatch());
+				if (params.getCount() != null) {
+					builder.count(params.getCount());
+				}
+			}
+
+			ScanOptions scanOptions = builder.build();
+
+			try (Cursor<byte[]> scan = connection.sScan(key, scanOptions);) {
+
+				List<byte[]> list = new LinkedList<>();
+
+				while (scan.hasNext()) {
+					byte[] bs = scan.next();
+					list.add(bs);
+				}
+
+				String cursorId = Long.toString(scan.getCursorId());
+				return new ValueScanCursor<byte[]>(cursorId, "0".equals(cursorId), list);
+			}
+		});
+	}
+
+	@Override
+	public Set<byte[]> sunion(byte[]... keys) {
+		return (Set) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sUnion(keys);
+		});
+	}
+
+	@Override
+	public Long sunionstore(byte[] dstkey, byte[]... keys) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.setCommands().sUnionStore(dstkey, keys);
+		});
 	}
 
 	@Override

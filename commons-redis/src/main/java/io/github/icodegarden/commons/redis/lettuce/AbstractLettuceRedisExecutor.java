@@ -26,6 +26,7 @@ import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.CopyArgs;
@@ -732,7 +733,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		if (params.getRank() != null) {
 			lPosArgs.rank(params.getRank());
 		}
-		if (params.getMaxLen() != null && params.getMaxLen() != 0/*lettuce要求不能是0*/) {
+		if (params.getMaxLen() != null && params.getMaxLen() != 0/* lettuce要求不能是0 */) {
 			lPosArgs.maxlen(params.getMaxLen());
 		}
 		return lPosArgs;
@@ -791,6 +792,119 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	@Override
 	public Long rpushx(byte[] key, byte[]... values) {
 		return syncRedisCommands.rpushx(key, values);
+	}
+
+	@Override
+	public Long sadd(byte[] key, byte[]... members) {
+		return syncRedisCommands.sadd(key, members);
+	}
+
+	@Override
+	public Long scard(byte[] key) {
+		return syncRedisCommands.scard(key);
+	}
+
+	@Override
+	public Set<byte[]> sdiff(byte[]... keys) {
+		return syncRedisCommands.sdiff(keys);
+	}
+
+	@Override
+	public Long sdiffstore(byte[] dstkey, byte[]... keys) {
+		return syncRedisCommands.sdiffstore(dstkey, keys);
+	}
+
+	@Override
+	public Set<byte[]> sinter(byte[]... keys) {
+		return syncRedisCommands.sinter(keys);
+	}
+
+	@Override
+	public long sintercard(byte[]... keys) {
+		return syncRedisCommands.sintercard(keys);
+	}
+
+	@Override
+	public long sintercard(int limit, byte[]... keys) {
+		return syncRedisCommands.sintercard(limit, keys);
+	}
+
+	@Override
+	public Long sinterstore(byte[] dstkey, byte[]... keys) {
+		return syncRedisCommands.sinterstore(dstkey, keys);
+	}
+
+	@Override
+	public Boolean sismember(byte[] key, byte[] member) {
+		return syncRedisCommands.sismember(key, member);
+	}
+
+	@Override
+	public Set<byte[]> smembers(byte[] key) {
+		return syncRedisCommands.smembers(key);
+	}
+
+	@Override
+	public List<Boolean> smismember(byte[] key, byte[]... members) {
+		return syncRedisCommands.smismember(key, members);
+	}
+
+	@Override
+	public Long smove(byte[] srckey, byte[] dstkey, byte[] member) {
+		return syncRedisCommands.smove(srckey, dstkey, member) ? 1L : 0L;
+	}
+
+	@Override
+	public byte[] spop(byte[] key) {
+		return syncRedisCommands.spop(key);
+	}
+
+	@Override
+	public Set<byte[]> spop(byte[] key, long count) {
+		return syncRedisCommands.spop(key, count);
+	}
+
+	@Override
+	public byte[] srandmember(byte[] key) {
+		return syncRedisCommands.srandmember(key);
+	}
+
+	@Override
+	public List<byte[]> srandmember(byte[] key, int count) {
+		return syncRedisCommands.srandmember(key, count);
+	}
+
+	@Override
+	public Long srem(byte[] key, byte[]... members) {
+		return syncRedisCommands.srem(key, members);
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.ValueScanCursor<byte[]> scanResult = syncRedisCommands.sscan(key, scanCursor);
+		return LettuceUtils.convertValueScanCursor(scanResult);
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
+
+		io.lettuce.core.ValueScanCursor<byte[]> scanResult = syncRedisCommands.sscan(key, scanCursor, scanArgs);
+		return LettuceUtils.convertValueScanCursor(scanResult);
+	}
+
+	@Override
+	public Set<byte[]> sunion(byte[]... keys) {
+		return syncRedisCommands.sunion(keys);
+	}
+
+	@Override
+	public Long sunionstore(byte[] dstkey, byte[]... keys) {
+		return syncRedisCommands.sunionstore(dstkey, keys);
 	}
 
 	@Override

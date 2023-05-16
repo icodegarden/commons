@@ -27,6 +27,7 @@ import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.JedisUtils;
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -710,6 +711,113 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	@Override
 	public Long rpushx(byte[] key, byte[]... values) {
 		return jc.rpushx(key, values);
+	}
+
+	@Override
+	public Long sadd(byte[] key, byte[]... members) {
+		return jc.sadd(key, members);
+	}
+
+	@Override
+	public Long scard(byte[] key) {
+		return jc.scard(key);
+	}
+
+	@Override
+	public Set<byte[]> sdiff(byte[]... keys) {
+		return jc.sdiff(keys);
+	}
+
+	@Override
+	public Long sdiffstore(byte[] dstkey, byte[]... keys) {
+		return jc.sdiffstore(dstkey, keys);
+	}
+
+	@Override
+	public Set<byte[]> sinter(byte[]... keys) {
+		return jc.sinter(keys);
+	}
+
+	@Override
+	public long sintercard(byte[]... keys) {
+		return jc.sintercard(keys);
+	}
+
+	@Override
+	public long sintercard(int limit, byte[]... keys) {
+		return jc.sintercard(limit, keys);
+	}
+
+	@Override
+	public Long sinterstore(byte[] dstkey, byte[]... keys) {
+		return jc.sinterstore(dstkey, keys);
+	}
+
+	@Override
+	public Boolean sismember(byte[] key, byte[] member) {
+		return jc.sismember(key, member);
+	}
+
+	@Override
+	public Set<byte[]> smembers(byte[] key) {
+		return jc.smembers(key);
+	}
+
+	@Override
+	public List<Boolean> smismember(byte[] key, byte[]... members) {
+		return jc.smismember(key, members);
+	}
+
+	@Override
+	public Long smove(byte[] srckey, byte[] dstkey, byte[] member) {
+		return jc.smove(srckey, dstkey, member);
+	}
+
+	@Override
+	public byte[] spop(byte[] key) {
+		return jc.spop(key);
+	}
+
+	@Override
+	public Set<byte[]> spop(byte[] key, long count) {
+		return jc.spop(key, count);
+	}
+
+	@Override
+	public byte[] srandmember(byte[] key) {
+		return jc.srandmember(key);
+	}
+
+	@Override
+	public List<byte[]> srandmember(byte[] key, int count) {
+		return jc.srandmember(key, count);
+	}
+
+	@Override
+	public Long srem(byte[] key, byte[]... members) {
+		return jc.srem(key, members);
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
+		ScanResult<byte[]> scanResult = jc.sscan(key, cursor);
+		return JedisUtils.convertValueScanCursor(scanResult);
+	}
+
+	@Override
+	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
+		ScanResult<byte[]> scanResult = jc.sscan(key, cursor, JedisUtils.convertScanParams(params));
+		return JedisUtils.convertValueScanCursor(scanResult);
+	}
+
+	@Override
+	public Set<byte[]> sunion(byte[]... keys) {
+		return jc.sunion(keys);
+	}
+
+	@Override
+	public Long sunionstore(byte[] dstkey, byte[]... keys) {
+		return jc.sunionstore(dstkey, keys);
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
@@ -126,6 +127,12 @@ public class LettuceUtils {
 		MapScanCursor<T, T> mapScanCursor = new MapScanCursor<T, T>(scanResult.getCursor(), scanResult.isFinished(),
 				scanResult.getMap());
 		return mapScanCursor;
+	}
+
+	public static <T> ValueScanCursor<T> convertValueScanCursor(io.lettuce.core.ValueScanCursor<T> scanResult) {
+		ValueScanCursor<T> valueScanCursor = new ValueScanCursor<T>(scanResult.getCursor(), scanResult.isFinished(),
+				scanResult.getValues());
+		return valueScanCursor;
 	}
 
 	public static io.lettuce.core.GetExArgs convertGetExArgs(GetExArgs params) {

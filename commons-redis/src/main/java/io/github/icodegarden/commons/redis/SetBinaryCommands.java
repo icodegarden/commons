@@ -3,8 +3,8 @@ package io.github.icodegarden.commons.redis;
 import java.util.List;
 import java.util.Set;
 
-import redis.clients.jedis.params.ScanParams;
-import redis.clients.jedis.resps.ScanResult;
+import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 
 /**
  * 
@@ -435,12 +435,12 @@ public interface SetBinaryCommands {
 	 * redis> <br>
 	 * 
 	 * @param key
-	 * @param member
+	 * @param members
 	 * @return
 	 */
-	Long srem(final byte[] key, final byte[]... member);
+	Long srem(final byte[] key, final byte[]... members);
 
-	ScanResult<byte[]> sscan(final byte[] key, final byte[] cursor);
+	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor);
 
 	/**
 	 * <h1>迭代set的元素</h1> <br>
@@ -452,7 +452,7 @@ public interface SetBinaryCommands {
 	 * @param params
 	 * @return
 	 */
-	ScanResult<byte[]> sscan(final byte[] key, final byte[] cursor, final ScanParams params);
+	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor, final ScanArgs params);
 
 	/**
 	 * <h1>返回多个set的并集</h1> <br>

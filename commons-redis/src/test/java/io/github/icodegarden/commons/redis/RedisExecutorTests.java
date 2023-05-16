@@ -24,6 +24,7 @@ import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.spring.RedisTemplateRedisExecutor;
 
 /**
@@ -615,64 +616,64 @@ public abstract class RedisExecutorTests {
 	public void sort() throws Exception {
 		byte[][] arr1 = { "22".getBytes(), "11".getBytes(), "33".getBytes() };
 		redisExecutor.rpush(key, arr1);
-		
+
 		List<byte[]> list = null;
-		
-		list = redisExecutor.sort(key);//不支持，因为value不是数值
+
+		list = redisExecutor.sort(key);// 不支持，因为value不是数值
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		
+
 		list = redisExecutor.lrange(key, 0, -1);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		//-------------------------------------------------------------
+		// -------------------------------------------------------------
 		redisExecutor.del(key);
-		arr1 = new byte[][]{ "weight_22".getBytes(), "weight_11".getBytes(), "weight_33".getBytes() };
+		arr1 = new byte[][] { "weight_22".getBytes(), "weight_11".getBytes(), "weight_33".getBytes() };
 		redisExecutor.rpush(key, arr1);
-		
+
 		SortArgs sortArgs = new SortArgs();
 		sortArgs.asc();
-		sortArgs.alpha();//因为值不是数字，要按ascii排序就需要alpha
+		sortArgs.alpha();// 因为值不是数字，要按ascii排序就需要alpha
 		list = redisExecutor.sort(key, sortArgs);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		
+
 		list = redisExecutor.lrange(key, 0, -1);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		//-------------------------------------------------------------
+		// -------------------------------------------------------------
 		redisExecutor.del(key);
-		arr1 = new byte[][]{ "22".getBytes(), "11".getBytes(), "33".getBytes() };
+		arr1 = new byte[][] { "22".getBytes(), "11".getBytes(), "33".getBytes() };
 		redisExecutor.rpush(key, arr1);
-		
+
 		long l = redisExecutor.sort(key, k2);
 		Assertions.assertThat(l).isEqualTo(arr1.length);
-		
+
 		list = redisExecutor.lrange(key, 0, -1);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		//-------------------------------------------------------------
+		// -------------------------------------------------------------
 		redisExecutor.del(key);
-		arr1 = new byte[][]{ "weight_22".getBytes(), "weight_11".getBytes(), "weight_33".getBytes() };
+		arr1 = new byte[][] { "weight_22".getBytes(), "weight_11".getBytes(), "weight_33".getBytes() };
 		redisExecutor.rpush(key, arr1);
-		
+
 		sortArgs = new SortArgs();
-		sortArgs.limit(1, 10);//倒排的结果中从1开始截取
+		sortArgs.limit(1, 10);// 倒排的结果中从1开始截取
 		sortArgs.desc();
-		sortArgs.alpha();//因为值不是数字，要按ascii排序就需要alpha
+		sortArgs.alpha();// 因为值不是数字，要按ascii排序就需要alpha
 		l = redisExecutor.sort(key, sortArgs, k2);
 		Assertions.assertThat(l).isEqualTo(2);
-		
+
 		list = redisExecutor.lrange(key, 0, -1);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		
+
 		list = redisExecutor.lrange(k2, 0, -1);
 		Assertions.assertThat(list.get(0)).isEqualTo("weight_22".getBytes());
 		Assertions.assertThat(list.get(1)).isEqualTo("weight_11".getBytes());
@@ -682,32 +683,32 @@ public abstract class RedisExecutorTests {
 	public void sortRO() throws Exception {
 		byte[][] arr1 = { "weight_22".getBytes(), "weight_11".getBytes(), "weight_33".getBytes() };
 		redisExecutor.rpush(key, arr1);
-		
+
 		SortArgs sortArgs = new SortArgs();
 		sortArgs.asc();
-		sortArgs.alpha();//因为值不是数字，要按ascii排序就需要alpha
+		sortArgs.alpha();// 因为值不是数字，要按ascii排序就需要alpha
 		List<byte[]> list = redisExecutor.sortReadonly(key, sortArgs);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[1]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(2)).isEqualTo(arr1[2]);
-		//-------------------------------------------------------------
-		
+		// -------------------------------------------------------------
+
 		sortArgs = new SortArgs();
-		sortArgs.limit(1, 10);//倒排的结果中从1开始截取
+		sortArgs.limit(1, 10);// 倒排的结果中从1开始截取
 		sortArgs.desc();
-		sortArgs.alpha();//因为值不是数字，要按ascii排序就需要alpha
+		sortArgs.alpha();// 因为值不是数字，要按ascii排序就需要alpha
 		list = redisExecutor.sortReadonly(key, sortArgs);
 		Assertions.assertThat(list.size()).isEqualTo(2);
 		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
 		Assertions.assertThat(list.get(1)).isEqualTo(arr1[1]);
-		//-------------------------------------------------------------
-		
+		// -------------------------------------------------------------
+
 		sortArgs = new SortArgs();
-		sortArgs.by("weight_*".getBytes());//有问题
-		sortArgs.get("weight_*".getBytes());//有问题
-		sortArgs.limit(1, 10);//倒排的结果中从1开始截取
+		sortArgs.by("weight_*".getBytes());// 有问题
+		sortArgs.get("weight_*".getBytes());// 有问题
+		sortArgs.limit(1, 10);// 倒排的结果中从1开始截取
 		sortArgs.desc();
-		sortArgs.alpha();//因为值不是数字，要按ascii排序就需要alpha
+		sortArgs.alpha();// 因为值不是数字，要按ascii排序就需要alpha
 //		list = redisExecutor.sortReadonly(key, sortArgs);
 //		Assertions.assertThat(list.size()).isEqualTo(2);
 //		Assertions.assertThat(list.get(0)).isEqualTo(arr1[0]);
@@ -1023,10 +1024,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void blmpop() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
 		byte[][] arr2 = { "x".getBytes(), "y".getBytes(), "z".getBytes() };
 		redisExecutor.rpush(key, arr1);
@@ -1179,7 +1180,7 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void lmpop() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
@@ -1305,7 +1306,7 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void lpushx() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
@@ -1408,7 +1409,7 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void rpushx() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
@@ -1418,6 +1419,261 @@ public abstract class RedisExecutorTests {
 		redisExecutor.rpush(key, "z".getBytes());
 		l = redisExecutor.rpushx(key, arr1);
 		Assertions.assertThat(l).isEqualTo(4);
+	}
+
+	@Test
+	public void sadd() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		Long l = redisExecutor.sadd(key, arr1);
+		Assertions.assertThat(l).isEqualTo(arr1.length);
+
+		l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(arr1.length);
+	}
+
+	@Test
+	public void scard() throws Exception {
+		// 不需要单独测
+	}
+
+	@Test
+	public void sdiff() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "c".getBytes(), "d".getBytes(), "e".getBytes() };
+		byte[][] arr3 = { "f".getBytes(), "b".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+		redisExecutor.sadd(k3, arr3);
+
+		Set<byte[]> set = redisExecutor.sdiff(key, k2);
+		Assertions.assertThat(set.size()).isEqualTo(2);
+		Assertions.assertThat(set).containsAll(Arrays.asList("a".getBytes(), "b".getBytes()));// 是key对k2的差集
+
+		set = redisExecutor.sdiff(key, k2, k3);
+		Assertions.assertThat(set.size()).isEqualTo(1);
+		Assertions.assertThat(set).containsAll(Arrays.asList("a".getBytes()));// 是key对k2、k3的差集
+	}
+
+	@Test
+	public void sdiffstore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "c".getBytes(), "d".getBytes(), "e".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		Long l = redisExecutor.sdiffstore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.scard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void sinter() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "b".getBytes(), "d".getBytes(), "e".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		Set<byte[]> set = redisExecutor.sinter(key, k2);
+		Assertions.assertThat(set.size()).isEqualTo(1);
+		Assertions.assertThat(set).containsAll(Arrays.asList("b".getBytes()));
+	}
+
+	@Test
+	public void sintercard() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "b".getBytes(), "c".getBytes(), "d".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		long l = redisExecutor.sintercard(key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.sintercard(1, key, k2);
+		Assertions.assertThat(l).isEqualTo(1);
+	}
+
+	@Test
+	public void sinterstore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "b".getBytes(), "c".getBytes(), "d".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		long l = redisExecutor.sinterstore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.scard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void sismember() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		Boolean b = redisExecutor.sismember(key, "b".getBytes());
+		Assertions.assertThat(b).isTrue();
+
+		b = redisExecutor.sismember(key, "d".getBytes());
+		Assertions.assertThat(b).isFalse();
+	}
+
+	@Test
+	public void smembers() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		Set<byte[]> set = redisExecutor.smembers(key);
+		Assertions.assertThat(set.size()).isEqualTo(3);
+	}
+
+	@Test
+	public void smismember() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		List<Boolean> list = redisExecutor.smismember(key, "b".getBytes(), "c".getBytes(), "d".getBytes());
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isTrue();
+		Assertions.assertThat(list.get(1)).isTrue();
+		Assertions.assertThat(list.get(2)).isFalse();
+	}
+
+	@Test
+	public void smove() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		Long l = redisExecutor.smove(key, k2, "b".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+
+		l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.scard(k2);
+		Assertions.assertThat(l).isEqualTo(1);
+	}
+
+	@Test
+	public void spop() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		byte[] bs = redisExecutor.spop(key);
+		Assertions.assertThat(bs).isNotNull();
+
+		Long l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		Set<byte[]> set = redisExecutor.spop(key, 10);
+		Assertions.assertThat(set.size()).isEqualTo(2);
+
+		l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(0);
+	}
+
+	@Test
+	public void srandmember() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		byte[] bs = redisExecutor.srandmember(key);
+		Assertions.assertThat(bs).isNotNull();
+
+		Long l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(arr1.length);
+
+		List<byte[]> list = redisExecutor.srandmember(key, 10);
+		Assertions.assertThat(list.size()).isEqualTo(arr1.length);
+
+		l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(arr1.length);
+	}
+
+	@Test
+	public void srem() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		Long l = redisExecutor.srem(key, "b".getBytes(), "c".getBytes(), "z".getBytes());
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.scard(key);
+		Assertions.assertThat(l).isEqualTo(1);
+	}
+
+	@Test
+	public void sscan() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes() };
+		redisExecutor.sadd(key, arr1);
+
+		byte[] cursorbytes = "0".getBytes();
+		ValueScanCursor<byte[]> cursor = null;
+		do {
+			cursor = redisExecutor.sscan(key, cursorbytes);
+
+			cursor.getValues().forEach(bs -> {
+				System.out.println(new String(bs));
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+
+		// -----------------------------------------------------------------
+
+		ScanArgs scanArgs = new ScanArgs();
+		scanArgs.match("*".getBytes());
+
+		cursorbytes = "0".getBytes();
+		cursor = null;
+		do {
+			cursor = redisExecutor.sscan(key, cursorbytes, scanArgs);
+
+			cursor.getValues().forEach(bs -> {
+				System.out.println(new String(bs));
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+	}
+
+	@Test
+	public void sunion() throws Exception {
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "a".getBytes(), "x".getBytes(), "y".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		Set<byte[]> set = redisExecutor.sunion(key, k2);
+		Assertions.assertThat(set.size()).isEqualTo(5);
+	}
+
+	@Test
+	public void sunionstore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes() };
+		byte[][] arr2 = { "a".getBytes(), "x".getBytes(), "y".getBytes() };
+		redisExecutor.sadd(key, arr1);
+		redisExecutor.sadd(k2, arr2);
+
+		Long l = redisExecutor.sunionstore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(5);
+
+		l = redisExecutor.scard(k3);
+		Assertions.assertThat(l).isEqualTo(5);
 	}
 
 	@Test

@@ -8,41 +8,9 @@ import java.io.IOException;
  *
  */
 public interface RedisExecutor extends KeyBinaryCommands, StringBinaryCommands, HashBinaryCommands, ListBinaryCommands,
-		ScriptingKeyBinaryCommands {
+		SetBinaryCommands, ScriptingKeyBinaryCommands {
 
 	void close() throws IOException;
-
-//	Set<byte[]> keys(byte[] pattern);
-//
-//	byte[] get(final byte[] key);
-//
-//	List<byte[]> mget(final byte[]... keys);
-//
-//	String set(final byte[] key, final byte[] value);
-//
-//	String setex(final byte[] key, final long seconds, final byte[] value);
-//
-//	Long setnx(final byte[] key, final byte[] value);
-//
-//	Long expire(final byte[] key, final long seconds);
-//
-//	Long del(final byte[] key);
-//
-//	Long del(final byte[]... keys);
-//
-//	Long incr(byte[] key);
-//
-//	Long incrBy(byte[] key, long value);
-//
-//	Double incrByFloat(byte[] key, double value);
-//
-//	Long hincrBy(byte[] key, byte[] field, long value);
-//
-//	Double hincrByFloat(byte[] key, byte[] field, double value);
-//
-//	Long decr(byte[] key);
-//
-//	Long decrBy(byte[] key, long value);
 
 	/**
 	 * 该动作是一直阻塞的，直到unsubscribe

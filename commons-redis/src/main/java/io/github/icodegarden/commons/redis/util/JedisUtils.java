@@ -17,6 +17,7 @@ import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
+import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import redis.clients.jedis.params.GetExParams;
 import redis.clients.jedis.params.SortingParams;
 import redis.clients.jedis.resps.ScanResult;
@@ -112,6 +113,12 @@ public class JedisUtils {
 		MapScanCursor<T, T> mapScanCursor = new MapScanCursor<T, T>(scanResult.getCursor(),
 				"0".equals(scanResult.getCursor()), map);
 		return mapScanCursor;
+	}
+
+	public static <T> ValueScanCursor<T> convertValueScanCursor(ScanResult<T> scanResult) {
+		ValueScanCursor<T> valueScanCursor = new ValueScanCursor<T>(scanResult.getCursor(),
+				"0".equals(scanResult.getCursor()), scanResult.getResult());
+		return valueScanCursor;
 	}
 
 	public static GetExParams convertGetExParams(GetExArgs params) {
