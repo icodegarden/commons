@@ -15,8 +15,12 @@ import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.ListDirection;
+import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
@@ -26,7 +30,9 @@ import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.CopyArgs;
 import io.lettuce.core.ExpireArgs;
-import io.lettuce.core.KeyValue;
+import io.lettuce.core.LMPopArgs;
+import io.lettuce.core.LMoveArgs;
+import io.lettuce.core.LPosArgs;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
 import io.lettuce.core.ScanCursor;
@@ -358,8 +364,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<byte[]> hmget(byte[] key, byte[]... fields) {
-		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.hmget(key, fields);
-		return list.stream().map(KeyValue::getValue).collect(Collectors.toList());
+		List<io.lettuce.core.KeyValue<byte[], byte[]>> list = syncRedisCommands.hmget(key, fields);
+		return list.stream().map(io.lettuce.core.KeyValue::getValue).collect(Collectors.toList());
 	}
 
 	@Override
@@ -379,8 +385,9 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public Map<byte[], byte[]> hrandfieldWithValues(byte[] key, long count) {
-		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.hrandfieldWithvalues(key, count);
-		return list.stream().collect(Collectors.toMap(KeyValue::getKey, KeyValue::getValue, (a, b) -> a));
+		List<io.lettuce.core.KeyValue<byte[], byte[]>> list = syncRedisCommands.hrandfieldWithvalues(key, count);
+		return list.stream().collect(
+				Collectors.toMap(io.lettuce.core.KeyValue::getKey, io.lettuce.core.KeyValue::getValue, (a, b) -> a));
 	}
 
 	@Override
@@ -520,8 +527,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<byte[]> mget(byte[]... keys) {
-		List<KeyValue<byte[], byte[]>> list = syncRedisCommands.mget(keys);
-		return list.stream().map(KeyValue::getValue).collect(Collectors.toList());
+		List<io.lettuce.core.KeyValue<byte[], byte[]>> list = syncRedisCommands.mget(keys);
+		return list.stream().map(io.lettuce.core.KeyValue::getValue).collect(Collectors.toList());
 	}
 
 	@Override
@@ -569,6 +576,221 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	@Override
 	public byte[] substr(byte[] key, int start, int end) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, long timeout) {
+		LMoveArgs lMoveArgs = convertLMoveArgs(from, to);
+		return syncRedisCommands.blmove(srcKey, dstKey, lMoveArgs, timeout);
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, double timeout) {
+		LMoveArgs lMoveArgs = convertLMoveArgs(from, to);
+		return syncRedisCommands.blmove(srcKey, dstKey, lMoveArgs, timeout);
+	}
+
+	private LMoveArgs convertLMoveArgs(ListDirection from, ListDirection to) {
+		LMoveArgs lMoveArgs = null;
+		if (from.equals(ListDirection.LEFT) && to.equals(ListDirection.LEFT)) {
+			lMoveArgs = LMoveArgs.Builder.leftLeft();
+		} else if (from.equals(ListDirection.LEFT) && to.equals(ListDirection.RIGHT)) {
+			lMoveArgs = LMoveArgs.Builder.leftRight();
+		} else if (from.equals(ListDirection.RIGHT) && to.equals(ListDirection.LEFT)) {
+			lMoveArgs = LMoveArgs.Builder.rightLeft();
+		} else if (from.equals(ListDirection.RIGHT) && to.equals(ListDirection.RIGHT)) {
+			lMoveArgs = LMoveArgs.Builder.rightRight();
+		}
+		return lMoveArgs;
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, byte[]... keys) {
+		LMPopArgs lmPopArgs = convertLMPopArgs(direction, null);
+		io.lettuce.core.KeyValue<byte[], List<byte[]>> kv = syncRedisCommands.blmpop(timeout, lmPopArgs, keys);
+		return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, long count, byte[]... keys) {
+		LMPopArgs lmPopArgs = convertLMPopArgs(direction, count);
+		io.lettuce.core.KeyValue<byte[], List<byte[]>> kv = syncRedisCommands.blmpop(timeout, lmPopArgs, keys);
+		return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+	}
+
+	private LMPopArgs convertLMPopArgs(ListDirection direction, Long count) {
+		LMPopArgs lmPopArgs = null;
+		if (direction.equals(ListDirection.LEFT)) {
+			lmPopArgs = LMPopArgs.Builder.left();
+		} else if (direction.equals(ListDirection.RIGHT)) {
+			lmPopArgs = LMPopArgs.Builder.right();
+		}
+		if (count != null) {
+			lmPopArgs.count(count);
+		}
+		return lmPopArgs;
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(long timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], byte[]> kv = syncRedisCommands.blpop(timeout, keys);
+		return new KeyValue<byte[], byte[]>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(double timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], byte[]> kv = syncRedisCommands.blpop(timeout, keys);
+		return new KeyValue<byte[], byte[]>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(long timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], byte[]> kv = syncRedisCommands.brpop(timeout, keys);
+		return new KeyValue<byte[], byte[]>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(double timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], byte[]> kv = syncRedisCommands.brpop(timeout, keys);
+		return new KeyValue<byte[], byte[]>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public byte[] brpoplpush(byte[] source, byte[] destination, long timeout) {
+		return syncRedisCommands.brpoplpush(timeout, source, destination);
+	}
+
+	@Override
+	public byte[] lindex(byte[] key, long index) {
+		return syncRedisCommands.lindex(key, index);
+	}
+
+	@Override
+	public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+		return syncRedisCommands.linsert(key, where.equals(ListPosition.BEFORE), pivot, value);
+	}
+
+	@Override
+	public Long llen(byte[] key) {
+		return syncRedisCommands.llen(key);
+	}
+
+	@Override
+	public byte[] lmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to) {
+		LMoveArgs lMoveArgs = convertLMoveArgs(from, to);
+		return syncRedisCommands.lmove(srcKey, dstKey, lMoveArgs);
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, byte[]... keys) {
+		LMPopArgs lmPopArgs = convertLMPopArgs(direction, null);
+		io.lettuce.core.KeyValue<byte[], List<byte[]>> kv = syncRedisCommands.lmpop(lmPopArgs, keys);
+		return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, long count, byte[]... keys) {
+		LMPopArgs lmPopArgs = convertLMPopArgs(direction, count);
+		io.lettuce.core.KeyValue<byte[], List<byte[]>> kv = syncRedisCommands.lmpop(lmPopArgs, keys);
+		return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+	}
+
+	@Override
+	public byte[] lpop(byte[] key) {
+		return syncRedisCommands.lpop(key);
+	}
+
+	@Override
+	public List<byte[]> lpop(byte[] key, long count) {
+		return syncRedisCommands.lpop(key, count);
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element) {
+		return syncRedisCommands.lpos(key, element);
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, long count) {
+		return syncRedisCommands.lpos(key, element, (int) count);
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element, LPosParams params) {
+		LPosArgs lPosArgs = convertLPosArgs(params);
+		return syncRedisCommands.lpos(key, element, lPosArgs);
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, LPosParams params, long count) {
+		LPosArgs lPosArgs = convertLPosArgs(params);
+		return syncRedisCommands.lpos(key, element, (int) count, lPosArgs);
+	}
+
+	private LPosArgs convertLPosArgs(LPosParams params) {
+		LPosArgs lPosArgs = new LPosArgs();
+		if (params.getRank() != null) {
+			lPosArgs.rank(params.getRank());
+		}
+		if (params.getMaxLen() != null && params.getMaxLen() != 0/*lettuce要求不能是0*/) {
+			lPosArgs.maxlen(params.getMaxLen());
+		}
+		return lPosArgs;
+	}
+
+	@Override
+	public Long lpush(byte[] key, byte[]... values) {
+		return syncRedisCommands.lpush(key, values);
+	}
+
+	@Override
+	public Long lpushx(byte[] key, byte[]... values) {
+		return syncRedisCommands.lpushx(key, values);
+	}
+
+	@Override
+	public List<byte[]> lrange(byte[] key, long start, long stop) {
+		return syncRedisCommands.lrange(key, start, stop);
+	}
+
+	@Override
+	public Long lrem(byte[] key, long count, byte[] value) {
+		return syncRedisCommands.lrem(key, count, value);
+	}
+
+	@Override
+	public String lset(byte[] key, long index, byte[] value) {
+		return syncRedisCommands.lset(key, index, value);
+	}
+
+	@Override
+	public String ltrim(byte[] key, long start, long stop) {
+		return syncRedisCommands.ltrim(key, start, stop);
+	}
+
+	@Override
+	public byte[] rpop(byte[] key) {
+		return syncRedisCommands.rpop(key);
+	}
+
+	@Override
+	public List<byte[]> rpop(byte[] key, long count) {
+		return syncRedisCommands.rpop(key, count);
+	}
+
+	@Override
+	public byte[] rpoplpush(byte[] srckey, byte[] dstkey) {
+		return syncRedisCommands.rpoplpush(srckey, dstkey);
+	}
+
+	@Override
+	public Long rpush(byte[] key, byte[]... values) {
+		return syncRedisCommands.rpush(key, values);
+	}
+
+	@Override
+	public Long rpushx(byte[] key, byte[]... values) {
+		return syncRedisCommands.rpushx(key, values);
 	}
 
 	@Override

@@ -753,7 +753,11 @@ public interface KeyBinaryCommands {
 
 	/**
 	 * <h1>返回排序结果，list、set、sorted set</h1><br>
-	 * 
+	 * SORT_RO key [BY pattern] [LIMIT offset count] [GET pattern [GET
+  pattern ...]] [ASC | DESC] [ALPHA]<br>
+  
+  SORT_RO mylist BY weight_*->fieldname GET object_*->fieldname<br>
+  
 	 * @param key
 	 * @param sortingParams
 	 * @return

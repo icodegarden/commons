@@ -10,6 +10,7 @@ import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.LPosParams;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
@@ -168,5 +169,16 @@ public class JedisUtils {
 		}
 
 		return new LCSMatchResult(lcsMatchResult.getMatchString(), ms, lcsMatchResult.getLen());
+	}
+
+	public static redis.clients.jedis.params.LPosParams convertLPosParams(LPosParams params) {
+		redis.clients.jedis.params.LPosParams lPosParams = redis.clients.jedis.params.LPosParams.lPosParams();
+		if (params.getRank() != null) {
+			lPosParams.rank(params.getRank());
+		}
+		if (params.getMaxLen() != null) {
+			lPosParams.maxlen(params.getMaxLen());
+		}
+		return lPosParams;
 	}
 }

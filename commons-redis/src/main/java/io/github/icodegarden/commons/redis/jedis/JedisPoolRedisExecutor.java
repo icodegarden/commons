@@ -8,13 +8,19 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.util.CollectionUtils;
+
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.ListDirection;
+import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
@@ -509,10 +515,12 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	public Long hset(byte[] key, byte[] field, byte[] value) {
 		return execCommand(jedis -> jedis.hset(key, field, value));
 	}
+
 	@Override
 	public Long hset(byte[] key, Map<byte[], byte[]> hash) {
 		return execCommand(jedis -> jedis.hset(key, hash));
 	}
+
 	@Override
 	public Long hsetnx(byte[] key, byte[] field, byte[] value) {
 		return execCommand(jedis -> jedis.hsetnx(key, field, value));
@@ -526,6 +534,260 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	@Override
 	public List<byte[]> hvals(byte[] key) {
 		return execCommand(jedis -> jedis.hvals(key));
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, long timeout) {
+		redis.clients.jedis.args.ListDirection f = redis.clients.jedis.args.ListDirection.valueOf(from.name());
+		redis.clients.jedis.args.ListDirection t = redis.clients.jedis.args.ListDirection.valueOf(to.name());
+		return execCommand(jedis -> jedis.blmove(srcKey, dstKey, f, t, timeout));
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, double timeout) {
+		redis.clients.jedis.args.ListDirection f = redis.clients.jedis.args.ListDirection.valueOf(from.name());
+		redis.clients.jedis.args.ListDirection t = redis.clients.jedis.args.ListDirection.valueOf(to.name());
+		return execCommand(jedis -> jedis.blmove(srcKey, dstKey, f, t, timeout));
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, byte[]... keys) {
+		redis.clients.jedis.args.ListDirection d = redis.clients.jedis.args.ListDirection.valueOf(direction.name());
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<byte[]>> kv = jedis.blmpop(timeout, d, keys);
+			return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, long count, byte[]... keys) {
+		redis.clients.jedis.args.ListDirection d = redis.clients.jedis.args.ListDirection.valueOf(direction.name());
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<byte[]>> kv = jedis.blmpop(timeout, d, (int) count, keys);
+			return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(long timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.blpop(timeout, keys);
+			if (CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(double timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.blpop(timeout, keys);
+			if (CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(long timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.brpop(timeout, keys);
+			if (CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(double timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.brpop(timeout, keys);
+			if (CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public byte[] brpoplpush(byte[] source, byte[] destination, long timeout) {
+		return execCommand(jedis -> {
+			return jedis.brpoplpush(source, destination, (int) timeout);
+		});
+	}
+
+	@Override
+	public byte[] lindex(byte[] key, long index) {
+		return execCommand(jedis -> {
+			return jedis.lindex(key, index);
+		});
+	}
+
+	@Override
+	public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.args.ListPosition w = redis.clients.jedis.args.ListPosition.valueOf(where.name());
+			return jedis.linsert(key, w, pivot, value);
+		});
+	}
+
+	@Override
+	public Long llen(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.llen(key);
+		});
+	}
+
+	@Override
+	public byte[] lmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.args.ListDirection f = redis.clients.jedis.args.ListDirection.valueOf(from.name());
+			redis.clients.jedis.args.ListDirection t = redis.clients.jedis.args.ListDirection.valueOf(to.name());
+			return jedis.lmove(srcKey, dstKey, f, t);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.args.ListDirection d = redis.clients.jedis.args.ListDirection.valueOf(direction.name());
+			redis.clients.jedis.util.KeyValue<byte[], List<byte[]>> kv = jedis.lmpop(d, keys);
+			return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, long count, byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.args.ListDirection d = redis.clients.jedis.args.ListDirection.valueOf(direction.name());
+			redis.clients.jedis.util.KeyValue<byte[], List<byte[]>> kv = jedis.lmpop(d, (int) count, keys);
+			return new KeyValue<byte[], List<byte[]>>(kv.getKey(), kv.getValue());
+		});
+	}
+
+	@Override
+	public byte[] lpop(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.lpop(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> lpop(byte[] key, long count) {
+		return execCommand(jedis -> {
+			return jedis.lpop(key, (int) count);
+		});
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element) {
+		return execCommand(jedis -> {
+			return jedis.lpos(key, element);
+		});
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, long count) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.params.LPosParams lPosParams = new redis.clients.jedis.params.LPosParams();
+			return jedis.lpos(key, element, lPosParams, count);
+		});
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element, LPosParams params) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.params.LPosParams lPosParams = JedisUtils.convertLPosParams(params);
+			return jedis.lpos(key, element, lPosParams);
+		});
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, LPosParams params, long count) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.params.LPosParams lPosParams = JedisUtils.convertLPosParams(params);
+			return jedis.lpos(key, element, lPosParams, count);
+		});
+	}
+
+	@Override
+	public Long lpush(byte[] key, byte[]... values) {
+		return execCommand(jedis -> {
+			return jedis.lpush(key, values);
+		});
+	}
+
+	@Override
+	public Long lpushx(byte[] key, byte[]... values) {
+		return execCommand(jedis -> {
+			return jedis.lpushx(key, values);
+		});
+	}
+
+	@Override
+	public List<byte[]> lrange(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+			return jedis.lrange(key, start, stop);
+		});
+	}
+
+	@Override
+	public Long lrem(byte[] key, long count, byte[] value) {
+		return execCommand(jedis -> {
+			return jedis.lrem(key, count, value);
+		});
+	}
+
+	@Override
+	public String lset(byte[] key, long index, byte[] value) {
+		return execCommand(jedis -> {
+			return jedis.lset(key, index, value);
+		});
+	}
+
+	@Override
+	public String ltrim(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+			return jedis.ltrim(key, start, stop);
+		});
+	}
+
+	@Override
+	public byte[] rpop(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.rpop(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> rpop(byte[] key, long count) {
+		return execCommand(jedis -> {
+			return jedis.rpop(key, (int) count);
+		});
+	}
+
+	@Override
+	public byte[] rpoplpush(byte[] srckey, byte[] dstkey) {
+		return execCommand(jedis -> {
+			return jedis.rpoplpush(srckey, dstkey);
+		});
+	}
+
+	@Override
+	public Long rpush(byte[] key, byte[]... values) {
+		return execCommand(jedis -> {
+			return jedis.rpush(key, values);
+		});
+	}
+
+	@Override
+	public Long rpushx(byte[] key, byte[]... values) {
+		return execCommand(jedis -> {
+			return jedis.rpushx(key, values);
+		});
 	}
 
 	@Override

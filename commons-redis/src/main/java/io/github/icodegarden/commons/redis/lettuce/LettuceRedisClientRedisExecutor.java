@@ -24,12 +24,19 @@ public class LettuceRedisClientRedisExecutor extends AbstractLettuceRedisExecuto
 	private StatefulRedisConnection<byte[], byte[]> connection;
 	private RedisCommands<byte[], byte[]> syncRedisCommands;
 
+	private boolean shutdownClientOnClose = false;
+	
 	public LettuceRedisClientRedisExecutor(RedisClient client) {
 		this.client = client;
 		this.connection = client.connect(new ByteArrayCodec());
 		this.syncRedisCommands = this.connection.sync();
 
 		super.setRedisClusterCommands(syncRedisCommands);
+	}
+	
+	public LettuceRedisClientRedisExecutor setShutdownClientOnClose(boolean shutdownClientOnClose) {
+		this.shutdownClientOnClose = shutdownClientOnClose;
+		return this;
 	}
 	
 	@Override
@@ -44,10 +51,15 @@ public class LettuceRedisClientRedisExecutor extends AbstractLettuceRedisExecuto
 
 	@Override
 	public void close() throws IOException {
-		/**
-		 * 只关闭connection，client是外面给进来的，不关闭
-		 */
 		super.close();
 		connection.close();
+		
+		/**
+		 * client是外面给进来的，默认不关闭
+		 */
+		if(shutdownClientOnClose) {
+			client.close();
+			client.shutdown();	
+		}
 	}
 }

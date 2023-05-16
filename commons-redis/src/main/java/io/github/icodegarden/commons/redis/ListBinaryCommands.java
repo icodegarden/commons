@@ -2,10 +2,10 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
-import redis.clients.jedis.args.ListDirection;
-import redis.clients.jedis.args.ListPosition;
-import redis.clients.jedis.params.LPosParams;
-import redis.clients.jedis.util.KeyValue;
+import io.github.icodegarden.commons.redis.args.KeyValue;
+import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.ListDirection;
+import io.github.icodegarden.commons.redis.args.ListPosition;
 
 /**
  * 
@@ -14,6 +14,7 @@ import redis.clients.jedis.util.KeyValue;
  */
 public interface ListBinaryCommands {
 
+	byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, long timeout);
 	/**
 	 * <h1>从指定的list中pop元素，并push到另一个list。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
 	 * 
@@ -33,15 +34,17 @@ public interface ListBinaryCommands {
 	 * @param dstKey
 	 * @param from
 	 * @param to
-	 * @param timeout
+	 * @param timeout 0表示超时时间无限大
 	 * @return
 	 */
 	byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, double timeout);
-
+	/**
+	 * <h1>从1个或多个list中pop一个元素，多个key时只会选择1个key进行pop。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
+	 */
 	KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, byte[]... keys);
 
 	/**
-	 * <h1>从1个或多个list中pop指定数量的元素。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
+	 * <h1>批量从1个或多个list中pop指定数量的元素，多个key时只会选择1个key进行pop。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
 	 * 
 	 * BLMPOP is the blocking variant of LMPOP.
 	 * 
@@ -54,15 +57,15 @@ public interface ListBinaryCommands {
 	 * 
 	 * See LMPOP for more information.
 	 * 
-	 * @param timeout
+	 * @param timeout 0表示超时时间无限大
 	 * @param direction
 	 * @param count
 	 * @param keys
 	 * @return
 	 */
-	KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, int count, byte[]... keys);
+	KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, long count, byte[]... keys);
 
-	List<byte[]> blpop(int timeout, byte[]... keys);
+	KeyValue<byte[], byte[]> blpop(long timeout, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个list中pop一个元素。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
@@ -81,13 +84,13 @@ public interface ListBinaryCommands {
 	 * 1) "list1"<br>
 	 * 2) "a"<br>
 	 * 
-	 * @param timeout 0表示非阻塞
+	 * @param timeout 0表示超时时间无限大
 	 * @param keys
 	 * @return
 	 */
-	List<byte[]> blpop(double timeout, byte[]... keys);
+	KeyValue<byte[], byte[]> blpop(double timeout, byte[]... keys);
 
-	List<byte[]> brpop(int timeout, byte[]... keys);
+	KeyValue<byte[], byte[]> brpop(long timeout, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个list中pop一个元素。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
@@ -106,11 +109,11 @@ public interface ListBinaryCommands {
 	 * 1) "list1"<br>
 	 * 2) "c"<br>
 	 * 
-	 * @param timeout 0表示非阻塞
+	 * @param timeout 0表示超时时间无限大
 	 * @param keys
 	 * @return
 	 */
-	List<byte[]> brpop(double timeout, byte[]... keys);
+	KeyValue<byte[], byte[]> brpop(double timeout, byte[]... keys);
 
 	/**
 	 * <h1>从1个list中pop元素，并push到另一个list然后返回。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
@@ -128,10 +131,10 @@ public interface ListBinaryCommands {
 	 * 
 	 * @param source
 	 * @param destination
-	 * @param timeout
+	 * @param timeout 0表示超时时间无限大
 	 * @return
 	 */
-	byte[] brpoplpush(final byte[] source, final byte[] destination, final int timeout);
+	byte[] brpoplpush(final byte[] source, final byte[] destination, final long timeout);
 
 	/**
 	 * <h1>返回对应index的元素</h1><br>
@@ -191,7 +194,7 @@ public interface ListBinaryCommands {
 	 * @param where
 	 * @param pivot
 	 * @param value
-	 * @return
+	 * @return Integer reply: the list length after a successful insert operation, 0 if the key doesn't exist, and -1 when the pivot wasn't found.
 	 */
 	Long linsert(final byte[] key, final ListPosition where, final byte[] pivot, final byte[] value);
 
@@ -334,7 +337,7 @@ public interface ListBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, int count, byte[]... keys);
+	KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, long count, byte[]... keys);
 
 	byte[] lpop(final byte[] key);
 
@@ -365,15 +368,22 @@ public interface ListBinaryCommands {
 	 * @param count
 	 * @return
 	 */
-	List<byte[]> lpop(final byte[] key, final int count);
+	List<byte[]> lpop(final byte[] key, final long count);
 
 	Long lpos(final byte[] key, final byte[] element);
 
+	List<Long> lpos(final byte[] key, final byte[] element, final long count);
+	
 	Long lpos(final byte[] key, final byte[] element, final LPosParams params);
 
 	/**
 	 * <h1>返回元素所在的index</h1><br>
 	 * 
+	 * LPOS key element [RANK rank] [COUNT num-matches] [MAXLEN len]<br>
+	 * RANK表示从命中的第几个开始统计，1表示第一个，2表示第二个...，负数表示按倒序统计例如-1<br>
+	 * COUNT表示统计个数，0表示无限；当COUNT有值但没有匹配到则返回空数组，当COUNT是null也没有匹配到则返回null<br>
+	 * MAXLEN表示计算的次数即向后多少个位置，0表示不限<br>
+	 * <br>
 	 * redis> RPUSH mylist a b c d 1 2 3 4 3 3 3<br>
 	 * (integer) 11<br>
 	 * redis> LPOS mylist 3<br>
@@ -418,10 +428,10 @@ public interface ListBinaryCommands {
 	 * 
 	 * 
 	 * @param key
-	 * @param strings
+	 * @param values
 	 * @return
 	 */
-	Long lpush(final byte[] key, final byte[]... strings);
+	Long lpush(final byte[] key, final byte[]... values);
 
 	/**
 	 * <h1>push1个或多个元素，只有当list存在时才可以</h1><br>
@@ -445,10 +455,10 @@ public interface ListBinaryCommands {
 	 * 
 	 * 
 	 * @param key
-	 * @param string
+	 * @param values
 	 * @return
 	 */
-	Long lpushx(final byte[] key, final byte[]... string);
+	Long lpushx(final byte[] key, final byte[]... values);
 
 	/**
 	 * <h1>返回指定范围内的元素</h1><br>
@@ -521,7 +531,7 @@ public interface ListBinaryCommands {
 	 * 
 	 * 
 	 * @param key
-	 * @param count
+	 * @param count >0表示从header到tail移除个数，<0则相反，=0表示移除所有符合的
 	 * @param value
 	 * @return
 	 */
@@ -609,7 +619,7 @@ public interface ListBinaryCommands {
 	 * @param count
 	 * @return
 	 */
-	List<byte[]> rpop(final byte[] key, final int count);
+	List<byte[]> rpop(final byte[] key, final long count);
 
 	/**
 	 * <h1>在一个list上rpop，如果有元素则lpush到另一个list</h1><br>
@@ -653,17 +663,17 @@ public interface ListBinaryCommands {
 	 * <h1>同lpush</h1><br>
 	 * 
 	 * @param key
-	 * @param strings
+	 * @param values
 	 * @return
 	 */
-	Long rpush(final byte[] key, final byte[]... strings);
+	Long rpush(final byte[] key, final byte[]... values);
 
 	/**
 	 * <h1>同lpushx</h1><br>
 	 * 
 	 * @param key
-	 * @param string
+	 * @param values
 	 * @return
 	 */
-	Long rpushx(final byte[] key, final byte[]... string);
+	Long rpushx(final byte[] key, final byte[]... values);
 }

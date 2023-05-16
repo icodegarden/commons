@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.connection.DefaultSortParameters;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisListCommands.Direction;
 import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.connection.SortParameters;
@@ -34,8 +35,12 @@ import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
+import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
+import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.ListDirection;
+import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
@@ -801,6 +806,252 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 	@Override
 	public byte[] substr(byte[] key, int start, int end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, long timeout) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			Direction f = Direction.valueOf(from.name());
+			Direction t = Direction.valueOf(to.name());
+			return connection.listCommands().bLMove(srcKey, dstKey, f, t, timeout);
+		});
+	}
+
+	@Override
+	public byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, double timeout) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			Direction f = Direction.valueOf(from.name());
+			Direction t = Direction.valueOf(to.name());
+			return connection.listCommands().bLMove(srcKey, dstKey, f, t, timeout);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, long count, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(long timeout, byte[]... keys) {
+		return (KeyValue) redisTemplate.execute((RedisCallback) connection -> {
+			List<byte[]> list = connection.listCommands().bLPop((int) timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> blpop(double timeout, byte[]... keys) {
+		return (KeyValue) redisTemplate.execute((RedisCallback) connection -> {
+			List<byte[]> list = connection.listCommands().bLPop((int) timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(long timeout, byte[]... keys) {
+		return (KeyValue) redisTemplate.execute((RedisCallback) connection -> {
+			List<byte[]> list = connection.listCommands().bRPop((int) timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], byte[]> brpop(double timeout, byte[]... keys) {
+		return (KeyValue) redisTemplate.execute((RedisCallback) connection -> {
+			List<byte[]> list = connection.listCommands().bRPop((int) timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return new KeyValue<byte[], byte[]>(null, null);
+			}
+			return new KeyValue<byte[], byte[]>(list.get(0), list.get(1));
+		});
+	}
+
+	@Override
+	public byte[] brpoplpush(byte[] source, byte[] destination, long timeout) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().bRPopLPush((int) timeout, source, destination);
+		});
+	}
+
+	@Override
+	public byte[] lindex(byte[] key, long index) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lIndex(key, index);
+		});
+	}
+
+	@Override
+	public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisListCommands.Position w = org.springframework.data.redis.connection.RedisListCommands.Position
+					.valueOf(where.name());
+			return connection.listCommands().lInsert(key, w, pivot, value);
+		});
+	}
+
+	@Override
+	public Long llen(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lLen(key);
+		});
+	}
+
+	@Override
+	public byte[] lmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			Direction f = Direction.valueOf(from.name());
+			Direction t = Direction.valueOf(to.name());
+			return connection.listCommands().lMove(srcKey, dstKey, f, t);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, long count, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public byte[] lpop(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lPop(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> lpop(byte[] key, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lPop(key, count);
+		});
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lPos(key, element);
+		});
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lPos(key, element, null, (int) count);
+		});
+	}
+
+	@Override
+	public Long lpos(byte[] key, byte[] element, LPosParams params) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			List<Long> list = connection.listCommands().lPos(key, element, params.getRank(), null);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return null;
+			}
+			return list.get(0);
+		});
+	}
+
+	@Override
+	public List<Long> lpos(byte[] key, byte[] element, LPosParams params, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			int c = (int) count;
+			if (params.getMaxLen() != null && count == 0) {
+				c = params.getMaxLen();// 因为redisTemplate不支持maxlen，所以这样算
+			}
+			return connection.listCommands().lPos(key, element, params.getRank(), c);
+		});
+	}
+
+	@Override
+	public Long lpush(byte[] key, byte[]... values) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lPush(key, values);
+		});
+	}
+
+	@Override
+	public Long lpushx(byte[] key, byte[]... values) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> lrange(byte[] key, long start, long stop) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lRange(key, start, stop);
+		});
+	}
+
+	@Override
+	public Long lrem(byte[] key, long count, byte[] value) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().lRem(key, count, value);
+		});
+	}
+
+	@Override
+	public String lset(byte[] key, long index, byte[] value) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.listCommands().lSet(key, index, value);
+			return "OK";
+		});
+	}
+
+	@Override
+	public String ltrim(byte[] key, long start, long stop) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.listCommands().lTrim(key, start, stop);
+			return "OK";
+		});
+	}
+
+	@Override
+	public byte[] rpop(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().rPop(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> rpop(byte[] key, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().rPop(key, count);
+		});
+	}
+
+	@Override
+	public byte[] rpoplpush(byte[] srckey, byte[] dstkey) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().rPopLPush(srckey, dstkey);
+		});
+	}
+
+	@Override
+	public Long rpush(byte[] key, byte[]... values) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.listCommands().rPush(key, values);
+		});
+	}
+
+	@Override
+	public Long rpushx(byte[] key, byte[]... values) {
 		throw new UnsupportedOperationException();
 	}
 

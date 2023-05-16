@@ -16,7 +16,7 @@ public class LettuceRedisClientRedisExecutorTests extends RedisExecutorTests {
 
 	@Override
 	protected RedisExecutor newInstance() {
-		return new LettuceRedisClientRedisExecutor(newRedisClient());
+		return new LettuceRedisClientRedisExecutor(newRedisClient()).setShutdownClientOnClose(true);
 	}
 
 	public static RedisClient newRedisClient() {
