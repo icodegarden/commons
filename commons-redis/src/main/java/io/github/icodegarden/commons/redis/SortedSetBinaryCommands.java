@@ -1,18 +1,18 @@
 package io.github.icodegarden.commons.redis;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import redis.clients.jedis.args.SortedSetOption;
-import redis.clients.jedis.params.ScanParams;
-import redis.clients.jedis.params.ZAddParams;
-import redis.clients.jedis.params.ZIncrByParams;
-import redis.clients.jedis.params.ZParams;
-import redis.clients.jedis.params.ZRangeParams;
-import redis.clients.jedis.resps.ScanResult;
-import redis.clients.jedis.resps.Tuple;
-import redis.clients.jedis.util.KeyValue;
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.redis.args.KeyValue;
+import io.github.icodegarden.commons.redis.args.Range;
+import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 
 /**
  * 
@@ -21,7 +21,11 @@ import redis.clients.jedis.util.KeyValue;
  */
 public interface SortedSetBinaryCommands {
 
-	KeyValue<byte[], List<Tuple>> bzmpop(long timeout, SortedSetOption option, byte[]... keys);
+	/**
+	 * pop出1个元素
+	 */
+	@Nullable
+	KeyValue<byte[], ScoredValue<byte[]>> bzmpop(long timeout, SortedSetOption option, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个set中移除并返回元素，携带score。阻塞直到有元素或超时，当没有元素时删除set</h1><br>
@@ -40,13 +44,14 @@ public interface SortedSetBinaryCommands {
 	 * 语法：BZMPOP timeout numkeys key [key ...] <MIN | MAX> [COUNT count]
 	 * 
 	 * 
-	 * @param timeout
+	 * @param timeout 0表示无限
 	 * @param option
 	 * @param count
 	 * @param keys
 	 * @return
 	 */
-	KeyValue<byte[], List<Tuple>> bzmpop(long timeout, SortedSetOption option, int count, byte[]... keys);
+	@Nullable
+	KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop(long timeout, SortedSetOption option, int count, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个set中移除并返回score最大的元素。阻塞直到有元素或超时，当没有元素时删除set</h1><br>
@@ -79,7 +84,8 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	List<byte[]> bzpopmax(double timeout, byte[]... keys);
+	@Nullable
+	KeyValue<byte[], ScoredValue<byte[]>> bzpopmax(double timeout, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个set中移除并返回score最小的元素。阻塞直到有元素或超时，当没有元素时删除set</h1><br>
@@ -112,13 +118,14 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	List<byte[]> bzpopmin(double timeout, byte[]... keys);
+	@Nullable
+	KeyValue<byte[], ScoredValue<byte[]>> bzpopmin(double timeout, byte[]... keys);
 
 	long zadd(byte[] key, double score, byte[] member);
 
-	long zadd(byte[] key, double score, byte[] member, ZAddParams params);
+	long zadd(byte[] key, double score, byte[] member, ZAddArgs params);
 
-	long zadd(byte[] key, Map<byte[], Double> scoreMembers);
+	long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues);
 
 	/**
 	 * <h1>向set中新增1个或多个元素，或更新元素的score</h1><br>
@@ -160,7 +167,7 @@ public interface SortedSetBinaryCommands {
 	 * @param params
 	 * @return
 	 */
-	long zadd(byte[] key, Map<byte[], Double> scoreMembers, ZAddParams params);
+	long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params);
 
 	/**
 	 * <h1>获取元素总数</h1><br>
@@ -183,10 +190,9 @@ public interface SortedSetBinaryCommands {
 	 */
 	long zcard(byte[] key);
 
-	long zcount(byte[] key, double min, double max);
-
 	/**
 	 * <h1>根据score的范围，获取元素总数</h1><br>
+	 * ZCOUNT key min max<br>
 	 * 
 	 * Returns the number of elements in the sorted set at key with a score between
 	 * min and max.
@@ -217,9 +223,10 @@ public interface SortedSetBinaryCommands {
 	 * @param max
 	 * @return
 	 */
-	long zcount(byte[] key, byte[] min, byte[] max);
+	long zcount(byte[] key, Range<? extends Number> range);
 
-	Set<byte[]> zdiff(byte[]... keys);
+	@NotNull
+	List<byte[]> zdiff(byte[]... keys);
 
 	/**
 	 * <h1>返回多个set之间的差集</h1><br>
@@ -248,7 +255,8 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	Set<Tuple> zdiffWithScores(byte[]... keys);
+	@NotNull
+	List<ScoredValue<byte[]>> zdiffWithScores(byte[]... keys);
 
 	/**
 	 * <h1>另存多个set之间的差集</h1><br>
@@ -285,8 +293,6 @@ public interface SortedSetBinaryCommands {
 	 */
 	long zdiffStore(byte[] dstkey, byte[]... keys);
 
-	double zincrby(byte[] key, double increment, byte[] member);
-
 	/**
 	 * <h1>原子操作元素的score</h1><br>
 	 * 
@@ -321,9 +327,16 @@ public interface SortedSetBinaryCommands {
 	 * @param params
 	 * @return
 	 */
-	Double zincrby(byte[] key, double increment, byte[] member, ZIncrByParams params);
+	double zincrby(byte[] key, double increment, byte[] member);
 
-	Set<byte[]> zinter(ZParams params, byte[]... keys);
+	@NotNull
+	List<byte[]> zinter(byte[]... keys);
+
+	@NotNull
+	List<byte[]> zinter(ZAggregateArgs params, byte[]... keys);
+
+	@NotNull
+	List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys);
 
 	/**
 	 * <h1>返回多个set之间的交集</h1><br>
@@ -358,7 +371,8 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	Set<Tuple> zinterWithScores(ZParams params, byte[]... keys);
+	@NotNull
+	List<ScoredValue<byte[]>> zinterWithScores(ZAggregateArgs params, byte[]... keys);
 
 	long zinterstore(byte[] dstkey, byte[]... sets);
 
@@ -404,7 +418,7 @@ public interface SortedSetBinaryCommands {
 	 * @param sets
 	 * @return
 	 */
-	long zinterstore(byte[] dstkey, ZParams params, byte[]... sets);
+	long zinterstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets);
 
 	long zintercard(byte[]... keys);
 
@@ -481,7 +495,11 @@ public interface SortedSetBinaryCommands {
 	 */
 	long zlexcount(byte[] key, byte[] min, byte[] max);
 
-	KeyValue<byte[], List<Tuple>> zmpop(SortedSetOption option, byte[]... keys);
+	/**
+	 * pop出1个
+	 */
+	@Nullable
+	KeyValue<byte[], ScoredValue<byte[]>> zmpop(SortedSetOption option, byte[]... keys);
 
 	/**
 	 * <h1>从1个或多个set中pop score最大或最小的元素。多个set时每次只会选中1个set</h1><br>
@@ -548,7 +566,8 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	KeyValue<byte[], List<Tuple>> zmpop(SortedSetOption option, int count, byte[]... keys);
+	@Nullable
+	KeyValue<byte[], List<ScoredValue<byte[]>>> zmpop(SortedSetOption option, int count, byte[]... keys);
 
 	/**
 	 * <h1>获取指定元素的score</h1><br>
@@ -574,9 +593,11 @@ public interface SortedSetBinaryCommands {
 	 * @param members
 	 * @return
 	 */
+	@NotNull
 	List<Double> zmscore(byte[] key, byte[]... members);
 
-	Tuple zpopmax(byte[] key);
+	@NotNull
+	ScoredValue<byte[]> zpopmax(byte[] key);
 
 	/**
 	 * <h1>pop并返回score最大的元素</h1><br>
@@ -605,9 +626,11 @@ public interface SortedSetBinaryCommands {
 	 * @param count pop的数量，默认1
 	 * @return
 	 */
-	List<Tuple> zpopmax(byte[] key, int count);
+	@NotNull
+	List<ScoredValue<byte[]>> zpopmax(byte[] key, int count);
 
-	Tuple zpopmin(byte[] key);
+	@NotNull
+	ScoredValue<byte[]> zpopmin(byte[] key);
 
 	/**
 	 * <h1>pop并返回score最小的元素。同zpopmax</h1><br>
@@ -616,10 +639,13 @@ public interface SortedSetBinaryCommands {
 	 * @param count pop的数量，默认1
 	 * @return
 	 */
-	List<Tuple> zpopmin(byte[] key, int count);
+	@NotNull
+	List<ScoredValue<byte[]>> zpopmin(byte[] key, int count);
 
+	@Nullable
 	byte[] zrandmember(byte[] key);
 
+	@NotNull
 	List<byte[]> zrandmember(byte[] key, long count);
 
 	/**
@@ -663,13 +689,11 @@ public interface SortedSetBinaryCommands {
 	 * @param count
 	 * @return
 	 */
-	List<Tuple> zrandmemberWithScores(byte[] key, long count);
+	@NotNull
+	List<ScoredValue<byte[]>> zrandmemberWithScores(byte[] key, long count);
 
+	@NotNull
 	List<byte[]> zrange(byte[] key, long start, long stop);
-
-	List<Tuple> zrangeWithScores(byte[] key, long start, long stop);
-
-	List<byte[]> zrange(byte[] key, ZRangeParams zRangeParams);
 
 	/**
 	 * <h1>获取range范围内的元素</h1><br>
@@ -703,9 +727,11 @@ public interface SortedSetBinaryCommands {
 	 * @param zRangeParams
 	 * @return
 	 */
-	List<Tuple> zrangeWithScores(byte[] key, ZRangeParams zRangeParams);
+	@NotNull
+	List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, long start, long stop);
 
-	List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max);
+	@NotNull
+	List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range);
 
 	/**
 	 * <h1>按字典排序返回值是min和max之间的元素，可以用于score相同的场景</h1><br>
@@ -752,21 +778,17 @@ public interface SortedSetBinaryCommands {
 	 * @param count  限制数量，默认不限制
 	 * @return
 	 */
-	List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max, int offset, int count);
+	@NotNull
+	List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count);
 
-	List<byte[]> zrangeByScore(byte[] key, double min, double max);
+	@NotNull
+	List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range);
 
-	List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max);
+	@NotNull
+	List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count);
 
-	List<byte[]> zrangeByScore(byte[] key, double min, double max, int offset, int count);
-
-	List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max, int offset, int count);
-
-	List<Tuple> zrangeByScoreWithScores(byte[] key, double min, double max);
-
-	List<Tuple> zrangeByScoreWithScores(byte[] key, double min, double max, int offset, int count);
-
-	List<Tuple> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max);
+	@NotNull
+	List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range);
 
 	/**
 	 * <h1>获取range范围内的元素</h1><br>
@@ -816,7 +838,8 @@ public interface SortedSetBinaryCommands {
 	 * @param count  限制数量，默认不限制
 	 * @return
 	 */
-	List<Tuple> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max, int offset, int count);
+	@NotNull
+	List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset, int count);
 
 	/**
 	 * <h1>另存range范围内的元素</h1><br>
@@ -838,7 +861,11 @@ public interface SortedSetBinaryCommands {
 	 * @param zRangeParams
 	 * @return
 	 */
-	long zrangestore(byte[] dest, byte[] src, ZRangeParams zRangeParams);
+	long zrangestore(byte[] dest, byte[] src, Range<Long> range);
+
+	long zrangestoreByLex(byte[] dest, byte[] src, Range<byte[]> range, int offset, int count);
+
+	long zrangestoreByScore(byte[] dest, byte[] src, Range<? extends Number> range, int offset, int count);
 
 	/**
 	 * <h1>返回元素的score排序是第几个，排序从小到大</h1><br>
@@ -873,6 +900,7 @@ public interface SortedSetBinaryCommands {
 	 * @param member
 	 * @return 首位是0
 	 */
+	@Nullable
 	Long zrank(byte[] key, byte[] member);
 
 	/**
@@ -934,7 +962,7 @@ public interface SortedSetBinaryCommands {
 	 * @param max
 	 * @return
 	 */
-	long zremrangeByLex(byte[] key, byte[] min, byte[] max);
+	long zremrangeByLex(byte[] key, Range<byte[]> range);
 
 	/**
 	 * <h1>根据rangeByRank移除1个或多个元素</h1><br>
@@ -967,8 +995,6 @@ public interface SortedSetBinaryCommands {
 	 */
 	long zremrangeByRank(byte[] key, long start, long stop);
 
-	long zremrangeByScore(byte[] key, double min, double max);
-
 	/**
 	 * <h1>根据rangeByScore移除1个或多个元素</h1><br>
 	 * 
@@ -996,8 +1022,9 @@ public interface SortedSetBinaryCommands {
 	 * @param max
 	 * @return
 	 */
-	long zremrangeByScore(byte[] key, byte[] min, byte[] max);
+	long zremrangeByScore(byte[] key, Range<? extends Number> range);
 
+	@NotNull
 	List<byte[]> zrevrange(byte[] key, long start, long stop);
 
 	/**
@@ -1008,9 +1035,11 @@ public interface SortedSetBinaryCommands {
 	 * @param stop
 	 * @return
 	 */
-	List<Tuple> zrevrangeWithScores(byte[] key, long start, long stop);
+	@NotNull
+	List<ScoredValue<byte[]>> zrevrangeWithScores(byte[] key, long start, long stop);
 
-	List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min);
+	@NotNull
+	List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range);
 
 	/**
 	 * <h1>zrangeByLex的倒排</h1><br>
@@ -1022,21 +1051,17 @@ public interface SortedSetBinaryCommands {
 	 * @param count
 	 * @return
 	 */
-	List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min, int offset, int count);
+	@NotNull
+	List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range, int offset, int count);
 
-	List<byte[]> zrevrangeByScore(byte[] key, double max, double min);
+	@NotNull
+	List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range);
 
-	List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min);
+	@NotNull
+	List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count);
 
-	List<byte[]> zrevrangeByScore(byte[] key, double max, double min, int offset, int count);
-
-	List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min, int offset, int count);
-
-	List<Tuple> zrevrangeByScoreWithScores(byte[] key, double max, double min);
-
-	List<Tuple> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min);
-
-	List<Tuple> zrevrangeByScoreWithScores(byte[] key, double max, double min, int offset, int count);
+	@NotNull
+	List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range);
 
 	/**
 	 * <h1>zrangeByScore的倒排</h1><br>
@@ -1048,7 +1073,9 @@ public interface SortedSetBinaryCommands {
 	 * @param count
 	 * @return
 	 */
-	List<Tuple> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min, int offset, int count);
+	@NotNull
+	List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count);
 
 	/**
 	 * <h1>zrank的倒排</h1><br>
@@ -1057,11 +1084,11 @@ public interface SortedSetBinaryCommands {
 	 * @param member
 	 * @return
 	 */
+	@Nullable
 	Long zrevrank(byte[] key, byte[] member);
 
-	default ScanResult<Tuple> zscan(byte[] key, byte[] cursor) {
-		return zscan(key, cursor, new ScanParams());
-	}
+	@NotNull
+	ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor);
 
 	/**
 	 * <h1>迭代zset</h1><br>
@@ -1071,7 +1098,8 @@ public interface SortedSetBinaryCommands {
 	 * @param params
 	 * @return
 	 */
-	ScanResult<Tuple> zscan(byte[] key, byte[] cursor, ScanParams params);
+	@NotNull
+	ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params);
 
 	/**
 	 * <h1>返回元素的score</h1><br>
@@ -1092,9 +1120,17 @@ public interface SortedSetBinaryCommands {
 	 * @param member
 	 * @return
 	 */
+	@Nullable
 	Double zscore(byte[] key, byte[] member);
 
-	Set<byte[]> zunion(ZParams params, byte[]... keys);
+	@NotNull
+	List<byte[]> zunion(byte[]... keys);
+
+	@NotNull
+	List<byte[]> zunion(ZAggregateArgs params, byte[]... keys);
+
+	@NotNull
+	List<ScoredValue<byte[]>> zunionWithScores(byte[]... keys);
 
 	/**
 	 * <h1>返回多个zset之间的并集</h1><br>
@@ -1131,7 +1167,8 @@ public interface SortedSetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
-	Set<Tuple> zunionWithScores(ZParams params, byte[]... keys);
+	@NotNull
+	List<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys);
 
 	long zunionstore(byte[] dstkey, byte[]... sets);
 
@@ -1187,5 +1224,5 @@ public interface SortedSetBinaryCommands {
 	 * @param sets
 	 * @return
 	 */
-	long zunionstore(byte[] dstkey, ZParams params, byte[]... sets);
+	long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets);
 }

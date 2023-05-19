@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.springframework.util.CollectionUtils;
+
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
@@ -15,12 +17,20 @@ import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import redis.clients.jedis.params.GetExParams;
 import redis.clients.jedis.params.SortingParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZParams;
+import redis.clients.jedis.params.ZParams.Aggregate;
 import redis.clients.jedis.resps.ScanResult;
+import redis.clients.jedis.resps.Tuple;
 
 /**
  * 
@@ -121,6 +131,21 @@ public class JedisUtils {
 		return valueScanCursor;
 	}
 
+	public static ScoredValueScanCursor<byte[]> convertScoredValueScanCursor(ScanResult<Tuple> scanResult) {
+		List<ScoredValue<byte[]>> collect = null;
+
+		List<Tuple> list = scanResult.getResult();
+		if (!CollectionUtils.isEmpty(list)) {
+			collect = list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		}
+
+		ScoredValueScanCursor<byte[]> valueScanCursor = new ScoredValueScanCursor<>(scanResult.getCursor(),
+				"0".equals(scanResult.getCursor()), collect);
+		return valueScanCursor;
+	}
+
 	public static GetExParams convertGetExParams(GetExArgs params) {
 		GetExParams getExParams = new GetExParams();
 		if (params.getEx() != null) {
@@ -187,5 +212,44 @@ public class JedisUtils {
 			lPosParams.maxlen(params.getMaxLen());
 		}
 		return lPosParams;
+	}
+
+	public static ZAddParams convertZAddParams(ZAddArgs params) {
+		ZAddParams zAddParams = new ZAddParams();
+		if (params.isCh()) {
+			zAddParams.ch();
+		}
+		if (params.isGt()) {
+			zAddParams.gt();
+		}
+		if (params.isLt()) {
+			zAddParams.lt();
+		}
+		if (params.isNx()) {
+			zAddParams.nx();
+		}
+		if (params.isXx()) {
+			zAddParams.xx();
+		}
+		return zAddParams;
+	}
+
+	public static ZParams convertZParams(ZAggregateArgs params) {
+		ZParams zParams = new ZParams();
+
+		if (params.getWeights() != null) {
+			double[] arr = new double[params.getWeights().size()];
+
+			int i = 0;
+			for (Double d : params.getWeights()) {
+				arr[i++] = d.doubleValue();
+			}
+			zParams.weights(arr);
+		}
+		if (params.getAggregate() != null) {
+			Aggregate aggregate = ZParams.Aggregate.valueOf(params.getAggregate().name());
+			zParams.aggregate(aggregate);
+		}
+		return zParams;
 	}
 }

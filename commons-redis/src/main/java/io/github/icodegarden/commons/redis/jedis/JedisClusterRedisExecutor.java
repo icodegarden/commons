@@ -2,13 +2,18 @@ package io.github.icodegarden.commons.redis.jedis;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.redis.RedisExecutor;
@@ -24,17 +29,28 @@ import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
+import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
+import io.github.icodegarden.commons.redis.args.ZRangeParams;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.JedisUtils;
 import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.params.GetExParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZParams;
 import redis.clients.jedis.resps.ScanResult;
+import redis.clients.jedis.resps.Tuple;
 
 /**
  * 
@@ -818,6 +834,520 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	@Override
 	public Long sunionstore(byte[] dstkey, byte[]... keys) {
 		return jc.sunionstore(dstkey, keys);
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzmpop(long timeout, SortedSetOption option, byte[]... keys) {
+		redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jc.bzmpop(timeout,
+				redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), keys);
+		if (kv == null) {
+			return null;
+		}
+
+		Assert.isTrue(kv.getValue().size() == 1, "bzmpop result size must eq 1");
+
+		Tuple tuple = kv.getValue().get(0);
+		return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(),
+				new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement()));
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop(long timeout, SortedSetOption option, int count,
+			byte[]... keys) {
+		redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jc.bzmpop(timeout,
+				redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), count, keys);
+		if (kv == null) {
+			return null;
+		}
+		List<ScoredValue<byte[]>> list = kv.getValue().stream()
+				.map(tuple -> new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement()))
+				.collect(Collectors.toList());
+		return new KeyValue<byte[], List<ScoredValue<byte[]>>>(kv.getKey(), list);
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmax(double timeout, byte[]... keys) {
+		List<byte[]> list = jc.bzpopmax(timeout, keys);
+		if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+			return null;
+		}
+
+		Iterator<byte[]> iterator = list.iterator();
+		byte[] key = iterator.next();
+		byte[] value = iterator.next();
+		byte[] score = iterator.next();
+		return new KeyValue<byte[], ScoredValue<byte[]>>(key,
+				new ScoredValue<byte[]>(Double.parseDouble(new String(score, StandardCharsets.UTF_8)), value));
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmin(double timeout, byte[]... keys) {
+		List<byte[]> list = jc.bzpopmin(timeout, keys);
+		if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+			return null;
+		}
+
+		Iterator<byte[]> iterator = list.iterator();
+		byte[] key = iterator.next();
+		byte[] value = iterator.next();
+		byte[] score = iterator.next();
+		return new KeyValue<byte[], ScoredValue<byte[]>>(key,
+				new ScoredValue<byte[]>(Double.parseDouble(new String(score, StandardCharsets.UTF_8)), value));
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member) {
+		return jc.zadd(key, score, member);
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member, ZAddArgs params) {
+		ZAddParams zAddParams = JedisUtils.convertZAddParams(params);
+		return jc.zadd(key, score, member, zAddParams);
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues) {
+		Map<byte[], Double> scoreMembers = scoredValues.stream()
+				.collect(Collectors.toMap(ScoredValue::getValue, ScoredValue::getScore, (a, b) -> a));
+		return jc.zadd(key, scoreMembers);
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params) {
+		Map<byte[], Double> scoreMembers = scoredValues.stream()
+				.collect(Collectors.toMap(ScoredValue::getValue, ScoredValue::getScore, (a, b) -> a));
+		ZAddParams zAddParams = JedisUtils.convertZAddParams(params);
+		return jc.zadd(key, scoreMembers, zAddParams);
+	}
+
+	@Override
+	public long zcard(byte[] key) {
+		return jc.zcard(key);
+	}
+	
+	@Override
+	public long zcount(byte[] key, Range<? extends Number> range) {
+		Boundary<? extends Number> lower = range.getLower();
+	
+		
+		if (lower.isUnbounded()) {
+			return io.lettuce.core.Range.Boundary.unbounded();
+		} else {
+			if (boundary.isIncluding()) {
+				return io.lettuce.core.Range.Boundary.including(boundary.getValue());
+			} else {
+				return io.lettuce.core.Range.Boundary.excluding(boundary.getValue());
+			}
+		}
+		
+		
+		return 0;
+	}
+	
+
+	@Override
+	public List<byte[]> zdiff(byte[]... keys) {
+		Set<byte[]> set = jc.zdiff(keys);
+		return new ArrayList<byte[]>(set);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zdiffWithScores(byte[]... keys) {
+		Set<Tuple> set = jc.zdiffWithScores(keys);
+		return set.stream().map(one -> {
+			return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long zdiffStore(byte[] dstkey, byte[]... keys) {
+		return jc.zdiffStore(dstkey, keys);
+	}
+
+	@Override
+	public double zincrby(byte[] key, double increment, byte[] member) {
+		return jc.zincrby(key, increment, member);
+	}
+
+	@Override
+	public List<byte[]> zinter(byte[]... keys) {
+		Set<byte[]> set = jc.zinter(null, keys);
+		return new ArrayList<byte[]>(set);
+	}
+
+	@Override
+	public List<byte[]> zinter(ZAggregateArgs params, byte[]... keys) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		Set<byte[]> set = jc.zinter(zParams, keys);
+		return new ArrayList<byte[]>(set);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys) {
+		Set<Tuple> set = jc.zinterWithScores(null, keys);
+		return set.stream().map(one -> {
+			return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(ZAggregateArgs params, byte[]... keys) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		Set<Tuple> set = jc.zinterWithScores(zParams, keys);
+		return set.stream().map(one -> {
+			return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, byte[]... sets) {
+		return jc.zinterstore(dstkey, sets);
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		return jc.zinterstore(dstkey, zParams, sets);
+	}
+
+	@Override
+	public long zintercard(byte[]... keys) {
+		return jc.zintercard(keys);
+	}
+
+	@Override
+	public long zintercard(long limit, byte[]... keys) {
+		return jc.zintercard(limit, keys);
+	}
+
+	@Override
+	public long zlexcount(byte[] key, byte[] min, byte[] max) {
+		return jc.zlexcount(key, min, max);
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> zmpop(SortedSetOption option, byte[]... keys) {
+		redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jc
+				.zmpop(redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), keys);
+		if (kv == null) {
+			return null;
+		}
+
+		Tuple tuple = kv.getValue().get(0);
+
+		ScoredValue<byte[]> value = new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(), value);
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> zmpop(SortedSetOption option, int count, byte[]... keys) {
+		redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jc
+				.zmpop(redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), count, keys);
+		if (kv == null) {
+			return null;
+		}
+
+		List<ScoredValue<byte[]>> list = kv.getValue().stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+
+		return new KeyValue<byte[], List<ScoredValue<byte[]>>>(kv.getKey(), list);
+	}
+
+	@Override
+	public List<Double> zmscore(byte[] key, byte[]... members) {
+		return jc.zmscore(key, members);
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmax(byte[] key) {
+		Tuple tuple = jc.zpopmax(key);
+		return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmax(byte[] key, int count) {
+		List<Tuple> list = jc.zpopmax(key, count);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmin(byte[] key) {
+		Tuple tuple = jc.zpopmin(key);
+		return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmin(byte[] key, int count) {
+		List<Tuple> list = jc.zpopmin(key, count);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public byte[] zrandmember(byte[] key) {
+		return jc.zrandmember(key);
+	}
+
+	@Override
+	public List<byte[]> zrandmember(byte[] key, long count) {
+		return jc.zrandmember(key, count);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrandmemberWithScores(byte[] key, long count) {
+		List<Tuple> list = jc.zrandmemberWithScores(key, count);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrange(byte[] key, long start, long stop) {
+		return jc.zrange(key, start, stop);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, long start, long stop) {
+		List<Tuple> list = jc.zrangeWithScores(key, start, stop);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrange(byte[] key, ZRangeParams zRangeParams) {
+		redis.clients.jedis.Protocol.Keyword by = null;
+		if (zRangeParams.getBy() != null) {
+			by = redis.clients.jedis.Protocol.Keyword.valueOf(zRangeParams.getBy().name());
+		}
+		redis.clients.jedis.params.ZRangeParams zrangeParams = new redis.clients.jedis.params.ZRangeParams(by,
+				zRangeParams.getMin(), zRangeParams.getMax());
+		return jc.zrange(key, zrangeParams);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, ZRangeParams zRangeParams) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max, int offset, int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, double min, double max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, double min, double max, int offset, int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max, int offset, int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, double min, double max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, double min, double max, int offset,
+			int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max, int offset,
+			int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public long zrangestore(byte[] dest, byte[] src, ZRangeParams zRangeParams) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Long zrank(byte[] key, byte[] member) {
+		return jc.zrank(key, member);
+	}
+
+	@Override
+	public long zrem(byte[] key, byte[]... members) {
+		return jc.zrem(key, members);
+	}
+
+	@Override
+	public long zremrangeByLex(byte[] key, byte[] min, byte[] max) {
+		return jc.zremrangeByLex(key, min, max);
+	}
+
+	@Override
+	public long zremrangeByRank(byte[] key, long start, long stop) {
+		return jc.zremrangeByRank(key, start, stop);
+	}
+
+	@Override
+	public long zremrangeByScore(byte[] key, double min, double max) {
+		return jc.zremrangeByScore(key, min, max);
+	}
+
+	@Override
+	public long zremrangeByScore(byte[] key, byte[] min, byte[] max) {
+		return jc.zremrangeByScore(key, min, max);
+	}
+
+	@Override
+	public List<byte[]> zrevrange(byte[] key, long start, long stop) {
+		return jc.zrevrange(key, start, stop);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeWithScores(byte[] key, long start, long stop) {
+		List<Tuple> list = jc.zrevrangeWithScores(key, start, stop);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min) {
+		return jc.zrevrangeByLex(key, max, min);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min, int offset, int count) {
+		return jc.zrevrangeByLex(key, max, min, offset, count);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, double max, double min) {
+		return jc.zrevrangeByScore(key, max, min);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min) {
+		return jc.zrevrangeByScore(key, max, min);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, double max, double min, int offset, int count) {
+		return jc.zrevrangeByScore(key, max, min, offset, count);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min, int offset, int count) {
+		return jc.zrevrangeByScore(key, max, min, offset, count);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, double max, double min) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, double max, double min, int offset,
+			int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min, int offset,
+			int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long zrevrank(byte[] key, byte[] member) {
+		return jc.zrevrank(key, member);
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+		ScanResult<Tuple> scanResult = jc.zscan(key, cursor);
+		return JedisUtils.convertScoredValueScanCursor(scanResult);
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+		ScanResult<Tuple> scanResult = jc.zscan(key, cursor, JedisUtils.convertScanParams(params));
+		return JedisUtils.convertScoredValueScanCursor(scanResult);
+	}
+
+	@Override
+	public Double zscore(byte[] key, byte[] member) {
+		return jc.zscore(key, member);
+	}
+
+	@Override
+	public Set<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		return jc.zunion(zParams, keys);
+	}
+
+	@Override
+	public Set<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		Set<Tuple> set = jc.zunionWithScores(zParams, keys);
+		return set.stream().map(one -> new ScoredValue<>(one.getScore(), one.getBinaryElement()))
+				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, byte[]... sets) {
+		return jc.zunionstore(dstkey, sets);
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		return jc.zunionstore(dstkey, zParams, sets);
 	}
 
 	@Override

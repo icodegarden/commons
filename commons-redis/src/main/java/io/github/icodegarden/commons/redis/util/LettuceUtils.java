@@ -2,17 +2,27 @@ package io.github.icodegarden.commons.redis.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
+import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortArgs.Limit;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
@@ -135,6 +145,22 @@ public class LettuceUtils {
 		return valueScanCursor;
 	}
 
+	public static <T> ScoredValueScanCursor<T> convertScoredValueScanCursor(
+			io.lettuce.core.ScoredValueScanCursor<T> scanResult) {
+		List<ScoredValue<T>> collect = null;
+
+		List<io.lettuce.core.ScoredValue<T>> list = scanResult.getValues();
+		if (!CollectionUtils.isEmpty(list)) {
+			collect = list.stream().map(tuple -> {
+				return new ScoredValue<T>(tuple.getScore(), tuple.getValue());
+			}).collect(Collectors.toList());
+		}
+
+		ScoredValueScanCursor<T> valueScanCursor = new ScoredValueScanCursor<>(scanResult.getCursor(),
+				scanResult.isFinished(), collect);
+		return valueScanCursor;
+	}
+
 	public static io.lettuce.core.GetExArgs convertGetExArgs(GetExArgs params) {
 		io.lettuce.core.GetExArgs getExArgs = new io.lettuce.core.GetExArgs();
 		if (params.getEx() != null) {
@@ -166,5 +192,71 @@ public class LettuceUtils {
 			scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
 		}
 		return scanCursor;
+	}
+
+	public static io.lettuce.core.ZAddArgs convertZAddArgs(ZAddArgs params) {
+		io.lettuce.core.ZAddArgs zAddArgs = new io.lettuce.core.ZAddArgs();
+		if (params.isCh()) {
+			zAddArgs.ch();
+		}
+		if (params.isGt()) {
+			zAddArgs.gt();
+		}
+		if (params.isLt()) {
+			zAddArgs.lt();
+		}
+		if (params.isNx()) {
+			zAddArgs.nx();
+		}
+		if (params.isXx()) {
+			zAddArgs.xx();
+		}
+		return zAddArgs;
+	}
+
+	public static io.lettuce.core.ZAggregateArgs convertZAggregateArgs(ZAggregateArgs params) {
+		return convertZStoreArgs(params);
+	}
+
+	public static io.lettuce.core.ZStoreArgs convertZStoreArgs(ZAggregateArgs params) {
+		io.lettuce.core.ZStoreArgs zStoreArgs = new io.lettuce.core.ZStoreArgs();
+
+		if (params.getWeights() != null) {
+			double[] arr = new double[params.getWeights().size()];
+
+			int i = 0;
+			for (Double d : params.getWeights()) {
+				arr[i++] = d.doubleValue();
+			}
+			zStoreArgs.weights(arr);
+		}
+		if (params.getAggregate() != null) {
+			if (params.getAggregate().equals(ZAggregateArgs.Aggregate.MAX)) {
+				zStoreArgs.max();
+			} else if (params.getAggregate().equals(ZAggregateArgs.Aggregate.MIN)) {
+				zStoreArgs.min();
+			} else if (params.getAggregate().equals(ZAggregateArgs.Aggregate.SUM)) {
+				zStoreArgs.sum();
+			}
+		}
+		return zStoreArgs;
+	}
+
+	private static <T> io.lettuce.core.Range.Boundary<T> convertBoundary(Boundary<T> boundary) {
+		if (boundary.isUnbounded()) {
+			return io.lettuce.core.Range.Boundary.unbounded();
+		} else {
+			if (boundary.isIncluding()) {
+				return io.lettuce.core.Range.Boundary.including(boundary.getValue());
+			} else {
+				return io.lettuce.core.Range.Boundary.excluding(boundary.getValue());
+			}
+		}
+	}
+
+	public static <T> io.lettuce.core.Range<T> convertRange(Range<T> range) {
+		io.lettuce.core.Range.Boundary<T> lower = LettuceUtils.convertBoundary(range.getLower());
+		io.lettuce.core.Range.Boundary<T> upper = LettuceUtils.convertBoundary(range.getUpper());
+		return io.lettuce.core.Range.from(lower, upper);
 	}
 }

@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.FluxSink.OverflowStrategy;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.ParallelFlux;
 import reactor.core.publisher.SignalType;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.EmitFailureHandler;
@@ -567,7 +568,7 @@ public class ReactorApiTests {
 	@Test
 	void merge() throws InterruptedException, ExecutionException {
 		Mono<String> mono1 = Mono.fromCallable(()->{
-			System.out.println("run mono1"+System.currentTimeMillis());
+			System.out.println("run mono1-"+System.currentTimeMillis());
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
@@ -576,7 +577,7 @@ public class ReactorApiTests {
 		});
 		
 		Mono<String> mono2 = Mono.fromCallable(()->{
-			System.out.println("run mono2"+System.currentTimeMillis());
+			System.out.println("run mono2-"+System.currentTimeMillis());
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
@@ -594,8 +595,24 @@ public class ReactorApiTests {
 		
 		flux = flux.mergeWith(mono2);
 		
-		flux.subscribeOn(Schedulers.parallel()).subscribe();
+		flux = Flux.merge(mono1,mono2);
 		
+		Flux<Integer> range = Flux.range(0, 10);
+		range.parallel(11).subscribe(i->{
+			System.out.println("run mono2-"+i);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+		});
+		
+//		ParallelFlux<Object> parallel = flux.parallel(4);
+		
+//		parallel.subscribe();
+		
+//		flux.subscribeOn(Schedulers.boundedElastic()).subscribe();
+		
+		Thread.sleep(10000);
 		
 //		mono1.subscribeOn(Schedulers.newSingle("")).subscribe(s->{
 //			System.out.println(s);

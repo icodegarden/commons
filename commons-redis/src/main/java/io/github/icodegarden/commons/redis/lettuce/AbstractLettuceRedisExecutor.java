@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.redis.lettuce;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,16 @@ import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.CopyArgs;
@@ -34,10 +41,12 @@ import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.LMPopArgs;
 import io.lettuce.core.LMoveArgs;
 import io.lettuce.core.LPosArgs;
+import io.lettuce.core.Limit;
 import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.ScriptOutputType;
+import io.lettuce.core.ZStoreArgs;
 import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
@@ -905,6 +914,438 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	@Override
 	public Long sunionstore(byte[] dstkey, byte[]... keys) {
 		return syncRedisCommands.sunionstore(dstkey, keys);
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzmpop(long timeout, SortedSetOption option, byte[]... keys) {
+		if (option.equals(SortedSetOption.MIN)) {
+			return bzpopmin(timeout, keys);
+		} else if (option.equals(SortedSetOption.MAX)) {
+			return bzpopmax(timeout, keys);
+		}
+		return null;
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop(long timeout, SortedSetOption option, int count,
+			byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmax(double timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], io.lettuce.core.ScoredValue<byte[]>> kv = syncRedisCommands.bzpopmax(timeout,
+				keys);
+		if (kv == null) {
+			return null;
+		}
+
+		io.lettuce.core.ScoredValue<byte[]> v = kv.getValue();
+		ScoredValue<byte[]> scoredValue = new ScoredValue<byte[]>(v.getScore(), v.getValue());
+		return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(), scoredValue);
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmin(double timeout, byte[]... keys) {
+		io.lettuce.core.KeyValue<byte[], io.lettuce.core.ScoredValue<byte[]>> kv = syncRedisCommands.bzpopmin(timeout,
+				keys);
+		if (kv == null) {
+			return null;
+		}
+
+		io.lettuce.core.ScoredValue<byte[]> v = kv.getValue();
+		ScoredValue<byte[]> scoredValue = new ScoredValue<byte[]>(v.getScore(), v.getValue());
+		return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(), scoredValue);
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member) {
+		return syncRedisCommands.zadd(key, score, member);
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member, ZAddArgs params) {
+		io.lettuce.core.ZAddArgs zAddArgs = LettuceUtils.convertZAddArgs(params);
+		return syncRedisCommands.zadd(key, zAddArgs, score, member);
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = scoredValues.stream()
+				.map(one -> io.lettuce.core.ScoredValue.just(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+		io.lettuce.core.ScoredValue<byte[]>[] svs = list.toArray(new io.lettuce.core.ScoredValue[scoredValues.size()]);
+
+		return syncRedisCommands.zadd(key, svs);
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = scoredValues.stream()
+				.map(one -> io.lettuce.core.ScoredValue.just(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+		io.lettuce.core.ScoredValue<byte[]>[] svs = list.toArray(new io.lettuce.core.ScoredValue[scoredValues.size()]);
+
+		io.lettuce.core.ZAddArgs zAddArgs = LettuceUtils.convertZAddArgs(params);
+
+		return syncRedisCommands.zadd(key, zAddArgs, svs);
+	}
+
+	@Override
+	public long zcard(byte[] key) {
+		return syncRedisCommands.zcard(key);
+	}
+
+	@Override
+	public long zcount(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zcount(key, r);
+	}
+
+	@Override
+	public List<byte[]> zdiff(byte[]... keys) {
+		return syncRedisCommands.zdiff(keys);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zdiffWithScores(byte[]... keys) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zdiffWithScores(keys);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public long zdiffStore(byte[] dstkey, byte[]... keys) {
+		return syncRedisCommands.zdiffstore(dstkey, keys);
+	}
+
+	@Override
+	public double zincrby(byte[] key, double increment, byte[] member) {
+		return syncRedisCommands.zincrby(key, increment, member);
+	}
+
+	@Override
+	public List<byte[]> zinter(byte[]... keys) {
+		return syncRedisCommands.zinter(keys);
+	}
+
+	@Override
+	public List<byte[]> zinter(ZAggregateArgs params, byte[]... keys) {
+		io.lettuce.core.ZAggregateArgs zAggregateArgs = LettuceUtils.convertZAggregateArgs(params);
+		return syncRedisCommands.zinter(zAggregateArgs, keys);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zinterWithScores(keys);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(ZAggregateArgs params, byte[]... keys) {
+		io.lettuce.core.ZAggregateArgs zAggregateArgs = LettuceUtils.convertZAggregateArgs(params);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zinterWithScores(zAggregateArgs, keys);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, byte[]... sets) {
+		return syncRedisCommands.zinterstore(dstkey, sets);
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		ZStoreArgs storeArgs = LettuceUtils.convertZStoreArgs(params);
+		return syncRedisCommands.zinterstore(dstkey, storeArgs, sets);
+	}
+
+	@Override
+	public long zintercard(byte[]... keys) {
+		return syncRedisCommands.zintercard(keys);
+	}
+
+	@Override
+	public long zintercard(long limit, byte[]... keys) {
+		return syncRedisCommands.zintercard(limit, keys);
+	}
+
+	@Override
+	public long zlexcount(byte[] key, byte[] min, byte[] max) {
+		return syncRedisCommands.zlexcount(key, new String(min, StandardCharsets.UTF_8),
+				new String(max, StandardCharsets.UTF_8));
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> zmpop(SortedSetOption option, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> zmpop(SortedSetOption option, int count, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Double> zmscore(byte[] key, byte[]... members) {
+		return syncRedisCommands.zmscore(key, members);
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmax(byte[] key) {
+		io.lettuce.core.ScoredValue<byte[]> one = syncRedisCommands.zpopmax(key);
+		return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmax(byte[] key, int count) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zpopmax(key, count);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmin(byte[] key) {
+		io.lettuce.core.ScoredValue<byte[]> one = syncRedisCommands.zpopmin(key);
+		return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmin(byte[] key, int count) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zpopmin(key, count);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public byte[] zrandmember(byte[] key) {
+		return syncRedisCommands.zrandmember(key);
+	}
+
+	@Override
+	public List<byte[]> zrandmember(byte[] key, long count) {
+		return syncRedisCommands.zrandmember(key, count);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrandmemberWithScores(byte[] key, long count) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrandmemberWithScores(key, count);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrange(byte[] key, long start, long stop) {
+
+		return syncRedisCommands.zrange(key, start, stop);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, long start, long stop) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrangeWithScores(key, start, stop);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range) {
+		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zrangebylex(key, r);
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		return syncRedisCommands.zrangebylex(key, r, limit);
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zrangebyscore(key, r);
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		return syncRedisCommands.zrangebyscore(key, r, limit);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrangebyscoreWithScores(key, r);
+
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrangebyscoreWithScores(key, r, limit);
+
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public long zrangestore(byte[] dest, byte[] src, Range<Long> range) {
+		io.lettuce.core.Range<Long> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zrangestore(dest, src, r);
+	}
+
+	@Override
+	public Long zrank(byte[] key, byte[] member) {
+		return syncRedisCommands.zrank(key, member);
+	}
+
+	@Override
+	public long zrem(byte[] key, byte[]... members) {
+		return syncRedisCommands.zrem(key, members);
+	}
+
+	@Override
+	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
+		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zremrangebylex(key, r);
+	}
+
+	@Override
+	public long zremrangeByRank(byte[] key, long start, long stop) {
+		return syncRedisCommands.zremrangebyrank(key, start, stop);
+	}
+
+	@Override
+	public long zremrangeByScore(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zremrangebyscore(key, r);
+	}
+
+	@Override
+	public List<byte[]> zrevrange(byte[] key, long start, long stop) {
+		return syncRedisCommands.zrevrange(key, start, stop);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeWithScores(byte[] key, long start, long stop) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrevrangeWithScores(key, start, stop);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
+		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zrevrangebylex(key, r);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		return syncRedisCommands.zrevrangebylex(key, r, limit);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		return syncRedisCommands.zrevrangebyscore(key, r);
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		return syncRedisCommands.zrevrangebyscore(key, r, limit);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrevrangebyscoreWithScores(key, r);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zrevrangebyscoreWithScores(key, r, limit);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public Long zrevrank(byte[] key, byte[] member) {
+		return syncRedisCommands.zrevrank(key, member);
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.ScoredValueScanCursor<byte[]> scanResult = syncRedisCommands.zscan(key, scanCursor);
+		return LettuceUtils.convertScoredValueScanCursor(scanResult);
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
+
+		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
+
+		io.lettuce.core.ScoredValueScanCursor<byte[]> scanResult = syncRedisCommands.zscan(key, scanCursor, scanArgs);
+		return LettuceUtils.convertScoredValueScanCursor(scanResult);
+	}
+
+	@Override
+	public Double zscore(byte[] key, byte[] member) {
+		return syncRedisCommands.zscore(key, member);
+	}
+
+	@Override
+	public List<byte[]> zunion(byte[]... keys) {
+		return syncRedisCommands.zunion(keys);
+	}
+
+	@Override
+	public List<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
+		io.lettuce.core.ZAggregateArgs zAggregateArgs = LettuceUtils.convertZAggregateArgs(params);
+		return syncRedisCommands.zunion(zAggregateArgs, keys);
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(byte[]... keys) {
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zunionWithScores(keys);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
+		io.lettuce.core.ZAggregateArgs zAggregateArgs = LettuceUtils.convertZAggregateArgs(params);
+		List<io.lettuce.core.ScoredValue<byte[]>> list = syncRedisCommands.zunionWithScores(zAggregateArgs, keys);
+		return list.stream().map(one -> new ScoredValue<byte[]>(one.getScore(), one.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, byte[]... sets) {
+		return syncRedisCommands.zunionstore(dstkey, sets);
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		ZStoreArgs storeArgs = LettuceUtils.convertZStoreArgs(params);
+		return syncRedisCommands.zunionstore(dstkey, storeArgs, sets);
 	}
 
 	@Override
