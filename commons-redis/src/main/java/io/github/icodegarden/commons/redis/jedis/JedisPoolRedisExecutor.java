@@ -2,14 +2,20 @@ package io.github.icodegarden.commons.redis.jedis;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
@@ -23,10 +29,16 @@ import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.JedisUtils;
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -34,7 +46,10 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.params.GetExParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZParams;
 import redis.clients.jedis.resps.ScanResult;
+import redis.clients.jedis.resps.Tuple;
 
 /**
  * 
@@ -937,6 +952,704 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	public Long sunionstore(byte[] dstkey, byte[]... keys) {
 		return execCommand(jedis -> {
 			return jedis.sunionstore(dstkey, keys);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzmpop(long timeout, SortedSetOption option, byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jedis.bzmpop(timeout,
+					redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), keys);
+			if (kv == null) {
+				return null;
+			}
+
+			Assert.isTrue(kv.getValue().size() == 1, "bzmpop result size must eq 1");
+
+			Tuple tuple = kv.getValue().get(0);
+			return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(),
+					new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement()));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop(long timeout, SortedSetOption option, int count,
+			byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jedis.bzmpop(timeout,
+					redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), count, keys);
+			if (kv == null) {
+				return null;
+			}
+			List<ScoredValue<byte[]>> list = kv.getValue().stream()
+					.map(tuple -> new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement()))
+					.collect(Collectors.toList());
+			return new KeyValue<byte[], List<ScoredValue<byte[]>>>(kv.getKey(), list);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmax(double timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.bzpopmax(timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return null;
+			}
+
+			Iterator<byte[]> iterator = list.iterator();
+			byte[] key = iterator.next();
+			byte[] value = iterator.next();
+			byte[] score = iterator.next();
+			return new KeyValue<byte[], ScoredValue<byte[]>>(key,
+					new ScoredValue<byte[]>(Double.parseDouble(new String(score, StandardCharsets.UTF_8)), value));
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmin(double timeout, byte[]... keys) {
+		return execCommand(jedis -> {
+			List<byte[]> list = jedis.bzpopmin(timeout, keys);
+			if (org.springframework.util.CollectionUtils.isEmpty(list)) {
+				return null;
+			}
+
+			Iterator<byte[]> iterator = list.iterator();
+			byte[] key = iterator.next();
+			byte[] value = iterator.next();
+			byte[] score = iterator.next();
+			return new KeyValue<byte[], ScoredValue<byte[]>>(key,
+					new ScoredValue<byte[]>(Double.parseDouble(new String(score, StandardCharsets.UTF_8)), value));
+		});
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member) {
+		return execCommand(jedis -> {
+			return jedis.zadd(key, score, member);
+		});
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member, ZAddArgs params) {
+		return execCommand(jedis -> {
+			ZAddParams zAddParams = JedisUtils.convertZAddParams(params);
+			return jedis.zadd(key, score, member, zAddParams);
+		});
+
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues) {
+		return execCommand(jedis -> {
+			Map<byte[], Double> scoreMembers = scoredValues.stream()
+					.collect(Collectors.toMap(ScoredValue::getValue, ScoredValue::getScore, (a, b) -> a));
+			return jedis.zadd(key, scoreMembers);
+		});
+
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params) {
+		return execCommand(jedis -> {
+			Map<byte[], Double> scoreMembers = scoredValues.stream()
+					.collect(Collectors.toMap(ScoredValue::getValue, ScoredValue::getScore, (a, b) -> a));
+			ZAddParams zAddParams = JedisUtils.convertZAddParams(params);
+			return jedis.zadd(key, scoreMembers, zAddParams);
+		});
+
+	}
+
+	@Override
+	public long zcard(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.zcard(key);
+		});
+
+	}
+
+	@Override
+	public long zcount(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zcount(key, min, max);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zdiff(byte[]... keys) {
+		return execCommand(jedis -> {
+			Set<byte[]> set = jedis.zdiff(keys);
+			return new ArrayList<byte[]>(set);
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zdiffWithScores(byte[]... keys) {
+		return execCommand(jedis -> {
+			Set<Tuple> set = jedis.zdiffWithScores(keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public long zdiffStore(byte[] dstkey, byte[]... keys) {
+		return execCommand(jedis -> {
+			return jedis.zdiffStore(dstkey, keys);
+		});
+
+	}
+
+	@Override
+	public double zincrby(byte[] key, double increment, byte[] member) {
+		return execCommand(jedis -> {
+			return jedis.zincrby(key, increment, member);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zinter(byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = new ZParams();
+			Set<byte[]> set = jedis.zinter(zParams, keys);
+			return new ArrayList<byte[]>(set);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zinter(ZAggregateArgs params, byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = JedisUtils.convertZParams(params);
+			Set<byte[]> set = jedis.zinter(zParams, keys);
+			return new ArrayList<byte[]>(set);
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = new ZParams();
+			Set<Tuple> set = jedis.zinterWithScores(zParams, keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(ZAggregateArgs params, byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = JedisUtils.convertZParams(params);
+			Set<Tuple> set = jedis.zinterWithScores(zParams, keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, byte[]... sets) {
+		return execCommand(jedis -> {
+			return jedis.zinterstore(dstkey, sets);
+		});
+
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		return execCommand(jedis -> {
+			ZParams zParams = JedisUtils.convertZParams(params);
+			return jedis.zinterstore(dstkey, zParams, sets);
+		});
+
+	}
+
+	@Override
+	public long zintercard(byte[]... keys) {
+		return execCommand(jedis -> {
+			return jedis.zintercard(keys);
+		});
+
+	}
+
+	@Override
+	public long zintercard(long limit, byte[]... keys) {
+		return execCommand(jedis -> {
+			return jedis.zintercard(limit, keys);
+		});
+
+	}
+
+	@Override
+	public long zlexcount(byte[] key, byte[] min, byte[] max) {
+		return execCommand(jedis -> {
+			return jedis.zlexcount(key, min, max);
+		});
+
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> zmpop(SortedSetOption option, byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jedis
+					.zmpop(redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), keys);
+			if (kv == null) {
+				return null;
+			}
+
+			Tuple tuple = kv.getValue().get(0);
+
+			ScoredValue<byte[]> value = new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			return new KeyValue<byte[], ScoredValue<byte[]>>(kv.getKey(), value);
+		});
+
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> zmpop(SortedSetOption option, int count, byte[]... keys) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.util.KeyValue<byte[], List<Tuple>> kv = jedis
+					.zmpop(redis.clients.jedis.args.SortedSetOption.valueOf(option.name()), count, keys);
+			if (kv == null) {
+				return null;
+			}
+
+			List<ScoredValue<byte[]>> list = kv.getValue().stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+
+			return new KeyValue<byte[], List<ScoredValue<byte[]>>>(kv.getKey(), list);
+		});
+
+	}
+
+	@Override
+	public List<Double> zmscore(byte[] key, byte[]... members) {
+		return execCommand(jedis -> {
+			return jedis.zmscore(key, members);
+		});
+
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmax(byte[] key) {
+		return execCommand(jedis -> {
+			Tuple tuple = jedis.zpopmax(key);
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmax(byte[] key, int count) {
+		return execCommand(jedis -> {
+			List<Tuple> list = jedis.zpopmax(key, count);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmin(byte[] key) {
+		return execCommand(jedis -> {
+			Tuple tuple = jedis.zpopmin(key);
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmin(byte[] key, int count) {
+		return execCommand(jedis -> {
+			List<Tuple> list = jedis.zpopmin(key, count);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public byte[] zrandmember(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.zrandmember(key);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrandmember(byte[] key, long count) {
+		return execCommand(jedis -> {
+			return jedis.zrandmember(key, count);
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrandmemberWithScores(byte[] key, long count) {
+		return execCommand(jedis -> {
+			List<Tuple> list = jedis.zrandmemberWithScores(key, count);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrange(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+			return jedis.zrange(key, start, stop);
+		});
+
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+			List<Tuple> list = jedis.zrangeWithScores(key, start, stop);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range) {
+		return execCommand(jedis -> {
+			return jedis.zrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue());
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return execCommand(jedis -> {
+			return jedis.zrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue(), offset, count);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zrangeByScore(key, min, max);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zrangeByScore(key, min, max, offset, count);
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			List<Tuple> list = jedis.zrangeByScoreWithScores(key, min, max);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			List<Tuple> list = jedis.zrangeByScoreWithScores(key, min, max, offset, count);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zrangestore(byte[] dest, byte[] src, Range<Long> range) {
+		return execCommand(jedis -> {
+			redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+					range.getLower().getValue().intValue(), range.getUpper().getValue().intValue());
+			return jedis.zrangestore(dest, src, zRangeParams);
+		});
+
+	}
+
+	@Override
+	public long zrangestoreByLex(byte[] dest, byte[] src, Range<byte[]> range, int offset, int count) {
+		return execCommand(jedis -> {
+			byte[] min = range.getLower().getValue();
+			byte[] max = range.getUpper().getValue();
+
+			redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+					redis.clients.jedis.Protocol.Keyword.BYLEX, min, max);
+			zRangeParams.limit(offset, count);
+			return jedis.zrangestore(dest, src, zRangeParams);
+		});
+
+	}
+
+	@Override
+	public long zrangestoreByScore(byte[] dest, byte[] src, Range<? extends Number> range, int offset, int count) {
+		return execCommand(jedis -> {
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+
+			redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+					redis.clients.jedis.Protocol.Keyword.BYSCORE, min, max);
+			zRangeParams.limit(offset, count);
+			return jedis.zrangestore(dest, src, zRangeParams);
+		});
+
+	}
+
+	@Override
+	public Long zrank(byte[] key, byte[] member) {
+		return execCommand(jedis -> {
+			return jedis.zrank(key, member);
+
+		});
+
+	}
+
+	@Override
+	public long zrem(byte[] key, byte[]... members) {
+		return execCommand(jedis -> {
+			return jedis.zrem(key, members);
+		});
+
+	}
+
+	@Override
+	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
+		return execCommand(jedis -> {
+			return jedis.zremrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue());
+		});
+
+	}
+
+	@Override
+	public long zremrangeByRank(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+
+			return jedis.zremrangeByRank(key, start, stop);
+		});
+	}
+
+	@Override
+	public long zremrangeByScore(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zremrangeByScore(key, min, max);
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrevrange(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+
+			return jedis.zrevrange(key, start, stop);
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeWithScores(byte[] key, long start, long stop) {
+		return execCommand(jedis -> {
+			List<Tuple> list = jedis.zrevrangeWithScores(key, start, stop);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
+		return execCommand(jedis -> {
+
+			return jedis.zrevrangeByLex(key, range.getUpper().getValue(), range.getLower().getValue());
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return execCommand(jedis -> {
+
+			return jedis.zrevrangeByLex(key, range.getUpper().getValue(), range.getLower().getValue(), offset, count);
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zrevrangeByScore(key, max, min);
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			return jedis.zrevrangeByScore(key, max, min, offset, count);
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			List<Tuple> list = jedis.zrevrangeByScoreWithScores(key, max, min);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		return execCommand(jedis -> {
+
+			Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+			byte[] min = tuple2.getT1();
+			byte[] max = tuple2.getT2();
+			List<Tuple> list = jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
+			return list.stream().map(tuple -> {
+				return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public Long zrevrank(byte[] key, byte[] member) {
+		return execCommand(jedis -> {
+
+			return jedis.zrevrank(key, member);
+		});
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+		return execCommand(jedis -> {
+
+			ScanResult<Tuple> scanResult = jedis.zscan(key, cursor);
+			return JedisUtils.convertScoredValueScanCursor(scanResult);
+		});
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+		return execCommand(jedis -> {
+
+			ScanResult<Tuple> scanResult = jedis.zscan(key, cursor, JedisUtils.convertScanParams(params));
+			return JedisUtils.convertScoredValueScanCursor(scanResult);
+		});
+	}
+
+	@Override
+	public Double zscore(byte[] key, byte[] member) {
+		return execCommand(jedis -> {
+
+			return jedis.zscore(key, member);
+		});
+	}
+
+	@Override
+	public List<byte[]> zunion(byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = new ZParams();
+			return new ArrayList<>(jedis.zunion(zParams, keys));
+		});
+	}
+
+	@Override
+	public List<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
+		return execCommand(jedis -> {
+
+			ZParams zParams = JedisUtils.convertZParams(params);
+			return new ArrayList<>(jedis.zunion(zParams, keys));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(byte[]... keys) {
+		return execCommand(jedis -> {
+			ZParams zParams = new ZParams();
+			Set<Tuple> set = jedis.zunionWithScores(zParams, keys);
+			return set.stream().map(one -> new ScoredValue<>(one.getScore(), one.getBinaryElement()))
+					.collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
+		return execCommand(jedis -> {
+
+			ZParams zParams = JedisUtils.convertZParams(params);
+			Set<Tuple> set = jedis.zunionWithScores(zParams, keys);
+			return set.stream().map(one -> new ScoredValue<>(one.getScore(), one.getBinaryElement()))
+					.collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, byte[]... sets) {
+		return execCommand(jedis -> {
+
+			return jedis.zunionstore(dstkey, sets);
+		});
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		return execCommand(jedis -> {
+
+			ZParams zParams = JedisUtils.convertZParams(params);
+			return jedis.zunionstore(dstkey, zParams, sets);
 		});
 	}
 

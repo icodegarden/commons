@@ -1150,15 +1150,27 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range) {
-		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
-		return syncRedisCommands.zrangebylex(key, r);
+//		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+//		return syncRedisCommands.zrangebylex(key, r);
+
+		/**
+		 * FIXME 上面不准
+		 */
+		return syncRedisCommands.zrangebylex(key, new String(range.getLower().getValue(), StandardCharsets.UTF_8),
+				new String(range.getUpper().getValue(), StandardCharsets.UTF_8));
 	}
 
 	@Override
 	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
-		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
-		Limit limit = io.lettuce.core.Limit.create(offset, count);
-		return syncRedisCommands.zrangebylex(key, r, limit);
+//		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+//		Limit limit = io.lettuce.core.Limit.create(offset, count);
+//		return syncRedisCommands.zrangebylex(key, r, limit);
+
+		/**
+		 * FIXME 上面不准
+		 */
+		return syncRedisCommands.zrangebylex(key, new String(range.getLower().getValue(), StandardCharsets.UTF_8),
+				new String(range.getUpper().getValue(), StandardCharsets.UTF_8), offset, count);
 	}
 
 	@Override
@@ -1201,6 +1213,24 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public long zrangestoreByLex(byte[] dest, byte[] src, Range<byte[]> range, int offset, int count) {
+//		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+//		Limit limit = io.lettuce.core.Limit.create(offset, count);
+//		return syncRedisCommands.zrangestorebylex(dest, src, r, limit);
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zrangestoreByScore(byte[] dest, byte[] src, Range<? extends Number> range, int offset, int count) {
+		io.lettuce.core.Range<? extends Number> r = LettuceUtils.convertRange(range);
+		Limit limit = io.lettuce.core.Limit.create(offset, count);
+		return syncRedisCommands.zrangestorebyscore(dest, src, r, limit);
+	}
+
+	@Override
 	public Long zrank(byte[] key, byte[] member) {
 		return syncRedisCommands.zrank(key, member);
 	}
@@ -1212,8 +1242,14 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
-		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
-		return syncRedisCommands.zremrangebylex(key, r);
+//		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+//		return syncRedisCommands.zremrangebylex(key, r);
+		
+		/**
+		 * FIXME 上面不准
+		 */
+		return syncRedisCommands.zremrangebylex(key, new String(range.getLower().getValue(), StandardCharsets.UTF_8),
+				new String(range.getUpper().getValue(), StandardCharsets.UTF_8));
 	}
 
 	@Override
@@ -1241,8 +1277,13 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
-		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
-		return syncRedisCommands.zrevrangebylex(key, r);
+//		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
+//		return syncRedisCommands.zrevrangebylex(key, r);
+		
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

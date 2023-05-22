@@ -164,7 +164,29 @@ public interface SortedSetBinaryCommands {
 	 * 
 	 * @param key
 	 * @param scoreMembers
-	 * @param params
+	 * @param params       XX: Only update elements that already exist. Don't add
+	 *                     new elements.<br>
+	 *                     NX: Only add new elements. Don't update already existing
+	 *                     elements.<br>
+	 *                     LT: Only update existing elements if the new score is
+	 *                     less than the current score. This flag doesn't prevent
+	 *                     adding new elements.<br>
+	 *                     GT: Only update existing elements if the new score is
+	 *                     greater than the current score. This flag doesn't prevent
+	 *                     adding new elements.<br>
+	 *                     CH: Modify the return value from the number of new
+	 *                     elements added, to the total number of elements changed
+	 *                     (CH is an abbreviation of changed). Changed elements are
+	 *                     new elements added and elements already existing for
+	 *                     which the score was updated. So elements specified in the
+	 *                     command line having the same score as they had in the
+	 *                     past are not counted. Note: normally the return value of
+	 *                     ZADD only counts the number of new elements added.<br>
+	 *                     INCR: When this option is specified ZADD acts like
+	 *                     ZINCRBY. Only one score-element pair can be specified in
+	 *                     this mode.<br>
+	 *                     Note: The GT, LT and NX options are mutually
+	 *                     exclusive.<br>
 	 * @return
 	 */
 	long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params);
@@ -635,6 +657,18 @@ public interface SortedSetBinaryCommands {
 	/**
 	 * <h1>pop并返回score最小的元素。同zpopmax</h1><br>
 	 * 
+	 * redis> ZADD myzset 1 "one"<br>
+	 * (integer) 1<br>
+	 * redis> ZADD myzset 2 "two"<br>
+	 * (integer) 1<br>
+	 * redis> ZADD myzset 3 "three"<br>
+	 * (integer) 1<br>
+	 * redis> ZPOPMIN myzset<br>
+	 * 1) "one"<br>
+	 * 2) "1"<br>
+	 * redis> <br>
+	 * 
+	 * 
 	 * @param key
 	 * @param count pop的数量，默认1
 	 * @return
@@ -843,6 +877,7 @@ public interface SortedSetBinaryCommands {
 
 	/**
 	 * <h1>另存range范围内的元素</h1><br>
+	 * ZRANGESTORE dst src min max [BYSCORE | BYLEX] [REV] [LIMIT offset count]<br>
 	 * 
 	 * This command is like ZRANGE, but stores the result in the <dst> destination
 	 * key.
@@ -858,7 +893,7 @@ public interface SortedSetBinaryCommands {
 	 * 
 	 * @param dest
 	 * @param src
-	 * @param zRangeParams
+	 * @param range 表示index的start和stop
 	 * @return
 	 */
 	long zrangestore(byte[] dest, byte[] src, Range<Long> range);
@@ -911,9 +946,12 @@ public interface SortedSetBinaryCommands {
 	 * 
 	 * An error is returned when key exists and does not hold a sorted set.
 	 * 
-	 * redis> ZADD myzset 1 "one" (integer) 1 redis> ZADD myzset 2 "two" (integer) 1
-	 * redis> ZADD myzset 3 "three" (integer) 1 redis> ZREM myzset "two" (integer) 1
-	 * redis> ZRANGE myzset 0 -1 WITHSCORES 1) "one" 2) "1" 3) "three" 4) "3" redis>
+	 * redis> ZADD myzset 1 "one" (integer) 1 <br>
+	 * redis> ZADD myzset 2 "two" (integer) 1 <br>
+	 * redis> ZADD myzset 3 "three" (integer) 1 <br>
+	 * redis> ZREM myzset "two" (integer) 1 <br>
+	 * redis> ZRANGE myzset 0 -1 WITHSCORES 1) "one" 2) "1" 3) "three" 4) "3" <br>
+	 * redis><br>
 	 * 
 	 * @param key
 	 * @param members

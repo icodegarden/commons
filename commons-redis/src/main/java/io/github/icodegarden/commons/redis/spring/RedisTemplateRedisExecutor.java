@@ -3,6 +3,8 @@ package io.github.icodegarden.commons.redis.spring;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -18,6 +20,9 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisListCommands.Direction;
 import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.data.redis.connection.RedisZSetCommands.Aggregate;
+import org.springframework.data.redis.connection.RedisZSetCommands.Limit;
+import org.springframework.data.redis.connection.RedisZSetCommands.Weights;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.connection.SortParameters;
 import org.springframework.data.redis.connection.ValueEncoding;
@@ -30,6 +35,7 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.ScanOptions.ScanOptionsBuilder;
 import org.springframework.data.redis.core.types.Expiration;
 
+import io.github.icodegarden.commons.lang.tuple.NullableTuple2;
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
@@ -44,10 +50,16 @@ import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.RedisTemplateUtils;
 
@@ -1223,6 +1235,623 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	public Long sunionstore(byte[] dstkey, byte[]... keys) {
 		return (Long) redisTemplate.execute((RedisCallback) connection -> {
 			return connection.setCommands().sUnionStore(dstkey, keys);
+		});
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzmpop(long timeout, SortedSetOption option, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop(long timeout, SortedSetOption option, int count,
+			byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmax(double timeout, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> bzpopmin(double timeout, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zAdd(key, score, member) ? 1L : 0L;
+		});
+	}
+
+	@Override
+	public long zadd(byte[] key, double score, byte[] member, ZAddArgs params) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.ZAddArgs zAddArgs = RedisTemplateUtils
+					.convertZAddArgs(params);
+			return connection.zSetCommands().zAdd(key, score, member, zAddArgs) ? 1L : 0L;
+		});
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> tuples = scoredValues.stream()
+					.map(one -> {
+						return new org.springframework.data.redis.connection.DefaultTuple(one.getValue(),
+								one.getScore());
+					}).collect(Collectors.toSet());
+
+			return connection.zSetCommands().zAdd(key, tuples);
+		});
+	}
+
+	@Override
+	public long zadd(byte[] key, Collection<ScoredValue<byte[]>> scoredValues, ZAddArgs params) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> tuples = scoredValues.stream()
+					.map(one -> {
+						return new org.springframework.data.redis.connection.DefaultTuple(one.getValue(),
+								one.getScore());
+					}).collect(Collectors.toSet());
+
+			org.springframework.data.redis.connection.RedisZSetCommands.ZAddArgs zAddArgs = RedisTemplateUtils
+					.convertZAddArgs(params);
+
+			return connection.zSetCommands().zAdd(key, tuples, zAddArgs);
+		});
+	}
+
+	@Override
+	public long zcard(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zCard(key);
+		});
+	}
+
+	@Override
+	public long zcount(byte[] key, Range<? extends Number> range) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			return connection.zSetCommands().zCount(key, r);
+		});
+	}
+
+	@Override
+	public List<byte[]> zdiff(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return new ArrayList(connection.zSetCommands().zDiff(keys));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zdiffWithScores(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zDiffWithScores(keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zdiffStore(byte[] dstkey, byte[]... keys) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zDiffStore(dstkey, keys);
+		});
+	}
+
+	@Override
+	public double zincrby(byte[] key, double increment, byte[] member) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zIncrBy(key, increment, member);
+		});
+	}
+
+	@Override
+	public List<byte[]> zinter(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return new ArrayList(connection.zSetCommands().zInter(keys));
+		});
+	}
+
+	@Override
+	public List<byte[]> zinter(ZAggregateArgs params, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zInterWithScores(keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zinterWithScores(ZAggregateArgs params, byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			NullableTuple2<Aggregate, Weights> tuple2 = RedisTemplateUtils.convertAggregateWeights(params);
+
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zInterWithScores(tuple2.getT1(), tuple2.getT2(), keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, byte[]... sets) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zInterStore(dstkey, sets);
+		});
+	}
+
+	@Override
+	public long zinterstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			NullableTuple2<Aggregate, Weights> tuple2 = RedisTemplateUtils.convertAggregateWeights(params);
+			return connection.zSetCommands().zInterStore(dstkey, tuple2.getT1(), tuple2.getT2(), sets);
+		});
+	}
+
+	@Override
+	public long zintercard(byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zintercard(long limit, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zlexcount(byte[] key, byte[] min, byte[] max) {
+//		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+//			org.springframework.data.redis.connection.RedisZSetCommands.Range range = new org.springframework.data.redis.connection.RedisZSetCommands.Range();
+//			range.gte(min);
+//			range.lte(max);
+//			return connection.zSetCommands().zLexCount(key, range);
+//		});
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], ScoredValue<byte[]>> zmpop(SortedSetOption option, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public KeyValue<byte[], List<ScoredValue<byte[]>>> zmpop(SortedSetOption option, int count, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Double> zmscore(byte[] key, byte[]... members) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zMScore(key, members);
+		});
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmax(byte[] key) {
+		return (ScoredValue) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Tuple tuple = connection.zSetCommands()
+					.zPopMax(key);
+			return new ScoredValue<>(tuple.getScore(), tuple.getValue());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmax(byte[] key, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zPopMax(key, count);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public ScoredValue<byte[]> zpopmin(byte[] key) {
+		return (ScoredValue) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Tuple tuple = connection.zSetCommands()
+					.zPopMin(key);
+			return new ScoredValue<>(tuple.getScore(), tuple.getValue());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zpopmin(byte[] key, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zPopMin(key, count);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public byte[] zrandmember(byte[] key) {
+		return (byte[]) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zRandMember(key);
+		});
+	}
+
+	@Override
+	public List<byte[]> zrandmember(byte[] key, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zRandMember(key, count);
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrandmemberWithScores(byte[] key, long count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			List<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> list = connection.zSetCommands()
+					.zRandMemberWithScore(key, count);
+			return list.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<byte[]> zrange(byte[] key, long start, long stop) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return new ArrayList(connection.zSetCommands().zRange(key, start, stop));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, long start, long stop) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRangeWithScores(key, start, stop);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range) {
+//		return (List) redisTemplate.execute((RedisCallback) connection -> {
+//			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+//					.convertRange(range);
+//			return new ArrayList(connection.zSetCommands().zRangeByLex(key, r));
+//		});
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+			return new ArrayList(connection.zSetCommands().zRangeByLex(key, r, limit));
+		});
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			return new ArrayList(connection.zSetCommands().zRangeByScore(key, r));
+		});
+	}
+
+	@Override
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+			return new ArrayList(connection.zSetCommands().zRangeByScore(key, r, limit));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRangeByScoreWithScores(key, r);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRangeByScoreWithScores(key, r, limit);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zrangestore(byte[] dest, byte[] src, Range<Long> range) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zrangestoreByLex(byte[] dest, byte[] src, Range<byte[]> range, int offset, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zrangestoreByScore(byte[] dest, byte[] src, Range<? extends Number> range, int offset, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Long zrank(byte[] key, byte[] member) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zRank(key, member);
+		});
+	}
+
+	@Override
+	public long zrem(byte[] key, byte[]... members) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zRem(key, members);
+		});
+	}
+
+	@Override
+	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
+//		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+//			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+//					.convertRange(range);
+//			return connection.zSetCommands().zRemRangeByLex(key, r);
+//		});
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zremrangeByRank(byte[] key, long start, long stop) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long zremrangeByScore(byte[] key, Range<? extends Number> range) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			return connection.zSetCommands().zRemRangeByScore(key, r);
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrange(byte[] key, long start, long stop) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return new ArrayList(connection.zSetCommands().zRevRange(key, start, stop));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeWithScores(byte[] key, long start, long stop) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRevRangeWithScores(key, start, stop);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
+//		return (List) redisTemplate.execute((RedisCallback) connection -> {
+//			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+//					.convertRange(range);
+//			return new ArrayList(connection.zSetCommands().zRevRangeByLex(key, r));
+//		});
+		/**
+		 * FIXME 上面不准
+		 */
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+
+			return new ArrayList(connection.zSetCommands().zRevRangeByLex(key, r, limit));
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			return new ArrayList(connection.zSetCommands().zRevRangeByScore(key, r));
+		});
+	}
+
+	@Override
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+			return new ArrayList(connection.zSetCommands().zRevRangeByScore(key, r, limit));
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRevRangeByScoreWithScores(key, r);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
+			int count) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			org.springframework.data.redis.connection.RedisZSetCommands.Range r = RedisTemplateUtils
+					.convertRange(range);
+			Limit limit = new org.springframework.data.redis.connection.RedisZSetCommands.Limit();
+			limit.offset(offset);
+			limit.count(count);
+			
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zRevRangeByScoreWithScores(key, r, limit);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public Long zrevrank(byte[] key, byte[] member) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zRevRank(key, member);
+		});
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+		return zscan(key, cursor, null);
+	}
+
+	@Override
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+		return (ScoredValueScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
+
+			ScanOptionsBuilder builder = ScanOptions.scanOptions();
+			if (params != null) {
+				params.match(params.getMatch());
+				if (params.getCount() != null) {
+					builder.count(params.getCount());
+				}
+			}
+
+			ScanOptions scanOptions = builder.build();
+
+			try (Cursor<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> scan = connection.zScan(key,
+					scanOptions);) {
+
+				List<ScoredValue<byte[]>> list = new LinkedList<>();
+
+				while (scan.hasNext()) {
+					org.springframework.data.redis.connection.RedisZSetCommands.Tuple tuple = scan.next();
+					list.add(new ScoredValue<byte[]>(tuple.getScore(), tuple.getValue()));
+				}
+
+				String cursorId = Long.toString(scan.getCursorId());
+				return new ScoredValueScanCursor<byte[]>(cursorId, "0".equals(cursorId), list);
+			}
+		});
+	}
+
+	@Override
+	public Double zscore(byte[] key, byte[] member) {
+		return (Double) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zScore(key, member);
+		});
+	}
+
+	@Override
+	public List<byte[]> zunion(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return new ArrayList(connection.zSetCommands().zUnion(keys));
+		});
+	}
+
+	@Override
+	public List<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zUnionWithScores(keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			NullableTuple2<Aggregate, Weights> tuple2 = RedisTemplateUtils.convertAggregateWeights(params);
+			Set<org.springframework.data.redis.connection.RedisZSetCommands.Tuple> set = connection.zSetCommands()
+					.zUnionWithScores(tuple2.getT1(), tuple2.getT2(), keys);
+			return set.stream().map(one -> {
+				return new ScoredValue<byte[]>(one.getScore(), one.getValue());
+			}).collect(Collectors.toList());
+		});
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, byte[]... sets) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.zSetCommands().zUnionStore(dstkey, sets);
+		});
+	}
+
+	@Override
+	public long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			NullableTuple2<Aggregate, Weights> tuple2 = RedisTemplateUtils.convertAggregateWeights(params);
+			return connection.zSetCommands().zUnionStore(dstkey, tuple2.getT1(), tuple2.getT2(), sets);
 		});
 	}
 

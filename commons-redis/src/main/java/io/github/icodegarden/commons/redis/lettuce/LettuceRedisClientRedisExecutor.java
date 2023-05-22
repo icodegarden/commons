@@ -1,12 +1,7 @@
 package io.github.icodegarden.commons.redis.lettuce;
 
 import java.io.IOException;
-import java.util.List;
 
-import io.github.icodegarden.commons.redis.args.GetExArgs;
-import io.github.icodegarden.commons.redis.args.LCSMatchResult;
-import io.github.icodegarden.commons.redis.args.LCSParams;
-import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;

@@ -18,13 +18,23 @@ import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.KeyValue;
+import io.github.icodegarden.commons.redis.args.LCSMatchResult;
+import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.LPosParams;
 import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
+import io.github.icodegarden.commons.redis.args.Range;
+import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScoredValue;
+import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
+import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.ZAddArgs;
+import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
+import io.github.icodegarden.commons.redis.lettuce.AbstractLettuceRedisExecutor;
 import io.github.icodegarden.commons.redis.spring.RedisTemplateRedisExecutor;
 
 /**
@@ -198,19 +208,19 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void lcs() throws Exception {
-		// TODO lettuce还没支持
+		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
+			return;
+		}
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 
-//		byte[] k1 = "k{tag}k1".getBytes();
-//		byte[] k2 = "k{tag}k2".getBytes();
-//		
-//		String s = redisExecutor.mset(k1,"ohmytext".getBytes(),k2,"mynewtext".getBytes());
-//		Assertions.assertThat(s).isEqualTo("OK");
-//		
-//		LCSParams lcsParams = new LCSParams();
-//		LCSMatchResult result = redisExecutor.lcs(k1, k2, lcsParams);
-//		Assertions.assertThat(result.getMatchString()).isEqualTo("mytext");
-//		
-//		redisExecutor.del(k1,k2);
+		String s = redisExecutor.mset(key, "ohmytext".getBytes(), k2, "mynewtext".getBytes());
+		Assertions.assertThat(s).isEqualTo("OK");
+
+		LCSParams lcsParams = new LCSParams();
+		LCSMatchResult result = redisExecutor.lcs(key, k2, lcsParams);
+		Assertions.assertThat(result.getMatchString()).isEqualTo("mytext");
 	}
 
 	@Test
@@ -1674,6 +1684,1106 @@ public abstract class RedisExecutorTests {
 
 		l = redisExecutor.scard(k3);
 		Assertions.assertThat(l).isEqualTo(5);
+	}
+
+	@Test
+	public void bzmpop() throws Exception {
+		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
+			return;
+		}
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		/**
+		 * 它总是从key的顺序中取，而不是多个key中的最优先
+		 */
+		KeyValue<byte[], ScoredValue<byte[]>> kv = redisExecutor.bzmpop(0, SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzmpop(0, SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(2.2);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzmpop(0, SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzmpop(0, SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.2);
+
+		// -----------------------------------------------------------
+		// -----------------------------------------------------------
+		// -----------------------------------------------------------
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop = redisExecutor.bzmpop(0, SortedSetOption.MAX, 10, key, k2);
+		Assertions.assertThat(bzmpop.getKey()).isEqualTo(key);
+		Assertions.assertThat(bzmpop.getValue().size()).isEqualTo(2);
+		Assertions.assertThat(bzmpop.getValue().get(0).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(0).getScore()).isEqualTo(2.2);
+		Assertions.assertThat(bzmpop.getValue().get(1).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(1).getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		bzmpop = redisExecutor.bzmpop(0, SortedSetOption.MAX, 10, key, k2);
+		Assertions.assertThat(bzmpop.getKey()).isEqualTo(k2);
+		Assertions.assertThat(bzmpop.getValue().size()).isEqualTo(2);
+		Assertions.assertThat(bzmpop.getValue().get(0).getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(0).getScore()).isEqualTo(0.2);
+		Assertions.assertThat(bzmpop.getValue().get(1).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(1).getScore()).isEqualTo(0.1);
+	}
+
+	@Test
+	public void bzpopmax() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		/**
+		 * 它总是从key的顺序中取，而不是多个key中的最优先
+		 */
+		KeyValue<byte[], ScoredValue<byte[]>> kv = redisExecutor.bzpopmax(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(2.2);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmax(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmax(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.2);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmax(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.1);
+	}
+
+	@Test
+	public void bzpopmin() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		/**
+		 * 它总是从key的顺序中取，而不是多个key中的最优先
+		 */
+		KeyValue<byte[], ScoredValue<byte[]>> kv = redisExecutor.bzpopmin(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmin(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(2.2);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmin(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.bzpopmin(0, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.2);
+	}
+
+	@Test
+	public void zadd() throws Exception {
+		long l = redisExecutor.zadd(key, 1.1, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+		l = redisExecutor.zadd(key, 11.11, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(0);// score会变但返回是0
+		Double d = redisExecutor.zscore(key, "a".getBytes());
+		Assertions.assertThat(d).isEqualTo(11.11);
+
+		ZAddArgs zAddArgs = new ZAddArgs();
+		zAddArgs.xx();
+		l = redisExecutor.zadd(key, 11.11, "x".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(0);// xx要求元素已存在
+		d = redisExecutor.zscore(key, "x".getBytes());
+		Assertions.assertThat(d).isNull();// 元素不会被add
+		l = redisExecutor.zadd(key, 11.11, "a".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(0);// 虽然返回0但是score变了
+		d = redisExecutor.zscore(key, "a".getBytes());
+		Assertions.assertThat(d).isEqualTo(11.11);// score不变
+
+		// --------------------------------------------------------------
+
+		zAddArgs = new ZAddArgs();
+		zAddArgs.nx();
+		l = redisExecutor.zadd(key, 11.11, "x".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(1);// nx要求元素不存在
+		l = redisExecutor.zadd(key, 22.22, "x".getBytes(), zAddArgs);
+		d = redisExecutor.zscore(key, "x".getBytes());
+		Assertions.assertThat(d).isEqualTo(11.11);// score不变
+
+		// --------------------------------------------------------------
+
+		zAddArgs = new ZAddArgs();
+		zAddArgs.lt();
+		l = redisExecutor.zadd(key, 11.11, "y".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(1);// lt要求元素score比已存在的小
+		l = redisExecutor.zadd(key, 22.22, "y".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(0);// lt要求元素score比已存在的小
+		d = redisExecutor.zscore(key, "y".getBytes());
+		Assertions.assertThat(d).isEqualTo(11.11);// score不变
+		l = redisExecutor.zadd(key, 9.9, "y".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(0);// lt要求元素score比已存在的小
+		d = redisExecutor.zscore(key, "y".getBytes());
+		Assertions.assertThat(d).isEqualTo(9.9);// score变了
+
+		// --------------------------------------------------------------
+
+		zAddArgs = new ZAddArgs();
+		zAddArgs.ch();
+		l = redisExecutor.zadd(key, 9.9, "y".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(0);// score没有被修改，返回值0
+		l = redisExecutor.zadd(key, 8.8, "y".getBytes(), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(1);// ch是true时，只要元素被修改，返回值1
+
+		// --------------------------------------------------------------重载方法测试
+
+		ScoredValue<byte[]> scoredValue1 = new ScoredValue<>(1.1, "m".getBytes());
+		ScoredValue<byte[]> scoredValue2 = new ScoredValue<>(1.1, "n".getBytes());
+		l = redisExecutor.zadd(key, Arrays.asList(scoredValue1, scoredValue2));
+		Assertions.assertThat(l).isEqualTo(2);
+
+		zAddArgs = new ZAddArgs();
+		ScoredValue<byte[]> scoredValue3 = new ScoredValue<>(1.1, "mm".getBytes());
+		ScoredValue<byte[]> scoredValue4 = new ScoredValue<>(1.1, "nn".getBytes());
+		l = redisExecutor.zadd(key, Arrays.asList(scoredValue3, scoredValue4), zAddArgs);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zcard() throws Exception {
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 1.1, "b".getBytes());
+
+		long l = redisExecutor.zcard(key);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zcount() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Range<Integer> range = Range.create(1, 3);// 两边都是包含
+		long l = redisExecutor.zcount(key, range);
+		Assertions.assertThat(l).isEqualTo(3);
+
+		range = Range.from(Boundary.excluding(1), Boundary.including(3));
+		l = redisExecutor.zcount(key, range);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zdiff() throws Exception {
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+		redisExecutor.zadd(k2, 0.1, "a".getBytes());
+		redisExecutor.zadd(k2, 0.2, "b".getBytes());
+
+		List<byte[]> list = redisExecutor.zdiff(key, k2);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isEqualTo("c".getBytes());
+
+		List<ScoredValue<byte[]>> zdiffWithScores = redisExecutor.zdiffWithScores(key, k2);
+		Assertions.assertThat(zdiffWithScores.size()).isEqualTo(1);
+		Assertions.assertThat(zdiffWithScores.get(0).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(zdiffWithScores.get(0).getScore()).isEqualTo(3.3);
+	}
+
+	@Test
+	public void zdiffStore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+
+		redisExecutor.del(k3);
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+		redisExecutor.zadd(k2, 0.1, "a".getBytes());
+		redisExecutor.zadd(k2, 0.2, "b".getBytes());
+
+		long l = redisExecutor.zdiffStore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(1);
+
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(1);
+	}
+
+	@Test
+	public void zincrby() throws Exception {
+		double d = redisExecutor.zincrby(key, 0.5, "a".getBytes());
+		Assertions.assertThat(d).isEqualTo(0.5);
+
+		d = redisExecutor.zincrby(key, 0.5, "a".getBytes());
+		Assertions.assertThat(d).isEqualTo(1);
+
+		d = redisExecutor.zscore(key, "a".getBytes());
+		Assertions.assertThat(d).isEqualTo(1);
+	}
+
+	@Test
+	public void zinter() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+		redisExecutor.zadd(k2, 1, "a".getBytes());
+		redisExecutor.zadd(k2, 2, "b".getBytes());
+
+		List<byte[]> list = redisExecutor.zinter(key, k2);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+
+		ZAggregateArgs zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.sum();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+		list = redisExecutor.zinter(zAggregateArgs, key, k2);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+
+		// ----------------------------------------------------------------------
+
+		List<ScoredValue<byte[]>> zinterWithScores = redisExecutor.zinterWithScores(key, k2);
+		Assertions.assertThat(zinterWithScores.size()).isEqualTo(2);
+		Assertions.assertThat(zinterWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zinterWithScores.get(0).getScore()).isEqualTo(2);// 默认是sum
+		Assertions.assertThat(zinterWithScores.get(1).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zinterWithScores.get(1).getScore()).isEqualTo(4);// 默认是sum
+
+		// ----------------------------------------------------------------------
+
+		zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.sum();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+
+		zinterWithScores = redisExecutor.zinterWithScores(zAggregateArgs, key, k2);
+		Assertions.assertThat(zinterWithScores.size()).isEqualTo(2);
+		Assertions.assertThat(zinterWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zinterWithScores.get(0).getScore()).isEqualTo(5);// 默认是sum
+		Assertions.assertThat(zinterWithScores.get(1).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zinterWithScores.get(1).getScore()).isEqualTo(10);// 默认是sum
+
+		// ----------------------------------------------------------------------
+
+		zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.max();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+
+		zinterWithScores = redisExecutor.zinterWithScores(zAggregateArgs, key, k2);
+		Assertions.assertThat(zinterWithScores.size()).isEqualTo(2);
+		Assertions.assertThat(zinterWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zinterWithScores.get(0).getScore()).isEqualTo(3);// max
+		Assertions.assertThat(zinterWithScores.get(1).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zinterWithScores.get(1).getScore()).isEqualTo(6);// max
+	}
+
+	@Test
+	public void zintercard() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+		redisExecutor.zadd(k2, 1, "a".getBytes());
+		redisExecutor.zadd(k2, 2, "b".getBytes());
+
+		long l = redisExecutor.zintercard(key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.zintercard(1, key, k2);
+		Assertions.assertThat(l).isEqualTo(1);
+	}
+
+	@Test
+	public void zinterstore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+		redisExecutor.zadd(k2, 1, "a".getBytes());
+		redisExecutor.zadd(k2, 2, "b".getBytes());
+
+		long l = redisExecutor.zinterstore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		// --------------------------------------------------------------------------------------
+		redisExecutor.del(k3);
+
+		ZAggregateArgs zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.sum();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+		l = redisExecutor.zinterstore(k3, zAggregateArgs, key, k2);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zlexcount() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 0, "a".getBytes());
+		redisExecutor.zadd(key, 0, "b".getBytes());
+		redisExecutor.zadd(key, 0, "c".getBytes());
+		redisExecutor.zadd(key, 0, "d".getBytes());
+		redisExecutor.zadd(key, 0, "e".getBytes());
+		redisExecutor.zadd(key, 0, "f".getBytes());
+		redisExecutor.zadd(key, 0, "g".getBytes());
+
+		long l = redisExecutor.zlexcount(key, "-".getBytes(), "+".getBytes());
+		Assertions.assertThat(l).isEqualTo(7);
+
+		l = redisExecutor.zlexcount(key, "[b".getBytes(), "[f".getBytes());
+		Assertions.assertThat(l).isEqualTo(5);
+	}
+
+	@Test
+	public void zmpop() throws Exception {
+		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
+			return;
+		}
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		/**
+		 * 它总是从key的顺序中取，而不是多个key中的最优先
+		 */
+		KeyValue<byte[], ScoredValue<byte[]>> kv = redisExecutor.zmpop(SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.zmpop(SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(key);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(2.2);
+		// -----------------------------------------------------------
+		kv = redisExecutor.zmpop(SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.1);
+		// -----------------------------------------------------------
+		kv = redisExecutor.zmpop(SortedSetOption.MIN, key, k2);
+		Assertions.assertThat(kv.getKey()).isEqualTo(k2);
+		Assertions.assertThat(kv.getValue().getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(kv.getValue().getScore()).isEqualTo(0.2);
+
+		// -----------------------------------------------------------
+		// -----------------------------------------------------------
+		// -----------------------------------------------------------
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(k2, 0.1, "c".getBytes());
+		redisExecutor.zadd(k2, 0.2, "d".getBytes());
+
+		KeyValue<byte[], List<ScoredValue<byte[]>>> bzmpop = redisExecutor.zmpop(SortedSetOption.MAX, 10, key, k2);
+		Assertions.assertThat(bzmpop.getKey()).isEqualTo(key);
+		Assertions.assertThat(bzmpop.getValue().size()).isEqualTo(2);
+		Assertions.assertThat(bzmpop.getValue().get(0).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(0).getScore()).isEqualTo(2.2);
+		Assertions.assertThat(bzmpop.getValue().get(1).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(1).getScore()).isEqualTo(1.1);
+		// -----------------------------------------------------------
+		bzmpop = redisExecutor.zmpop(SortedSetOption.MAX, 10, key, k2);
+		Assertions.assertThat(bzmpop.getKey()).isEqualTo(k2);
+		Assertions.assertThat(bzmpop.getValue().size()).isEqualTo(2);
+		Assertions.assertThat(bzmpop.getValue().get(0).getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(0).getScore()).isEqualTo(0.2);
+		Assertions.assertThat(bzmpop.getValue().get(1).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(bzmpop.getValue().get(1).getScore()).isEqualTo(0.1);
+	}
+
+	@Test
+	public void zmscore() throws Exception {
+		List<Double> list = redisExecutor.zmscore(key, "a".getBytes(), "c".getBytes());// 不会返回null
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isNull();
+		Assertions.assertThat(list.get(1)).isNull();
+
+		redisExecutor.zadd(key, 1.5, "a".getBytes());
+		redisExecutor.zadd(key, 1.2, "b".getBytes());
+		redisExecutor.zadd(key, 1.3, "c".getBytes());
+
+		list = redisExecutor.zmscore(key, "a".getBytes(), "c".getBytes());
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(1.5);// a
+		Assertions.assertThat(list.get(1)).isEqualTo(1.3);// c
+	}
+
+	@Test
+	public void zpopmax() throws Exception {
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+
+		ScoredValue<byte[]> zpopmax = redisExecutor.zpopmax(key);
+		Assertions.assertThat(zpopmax.getScore()).isEqualTo(3.3);
+		Assertions.assertThat(zpopmax.getValue()).isEqualTo("c".getBytes());
+
+		List<ScoredValue<byte[]>> list = redisExecutor.zpopmax(key, 10);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0).getScore()).isEqualTo(2.2);
+		Assertions.assertThat(list.get(1).getScore()).isEqualTo(1.1);
+	}
+
+	@Test
+	public void zpopmin() throws Exception {
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+
+		ScoredValue<byte[]> zpopmax = redisExecutor.zpopmin(key);
+		Assertions.assertThat(zpopmax.getScore()).isEqualTo(1.1);
+		Assertions.assertThat(zpopmax.getValue()).isEqualTo("a".getBytes());
+
+		List<ScoredValue<byte[]>> list = redisExecutor.zpopmin(key, 10);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0).getScore()).isEqualTo(2.2);
+		Assertions.assertThat(list.get(1).getScore()).isEqualTo(3.3);
+	}
+
+	@Test
+	public void zrandmember() throws Exception {
+		byte[] bs = redisExecutor.zrandmember(key);
+		Assertions.assertThat(bs).isNull();
+
+		List<byte[]> list = redisExecutor.zrandmember(key, 10);
+		Assertions.assertThat(list.size()).isEqualTo(0);
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+
+		bs = redisExecutor.zrandmember(key);
+		Assertions.assertThat(bs).isNotNull();
+
+		long l = redisExecutor.zcard(key);
+		Assertions.assertThat(l).isEqualTo(3);
+
+		list = redisExecutor.zrandmember(key, 10);
+		Assertions.assertThat(l).isEqualTo(3);
+
+		List<ScoredValue<byte[]>> zrandmemberWithScores = redisExecutor.zrandmemberWithScores(key, 10);
+		Assertions.assertThat(zrandmemberWithScores.size()).isEqualTo(3);
+	}
+
+	@Test
+	public void zrange() throws Exception {
+		List<byte[]> list = redisExecutor.zrange(key, 0, -1);
+		Assertions.assertThat(list.size()).isEqualTo(0);
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+
+		list = redisExecutor.zrange(key, 1, -1);// 从index 1到末尾
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());
+
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrangeWithScores(key, 1, -1);
+		Assertions.assertThat(zrangeWithScores.size()).isEqualTo(2);
+		Assertions.assertThat(zrangeWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+	}
+
+	@Test
+	public void zrangeByLex() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 0, "a".getBytes());
+		redisExecutor.zadd(key, 0, "b".getBytes());
+		redisExecutor.zadd(key, 0, "c".getBytes());
+		redisExecutor.zadd(key, 0, "d".getBytes());
+		redisExecutor.zadd(key, 0, "e".getBytes());
+		redisExecutor.zadd(key, 0, "f".getBytes());
+		redisExecutor.zadd(key, 0, "g".getBytes());
+
+		Range<byte[]> range = Range.create("-".getBytes(), "[c".getBytes());// 包含c
+		List<byte[]> list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("c".getBytes());
+
+		range = Range.from(Boundary.including("-".getBytes()), Boundary.including("[c".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("c".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		range = Range.create("-".getBytes(), "(c".getBytes());// 不包含c
+		list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+
+		range = Range.from(Boundary.including("-".getBytes()), Boundary.including("(c".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		range = Range.create("[aaa".getBytes(), "(g".getBytes());
+		list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("f".getBytes());
+
+		range = Range.from(Boundary.including("[aaa".getBytes()), Boundary.including("(g".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("f".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		list = redisExecutor.zrangeByLex(key, range, 0, 10);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("f".getBytes());
+
+		list = redisExecutor.zrangeByLex(key, range, 2, 2);// limit 2,2
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("e".getBytes());
+	}
+
+	@Test
+	public void zrangeByScore() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Range<Integer> range = Range.create(1, 3);
+		List<byte[]> list = redisExecutor.zrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("c".getBytes());
+
+		range = Range.from(Boundary.including(1), Boundary.including(2));// 不同的方式创建
+		list = redisExecutor.zrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+
+		range = Range.from(Boundary.excluding(1), Boundary.including(2));// 不同的方式创建
+		list = redisExecutor.zrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+
+		range = Range.from(Boundary.excluding(1), Boundary.excluding(2));// 不同的方式创建
+		list = redisExecutor.zrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(0);
+
+		range = Range.from(Boundary.including(1), Boundary.including(3));// 不同的方式创建
+		list = redisExecutor.zrangeByScore(key, range, 2, 2);// limit 2,2
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isEqualTo("c".getBytes());
+
+		// ----------------------------------------------------------------------------
+
+		List<ScoredValue<byte[]>> zrangeByScoreWithScores = redisExecutor.zrangeByScoreWithScores(key, range);
+		Assertions.assertThat(zrangeByScoreWithScores.size()).isEqualTo(3);
+		Assertions
+				.assertThat(
+						zrangeByScoreWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+
+		zrangeByScoreWithScores = redisExecutor.zrangeByScoreWithScores(key, range, 2, 2);
+		Assertions.assertThat(zrangeByScoreWithScores.size()).isEqualTo(1);
+		Assertions
+				.assertThat(
+						zrangeByScoreWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+	}
+
+	@Test
+	public void zrangestore() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		long l = redisExecutor.zrangestore(k3, key, Range.create(1L, 10L));// 这是index的start 和 stop
+		Assertions.assertThat(l).isEqualTo(2);
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+
+		// ------------------------------------------------------------------
+
+		if (!(redisExecutor instanceof AbstractLettuceRedisExecutor)) {
+			redisExecutor.del(k3);
+
+			l = redisExecutor.zrangestoreByLex(k3, key, Range.create("-".getBytes(), "[c".getBytes()), 1, 2);
+			Assertions.assertThat(l).isEqualTo(2);
+			l = redisExecutor.zcard(k3);
+			Assertions.assertThat(l).isEqualTo(2);
+		}
+
+		// ------------------------------------------------------------------
+
+		redisExecutor.del(k3);
+
+		l = redisExecutor.zrangestoreByScore(k3, key, Range.from(Boundary.including(1), Boundary.including(3)), 1, 2);
+		Assertions.assertThat(l).isEqualTo(2);
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zrank() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Long l = redisExecutor.zrank(key, "c".getBytes());
+		Assertions.assertThat(l).isEqualTo(2);// 首位是0
+	}
+
+	@Test
+	public void zrem() throws Exception {
+		long l = redisExecutor.zrem(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(0);
+
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		l = redisExecutor.zrem(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+
+		l = redisExecutor.zrem(key, "a".getBytes(), "b".getBytes(), "c".getBytes());
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zremrangeByLex() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Range<byte[]> range = Range.create("-".getBytes(), "[c".getBytes());
+		long l = redisExecutor.zremrangeByLex(key, range);
+		Assertions.assertThat(l).isEqualTo(3);
+	}
+
+	@Test
+	public void zremrangeByRank() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		long l = redisExecutor.zremrangeByRank(key, 1, 2);// index 1到2，保留0
+		Assertions.assertThat(l).isEqualTo(2);
+	}
+
+	@Test
+	public void zremrangeByScore() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Range<Integer> range = Range.from(Boundary.including(1), Boundary.including(3));
+		long l = redisExecutor.zremrangeByScore(key, range);
+		Assertions.assertThat(l).isEqualTo(3);
+	}
+
+	@Test
+	public void zrevrange() throws Exception {
+		List<byte[]> list = redisExecutor.zrevrange(key, 0, -1);
+		Assertions.assertThat(list.size()).isEqualTo(0);
+
+		redisExecutor.zadd(key, 1.1, "a".getBytes());
+		redisExecutor.zadd(key, 2.2, "b".getBytes());
+		redisExecutor.zadd(key, 3.3, "c".getBytes());
+
+		list = redisExecutor.zrevrange(key, 1, -1);// 从index 1到末尾
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("a".getBytes());
+
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrevrangeWithScores(key, 1, -1);
+		Assertions.assertThat(zrangeWithScores.size()).isEqualTo(2);
+		Assertions.assertThat(zrangeWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+	}
+
+	@Test
+	public void zrevrangeByLex() throws Exception {
+		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
+			return;
+		}
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 0, "a".getBytes());
+		redisExecutor.zadd(key, 0, "b".getBytes());
+		redisExecutor.zadd(key, 0, "c".getBytes());
+		redisExecutor.zadd(key, 0, "d".getBytes());
+		redisExecutor.zadd(key, 0, "e".getBytes());
+		redisExecutor.zadd(key, 0, "f".getBytes());
+		redisExecutor.zadd(key, 0, "g".getBytes());
+
+		Range<byte[]> range = Range.create("-".getBytes(), "[c".getBytes());// 包含c
+		List<byte[]> list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("a".getBytes());
+
+		range = Range.from(Boundary.including("-".getBytes()), Boundary.including("[c".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("a".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		range = Range.create("-".getBytes(), "(c".getBytes());// 不包含c
+		list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("a".getBytes());
+
+		range = Range.from(Boundary.including("-".getBytes()), Boundary.including("(c".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("a".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		range = Range.create("[aaa".getBytes(), "(g".getBytes());
+		list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("f".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("b".getBytes());
+
+		range = Range.from(Boundary.including("[aaa".getBytes()), Boundary.including("(g".getBytes()));// 不同的方式创建
+		list = redisExecutor.zrevrangeByLex(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("f".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("b".getBytes());
+
+		// ---------------------------------------------------------------------------------
+
+		list = redisExecutor.zrevrangeByLex(key, range, 0, 10);
+		Assertions.assertThat(list.size()).isEqualTo(5);
+		Assertions.assertThat(list.get(0)).isEqualTo("f".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("e".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(3)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(4)).isEqualTo("b".getBytes());
+
+		list = redisExecutor.zrevrangeByLex(key, range, 2, 2);// limit 2,2
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("d".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());
+	}
+
+	@Test
+	public void zrevrangeByScore() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Range<Integer> range = Range.create(1, 3);
+		List<byte[]> list = redisExecutor.zrevrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(3);
+		Assertions.assertThat(list.get(0)).isEqualTo("c".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(2)).isEqualTo("a".getBytes());
+
+		range = Range.from(Boundary.including(1), Boundary.including(2));// 不同的方式创建
+		list = redisExecutor.zrevrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+		Assertions.assertThat(list.get(1)).isEqualTo("a".getBytes());
+
+		range = Range.from(Boundary.excluding(1), Boundary.including(2));// 不同的方式创建
+		list = redisExecutor.zrevrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isEqualTo("b".getBytes());
+
+		range = Range.from(Boundary.excluding(1), Boundary.excluding(2));// 不同的方式创建
+		list = redisExecutor.zrevrangeByScore(key, range);
+		Assertions.assertThat(list.size()).isEqualTo(0);
+
+		range = Range.from(Boundary.including(1), Boundary.including(3));// 不同的方式创建
+		list = redisExecutor.zrevrangeByScore(key, range, 2, 2);// limit 2,2
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());
+
+		// ----------------------------------------------------------------------------
+
+		List<ScoredValue<byte[]>> zrangeByScoreWithScores = redisExecutor.zrevrangeByScoreWithScores(key, range);
+		Assertions.assertThat(zrangeByScoreWithScores.size()).isEqualTo(3);
+		Assertions
+				.assertThat(
+						zrangeByScoreWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+
+		zrangeByScoreWithScores = redisExecutor.zrevrangeByScoreWithScores(key, range, 2, 2);
+		Assertions.assertThat(zrangeByScoreWithScores.size()).isEqualTo(1);
+		Assertions
+				.assertThat(
+						zrangeByScoreWithScores.stream().allMatch(one -> one.getScore() > 0 && one.getValue() != null))
+				.isTrue();
+	}
+
+	@Test
+	public void zrevrank() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		Long l = redisExecutor.zrevrank(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(2);// 首位是0
+	}
+
+	@Test
+	public void zscan() throws Exception {
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+
+		byte[] cursorbytes = "0".getBytes();
+		ScoredValueScanCursor<byte[]> cursor = null;
+		do {
+			cursor = redisExecutor.zscan(key, cursorbytes);
+
+			cursor.getValues().forEach(sv -> {
+				System.out.println(new String(sv.getValue()) + ":" + sv.getScore());
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+
+		// -----------------------------------------------------------------
+
+		ScanArgs scanArgs = new ScanArgs();
+		scanArgs.match("*".getBytes());
+
+		cursorbytes = "0".getBytes();
+		cursor = null;
+		do {
+			cursor = redisExecutor.zscan(key, cursorbytes, scanArgs);
+
+			cursor.getValues().forEach(sv -> {
+				System.out.println(new String(sv.getValue()) + ":" + sv.getScore());
+			});
+
+			cursorbytes = cursor.getCursor().getBytes();
+		} while (!cursor.isFinished());
+	}
+
+	@Test
+	public void zscore() throws Exception {
+		// 不需要单独测
+	}
+
+	@Test
+	public void zunion() throws Exception {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+		redisExecutor.zadd(k2, 1, "a".getBytes());
+		redisExecutor.zadd(k2, 2, "b".getBytes());
+		redisExecutor.zadd(k2, 4, "d".getBytes());
+
+		List<byte[]> list = redisExecutor.zunion(key, k2);
+		Assertions.assertThat(list.size()).isEqualTo(4);// 结果按score从小到大排序， 默认是sum
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());// 2
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());// 3
+		Assertions.assertThat(list.get(2)).isEqualTo("b".getBytes());// 4
+		Assertions.assertThat(list.get(3)).isEqualTo("d".getBytes());// 4
+
+		ZAggregateArgs zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.sum();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+		list = redisExecutor.zunion(zAggregateArgs, key, k2);
+		Assertions.assertThat(list.size()).isEqualTo(4);
+		Assertions.assertThat(list.get(0)).isEqualTo("a".getBytes());// 5
+		Assertions.assertThat(list.get(1)).isEqualTo("c".getBytes());// 6
+		Assertions.assertThat(list.get(2)).isEqualTo("b".getBytes());// 10
+		Assertions.assertThat(list.get(3)).isEqualTo("d".getBytes());// 12
+
+		// ----------------------------------------------------------------------
+
+		List<ScoredValue<byte[]>> zunionWithScores = redisExecutor.zunionWithScores(key, k2);
+		Assertions.assertThat(zunionWithScores.size()).isEqualTo(4);
+		Assertions.assertThat(zunionWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zunionWithScores.get(0).getScore()).isEqualTo(2);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(1).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(zunionWithScores.get(1).getScore()).isEqualTo(3);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(2).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zunionWithScores.get(2).getScore()).isEqualTo(4);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(3).getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(zunionWithScores.get(3).getScore()).isEqualTo(4);// 默认是sum
+
+		// ----------------------------------------------------------------------
+
+		zunionWithScores = redisExecutor.zunionWithScores(zAggregateArgs, key, k2);
+		Assertions.assertThat(zunionWithScores.size()).isEqualTo(4);
+		Assertions.assertThat(zunionWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zunionWithScores.get(0).getScore()).isEqualTo(5);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(1).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(zunionWithScores.get(1).getScore()).isEqualTo(6);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(2).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zunionWithScores.get(2).getScore()).isEqualTo(10);// 默认是sum
+		Assertions.assertThat(zunionWithScores.get(3).getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(zunionWithScores.get(3).getScore()).isEqualTo(12);// 默认是sum
+
+		// ----------------------------------------------------------------------
+
+		zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.max();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+
+		zunionWithScores = redisExecutor.zunionWithScores(zAggregateArgs, key, k2);
+		Assertions.assertThat(zunionWithScores.size()).isEqualTo(4);
+		Assertions.assertThat(zunionWithScores.get(0).getValue()).isEqualTo("a".getBytes());
+		Assertions.assertThat(zunionWithScores.get(0).getScore()).isEqualTo(3);// max
+		Assertions.assertThat(zunionWithScores.get(1).getValue()).isEqualTo("b".getBytes());
+		Assertions.assertThat(zunionWithScores.get(1).getScore()).isEqualTo(6);// max
+		Assertions.assertThat(zunionWithScores.get(2).getValue()).isEqualTo("c".getBytes());
+		Assertions.assertThat(zunionWithScores.get(2).getScore()).isEqualTo(6);// max
+		Assertions.assertThat(zunionWithScores.get(3).getValue()).isEqualTo("d".getBytes());
+		Assertions.assertThat(zunionWithScores.get(3).getScore()).isEqualTo(12);// max
+	}
+
+	@Test
+	public void zunionstore() throws Exception {
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		redisExecutor.zadd(key, 1, "a".getBytes());
+		redisExecutor.zadd(key, 2, "b".getBytes());
+		redisExecutor.zadd(key, 3, "c".getBytes());
+		redisExecutor.zadd(k2, 1, "a".getBytes());
+		redisExecutor.zadd(k2, 2, "b".getBytes());
+		redisExecutor.zadd(k2, 4, "d".getBytes());
+
+		long l = redisExecutor.zunionstore(k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(4);
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(4);
+
+		// --------------------------------------------------------------------------------------
+		redisExecutor.del(k3);
+
+		ZAggregateArgs zAggregateArgs = new ZAggregateArgs();
+		zAggregateArgs.sum();
+		zAggregateArgs.weights(2, 3);// 分别指向2个key
+		l = redisExecutor.zunionstore(k3, zAggregateArgs, key, k2);
+		Assertions.assertThat(l).isEqualTo(4);
+
+		l = redisExecutor.zcard(k3);
+		Assertions.assertThat(l).isEqualTo(4);
 	}
 
 	@Test

@@ -16,6 +16,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
@@ -30,7 +31,6 @@ import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.Range;
-import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.ScoredValue;
@@ -40,7 +40,6 @@ import io.github.icodegarden.commons.redis.args.SortedSetOption;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.args.ZAddArgs;
 import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
-import io.github.icodegarden.commons.redis.args.ZRangeParams;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.JedisUtils;
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -925,26 +924,14 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public long zcard(byte[] key) {
 		return jc.zcard(key);
 	}
-	
+
 	@Override
 	public long zcount(byte[] key, Range<? extends Number> range) {
-		Boundary<? extends Number> lower = range.getLower();
-	
-		
-		if (lower.isUnbounded()) {
-			return io.lettuce.core.Range.Boundary.unbounded();
-		} else {
-			if (boundary.isIncluding()) {
-				return io.lettuce.core.Range.Boundary.including(boundary.getValue());
-			} else {
-				return io.lettuce.core.Range.Boundary.excluding(boundary.getValue());
-			}
-		}
-		
-		
-		return 0;
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		return jc.zcount(key, min, max);
 	}
-	
 
 	@Override
 	public List<byte[]> zdiff(byte[]... keys) {
@@ -972,7 +959,8 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<byte[]> zinter(byte[]... keys) {
-		Set<byte[]> set = jc.zinter(null, keys);
+		ZParams zParams = new ZParams();
+		Set<byte[]> set = jc.zinter(zParams, keys);
 		return new ArrayList<byte[]>(set);
 	}
 
@@ -985,7 +973,8 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<ScoredValue<byte[]>> zinterWithScores(byte[]... keys) {
-		Set<Tuple> set = jc.zinterWithScores(null, keys);
+		ZParams zParams = new ZParams();
+		Set<Tuple> set = jc.zinterWithScores(zParams, keys);
 		return set.stream().map(one -> {
 			return new ScoredValue<byte[]>(one.getScore(), one.getBinaryElement());
 		}).collect(Collectors.toList());
@@ -1120,88 +1109,82 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public List<byte[]> zrange(byte[] key, ZRangeParams zRangeParams) {
-		redis.clients.jedis.Protocol.Keyword by = null;
-		if (zRangeParams.getBy() != null) {
-			by = redis.clients.jedis.Protocol.Keyword.valueOf(zRangeParams.getBy().name());
-		}
-		redis.clients.jedis.params.ZRangeParams zrangeParams = new redis.clients.jedis.params.ZRangeParams(by,
-				zRangeParams.getMin(), zRangeParams.getMax());
-		return jc.zrange(key, zrangeParams);
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range) {
+		return jc.zrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue());
 	}
 
 	@Override
-	public List<ScoredValue<byte[]>> zrangeWithScores(byte[] key, ZRangeParams zRangeParams) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<byte[]> zrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return jc.zrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue(), offset, count);
 	}
 
 	@Override
-	public List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		return jc.zrangeByScore(key, min, max);
 	}
 
 	@Override
-	public List<byte[]> zrangeByLex(byte[] key, byte[] min, byte[] max, int offset, int count) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<byte[]> zrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		return jc.zrangeByScore(key, min, max, offset, count);
 	}
 
 	@Override
-	public List<byte[]> zrangeByScore(byte[] key, double min, double max) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		List<Tuple> list = jc.zrangeByScoreWithScores(key, min, max);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<byte[]> zrangeByScore(byte[] key, double min, double max, int offset, int count) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<byte[]> zrangeByScore(byte[] key, byte[] min, byte[] max, int offset, int count) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, double min, double max) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, double min, double max, int offset,
+	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
 			int count) {
-		// TODO Auto-generated method stub
-		return null;
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		List<Tuple> list = jc.zrangeByScoreWithScores(key, min, max, offset, count);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max) {
-		// TODO Auto-generated method stub
-		return null;
+	public long zrangestore(byte[] dest, byte[] src, Range<Long> range) {
+		redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+				range.getLower().getValue().intValue(), range.getUpper().getValue().intValue());
+		return jc.zrangestore(dest, src, zRangeParams);
 	}
 
 	@Override
-	public List<ScoredValue<byte[]>> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max, int offset,
-			int count) {
-		// TODO Auto-generated method stub
-		return null;
+	public long zrangestoreByLex(byte[] dest, byte[] src, Range<byte[]> range, int offset, int count) {
+		byte[] min = range.getLower().getValue();
+		byte[] max = range.getUpper().getValue();
+
+		redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+				redis.clients.jedis.Protocol.Keyword.BYLEX, min, max);
+		zRangeParams.limit(offset, count);
+		return jc.zrangestore(dest, src, zRangeParams);
 	}
 
 	@Override
-	public long zrangestore(byte[] dest, byte[] src, ZRangeParams zRangeParams) {
-		// TODO Auto-generated method stub
-		return 0;
+	public long zrangestoreByScore(byte[] dest, byte[] src, Range<? extends Number> range, int offset, int count) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+
+		redis.clients.jedis.params.ZRangeParams zRangeParams = new redis.clients.jedis.params.ZRangeParams(
+				redis.clients.jedis.Protocol.Keyword.BYSCORE, min, max);
+		zRangeParams.limit(offset, count);
+		return jc.zrangestore(dest, src, zRangeParams);
 	}
 
 	@Override
@@ -1215,8 +1198,8 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public long zremrangeByLex(byte[] key, byte[] min, byte[] max) {
-		return jc.zremrangeByLex(key, min, max);
+	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
+		return jc.zremrangeByLex(key, range.getLower().getValue(), range.getUpper().getValue());
 	}
 
 	@Override
@@ -1225,12 +1208,10 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public long zremrangeByScore(byte[] key, double min, double max) {
-		return jc.zremrangeByScore(key, min, max);
-	}
-
-	@Override
-	public long zremrangeByScore(byte[] key, byte[] min, byte[] max) {
+	public long zremrangeByScore(byte[] key, Range<? extends Number> range) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
 		return jc.zremrangeByScore(key, min, max);
 	}
 
@@ -1248,59 +1229,52 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min) {
-		return jc.zrevrangeByLex(key, max, min);
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
+		return jc.zrevrangeByLex(key, range.getUpper().getValue(), range.getLower().getValue());
 	}
 
 	@Override
-	public List<byte[]> zrevrangeByLex(byte[] key, byte[] max, byte[] min, int offset, int count) {
-		return jc.zrevrangeByLex(key, max, min, offset, count);
+	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range, int offset, int count) {
+		return jc.zrevrangeByLex(key, range.getUpper().getValue(), range.getLower().getValue(), offset, count);
 	}
 
 	@Override
-	public List<byte[]> zrevrangeByScore(byte[] key, double max, double min) {
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
 		return jc.zrevrangeByScore(key, max, min);
 	}
 
 	@Override
-	public List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min) {
-		return jc.zrevrangeByScore(key, max, min);
-	}
-
-	@Override
-	public List<byte[]> zrevrangeByScore(byte[] key, double max, double min, int offset, int count) {
+	public List<byte[]> zrevrangeByScore(byte[] key, Range<? extends Number> range, int offset, int count) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
 		return jc.zrevrangeByScore(key, max, min, offset, count);
 	}
 
 	@Override
-	public List<byte[]> zrevrangeByScore(byte[] key, byte[] max, byte[] min, int offset, int count) {
-		return jc.zrevrangeByScore(key, max, min, offset, count);
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range) {
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		List<Tuple> list = jc.zrevrangeByScoreWithScores(key, max, min);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, double max, double min) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, double max, double min, int offset,
+	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, Range<? extends Number> range, int offset,
 			int count) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScoredValue<byte[]>> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min, int offset,
-			int count) {
-		// TODO Auto-generated method stub
-		return null;
+		Tuple2<byte[], byte[]> tuple2 = JedisUtils.convertMinMax(range);
+		byte[] min = tuple2.getT1();
+		byte[] max = tuple2.getT2();
+		List<Tuple> list = jc.zrevrangeByScoreWithScores(key, max, min, offset, count);
+		return list.stream().map(tuple -> {
+			return new ScoredValue<byte[]>(tuple.getScore(), tuple.getBinaryElement());
+		}).collect(Collectors.toList());
 	}
 
 	@Override
@@ -1326,17 +1300,31 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public Set<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
-		ZParams zParams = JedisUtils.convertZParams(params);
-		return jc.zunion(zParams, keys);
+	public List<byte[]> zunion(byte[]... keys) {
+		ZParams zParams = new ZParams();
+		return new ArrayList<>(jc.zunion(zParams, keys));
 	}
 
 	@Override
-	public Set<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
+	public List<byte[]> zunion(ZAggregateArgs params, byte[]... keys) {
+		ZParams zParams = JedisUtils.convertZParams(params);
+		return new ArrayList<>(jc.zunion(zParams, keys));
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(byte[]... keys) {
+		ZParams zParams = new ZParams();
+		Set<Tuple> set = jc.zunionWithScores(zParams, keys);
+		return set.stream().map(one -> new ScoredValue<>(one.getScore(), one.getBinaryElement()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ScoredValue<byte[]>> zunionWithScores(ZAggregateArgs params, byte[]... keys) {
 		ZParams zParams = JedisUtils.convertZParams(params);
 		Set<Tuple> set = jc.zunionWithScores(zParams, keys);
 		return set.stream().map(one -> new ScoredValue<>(one.getScore(), one.getBinaryElement()))
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
 	@Override

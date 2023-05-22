@@ -1,5 +1,6 @@
 package io.github.icodegarden.commons.redis.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -7,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.util.CollectionUtils;
 
+import io.github.icodegarden.commons.lang.tuple.Tuple2;
+import io.github.icodegarden.commons.lang.tuple.Tuples;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
@@ -15,6 +18,8 @@ import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.LPosParams;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.Range;
+import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.ScoredValue;
@@ -251,5 +256,33 @@ public class JedisUtils {
 			zParams.aggregate(aggregate);
 		}
 		return zParams;
+	}
+
+	public static Tuple2<byte[], byte[]> convertMinMax(Range<? extends Number> range) {
+		Boundary<? extends Number> lower = range.getLower();
+		byte[] min = null;
+		if (lower.isUnbounded()) {
+			min = "-inf".getBytes(StandardCharsets.UTF_8);
+		} else {
+			if (lower.isIncluding()) {
+				min = Double.toString(lower.getValue().doubleValue()).getBytes(StandardCharsets.UTF_8);
+			} else {
+				min = ("(" + lower.getValue().doubleValue()).getBytes(StandardCharsets.UTF_8);
+			}
+		}
+
+		Boundary<? extends Number> upper = range.getUpper();
+		byte[] max = null;
+		if (upper.isUnbounded()) {
+			min = "+inf".getBytes(StandardCharsets.UTF_8);
+		} else {
+			if (upper.isIncluding()) {
+				max = Double.toString(upper.getValue().doubleValue()).getBytes(StandardCharsets.UTF_8);
+			} else {
+				max = ("(" + upper.getValue().doubleValue()).getBytes(StandardCharsets.UTF_8);
+			}
+		}
+
+		return Tuples.of(min, max);
 	}
 }

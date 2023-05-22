@@ -32,4 +32,5 @@ public class LettuceRedisClientRedisExecutorTests extends RedisExecutorTests {
 		RedisClient client = RedisClient.create(redisURI);
 		return client;
 	}
+
 }
