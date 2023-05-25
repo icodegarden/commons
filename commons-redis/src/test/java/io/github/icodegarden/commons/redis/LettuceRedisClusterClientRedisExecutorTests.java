@@ -22,7 +22,7 @@ public class LettuceRedisClusterClientRedisExecutorTests extends RedisExecutorTe
 
 	public static RedisClusterClient newRedisClusterClient() {
 		RedisURI redisURI = RedisURI.builder()//
-				.withHost("192.168.80.130")//
+				.withHost("192.168.184.128")//
 				.withPort(6379)//
 //				.withPassword("".toCharArray())//
 				.withDatabase(0)//

@@ -39,7 +39,7 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 				.build();
 
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-		redisConfig.setHostName("192.168.80.130");
+		redisConfig.setHostName("192.168.184.128");
 //		redisConfig.setPassword(RedisPassword.of("8q9P&ZF5SQ@Fv49x"));
 		redisConfig.setPort(6379);
 
@@ -50,7 +50,7 @@ public class RedisTemplateRedisExecutorTests extends RedisExecutorTests {
 	
 	static RedisConnectionFactory lettuceConnectionFactory() {
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-		redisConfig.setHostName("192.168.80.130");
+		redisConfig.setHostName("192.168.184.128");
 //		redisConfig.setPassword(RedisPassword.of("8q9P&ZF5SQ@Fv49x"));
 		redisConfig.setPort(6379);
 		
