@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.util.CronUtils;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractSchedule implements Schedule {
 
-	private final ScheduledThreadPoolExecutor scheduleThreadPool = ThreadPoolUtils
+	private final ScheduledThreadPoolExecutor scheduleThreadPool = ThreadUtils
 			.newSingleScheduledThreadPool(AbstractSchedule.this.getClass().getSimpleName());
 	{
 		scheduleThreadPool.setRemoveOnCancelPolicy(true);

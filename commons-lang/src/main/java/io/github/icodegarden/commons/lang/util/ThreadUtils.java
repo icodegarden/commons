@@ -3,13 +3,29 @@ package io.github.icodegarden.commons.lang.util;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import io.github.icodegarden.commons.lang.concurrent.NamedThreadFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-public abstract class ThreadPoolUtils {
+@Slf4j
+public abstract class ThreadUtils {
+
+	public static void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			if (log.isWarnEnabled()) {
+				log.warn("sleep Interrupted", e);
+			}
+		}
+	}
+
+	public static void sleepInterruptibly(long millis) throws InterruptedException {
+		Thread.sleep(millis);
+	}
 
 //	public static final ScheduledExecutorService LIGHT_RESOURCE_SINGLE_THREAD_SCHEDULER = Executors
 //			.newSingleThreadScheduledExecutor(new NamedThreadFactory("Light-Resource-Single-Thread-Scheduler"));

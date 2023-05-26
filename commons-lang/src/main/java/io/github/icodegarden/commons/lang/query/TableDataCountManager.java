@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.github.icodegarden.commons.lang.util.SystemUtils;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 
 /**
  * 允许任意组合 Collector 和 Storage<br>
@@ -61,7 +61,7 @@ public class TableDataCountManager {
 	}
 
 	public void start(long initialDelayMillis, long scheduleMillis) {
-		ScheduledThreadPoolExecutor scheduledThreadPool = ThreadPoolUtils
+		ScheduledThreadPoolExecutor scheduledThreadPool = ThreadUtils
 				.newSingleScheduledThreadPool("TableDataCount-Schedule");
 		this.future = scheduledThreadPool.scheduleWithFixedDelay(() -> {
 			try {

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.Validateable;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 import io.github.icodegarden.commons.zookeeper.exception.ConnectTimeoutZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ExceedExpectedZooKeeperException;
 import io.github.icodegarden.commons.zookeeper.exception.ZooKeeperException;
@@ -43,7 +43,7 @@ public class ZooKeeperHolder implements Closeable {
 	 */
 	public static long MAX_WAIT_CONNECTED_MS = 10000;
 
-	private final ScheduledThreadPoolExecutor reconnectScheduledThreadPool = ThreadPoolUtils
+	private final ScheduledThreadPoolExecutor reconnectScheduledThreadPool = ThreadUtils
 			.newSingleScheduledThreadPool("ZooKeeperReconnectTimerTask");
 
 	private volatile boolean closeCalled;

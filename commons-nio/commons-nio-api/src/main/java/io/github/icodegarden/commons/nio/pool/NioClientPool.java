@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import io.github.icodegarden.commons.lang.exception.remote.RemoteException;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 import io.github.icodegarden.commons.nio.NioClient;
 
 /**
@@ -31,7 +31,7 @@ public class NioClientPool implements Closeable {
 	private String poolName;
 	private NioClientSupplier defaultSupplier;
 
-	private ScheduledThreadPoolExecutor scheduledThreadPool = ThreadPoolUtils
+	private ScheduledThreadPoolExecutor scheduledThreadPool = ThreadUtils
 			.newSingleScheduledThreadPool("NioClientPool-ClearClosedSchedule");
 	private ScheduledFuture<?> future;
 

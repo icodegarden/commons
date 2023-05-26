@@ -48,11 +48,11 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 	public boolean isAcquired() throws LockException {
 		try {
 			String nowStr = SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now());
-			List<LockDO> list = lockDao.listLocks(name, nowStr);// FIXME 使用精准查询
+			List<LockDO> list = lockDao.listLockedDataInterProcess(name, identifier, readType, nowStr);
 			if (list.isEmpty()) {
 				return false;
 			}
-			return list.stream().anyMatch(one -> one.getIdentifier().equals(identifier));
+			return list.stream().anyMatch(one -> one.getIdentifier().equals(identifier) && one.isReadType() == readType);
 		} catch (Exception e) {
 			throw new LockExceedExpectedException(e);
 		}
@@ -108,7 +108,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 
 	private boolean mutex() {
 		String nowStr = SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now());
-		List<LockDO> dos = lockDao.listLocks(name, nowStr);
+		List<LockDO> dos = lockDao.listLockedDatas(name, nowStr);
 		if (this.readType) {
 			/**
 			 * 是否有write锁且不是本地持有的

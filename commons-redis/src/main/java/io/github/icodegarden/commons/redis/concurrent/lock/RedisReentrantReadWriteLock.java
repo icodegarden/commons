@@ -2,14 +2,9 @@ package io.github.icodegarden.commons.redis.concurrent.lock;
 
 import java.util.UUID;
 
-import javax.sql.DataSource;
-
 import io.github.icodegarden.commons.lang.concurrent.lock.CustomizeReentrantLock;
-import io.github.icodegarden.commons.lang.concurrent.lock.DatabaseReadWriteLock;
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedReentrantLock;
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedReentrantReadWriteLock;
-import io.github.icodegarden.commons.lang.concurrent.lock.JdbcLock;
-import io.github.icodegarden.commons.lang.concurrent.lock.MysqlJdbcReadWriteLockDao;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 
 /**

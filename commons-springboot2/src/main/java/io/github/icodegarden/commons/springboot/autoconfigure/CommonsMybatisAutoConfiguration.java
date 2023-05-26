@@ -55,7 +55,8 @@ public class CommonsMybatisAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.mybatis.mapperScan.enabled", havingValue = "true", matchIfMissing = true)
 	@MapperScan(basePackages = "${" + CommonsMybatisProperties.SCAN_BASE_PACKAGES + "}", basePackageClasses = {
 			io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase.class, //
-			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper.class//
+			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper.class,//
+			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper.class//
 	})
 	@Configuration
 	protected static class MapperScanAutoConfiguration {

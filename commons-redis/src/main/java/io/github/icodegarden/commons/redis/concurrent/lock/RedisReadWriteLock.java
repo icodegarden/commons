@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.util.Assert;
 
@@ -62,10 +60,10 @@ class RedisReadWriteLock implements DistributedLock {
 		return "rwlock:" + name;
 	}
 
-	private Set<String> toStrFields(Map<byte[], byte[]> hgetAll) {
-		return hgetAll.keySet().stream().map(field -> new String(field, StandardCharsets.UTF_8))
-				.collect(Collectors.toSet());
-	}
+//	private Set<String> toStrFields(Map<byte[], byte[]> hgetAll) {
+//		return hgetAll.keySet().stream().map(field -> new String(field, StandardCharsets.UTF_8))
+//				.collect(Collectors.toSet());
+//	}
 
 //	private Map<String, Boolean> toReadableMap(Map<byte[], byte[]> hgetAll){
 //		Map<String, Boolean> map = hgetAll.entrySet().stream().collect(Collectors.toMap(one->new String(one.getKey(),StandardCharsets.UTF_8), one->{
@@ -76,10 +74,10 @@ class RedisReadWriteLock implements DistributedLock {
 //	}
 
 	private byte[] identifierToField(String identifier, boolean readType) {
-		String suffix = readType ? "_r":"_w";
-		return (identifier+suffix).getBytes(CHARSET);
+		String suffix = readType ? "_r" : "_w";
+		return (identifier + suffix).getBytes(CHARSET);
 	}
-	
+
 	private byte[] toHashBytes(boolean b) {
 		Integer i = b ? 1 : 0;
 		return i.toString().getBytes(StandardCharsets.UTF_8);
@@ -97,8 +95,13 @@ class RedisReadWriteLock implements DistributedLock {
 			if (hgetAll.isEmpty()) {
 				return false;
 			}
-			Set<String> strFields = toStrFields(hgetAll);
-			return strFields.contains(new String(key, StandardCharsets.UTF_8));
+
+			boolean b = hgetAll.entrySet().stream().anyMatch(one -> {
+				boolean isReadType = booleanFromHashBytes(one.getValue());
+				return isReadType == readType && CollectionUtils.arrayStartWith(one.getKey(), originIdentifier);
+			});
+
+			return b;
 		} catch (Exception e) {
 			throw new LockExceedExpectedException(e);
 		}
@@ -166,7 +169,7 @@ class RedisReadWriteLock implements DistributedLock {
 			 */
 			boolean b = hgetAll.entrySet().stream().anyMatch(one -> {
 				boolean isReadType = booleanFromHashBytes(one.getValue());
-				return !isReadType && ! CollectionUtils.arrayStartWith(one.getKey(), originIdentifier); 
+				return !isReadType && !CollectionUtils.arrayStartWith(one.getKey(), originIdentifier);
 			});
 
 			return b;

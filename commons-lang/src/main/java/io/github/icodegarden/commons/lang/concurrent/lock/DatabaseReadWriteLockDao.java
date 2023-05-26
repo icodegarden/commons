@@ -20,7 +20,10 @@ public interface DatabaseReadWriteLockDao {
 	void createRow(String lockName, String identifier, Long expireSeconds, String lockAt, boolean readType);
 
 	@NotNull
-	List<LockDO> listLocks(String lockName, String nowStr);
+	List<LockDO> listLockedDatas(String lockName, String nowStr);
+	
+	@NotNull
+	List<LockDO> listLockedDataInterProcess(String lockName, String identifier, boolean readType, String nowStr);
 
 	int deleteRow(String lockName, String identifier);
 

@@ -11,7 +11,7 @@ import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
 import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
 import io.github.icodegarden.commons.lang.registry.InstanceRegistry;
 import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 
 /**
  * 
@@ -24,7 +24,7 @@ public class DefaultMetricsOverload implements MetricsOverload {
 	/**
 	 * 每个对象独占1线程
 	 */
-	private final ScheduledThreadPoolExecutor scheduleFlushMetricsThreadPool = ThreadPoolUtils
+	private final ScheduledThreadPoolExecutor scheduleFlushMetricsThreadPool = ThreadUtils
 			.newSingleScheduledThreadPool("DefaultMetricsOverload-scheduleFlushMetrics");
 
 	private final InstanceRegistry<? extends RegisteredInstance> instanceRegistry;

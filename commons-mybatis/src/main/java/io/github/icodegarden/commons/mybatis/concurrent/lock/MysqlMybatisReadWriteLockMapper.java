@@ -26,7 +26,16 @@ public interface MysqlMybatisReadWriteLockMapper extends DatabaseReadWriteLockDa
 	@Select("<script> select identifier,is_read_type from " + MysqlJdbcReadWriteLockDao.TABLE_NAME
 			+ " where name = #{lockName} and is_locked=1 and DATE_ADD(lock_at,INTERVAL expire_seconds SECOND) &gt;= #{nowStr}</script>")
 	@Override
-	List<LockDO> listLocks(@Param("lockName") String lockName, @Param("nowStr") String nowStr);
+	List<LockDO> listLockedDatas(@Param("lockName") String lockName, @Param("nowStr") String nowStr);
+
+	/**
+	 * 获取处于锁中的identifier
+	 */
+	@Select("<script> select identifier,is_read_type from " + MysqlJdbcReadWriteLockDao.TABLE_NAME
+			+ " where name = #{lockName} and identifier=#{identifier} and is_read_type=#{readType} and is_locked=1 and DATE_ADD(lock_at,INTERVAL expire_seconds SECOND) &gt;= #{nowStr}</script>")
+	@Override
+	List<LockDO> listLockedDataInterProcess(@Param("lockName") String lockName, @Param("identifier") String identifier,
+			@Param("readType") boolean readType, @Param("nowStr") String nowStr);
 
 	@Insert("<script> insert into " + MysqlJdbcReadWriteLockDao.TABLE_NAME
 			+ " (`name`, `identifier`, `is_read_type`, `is_locked`, `expire_seconds`, `lock_at`) values(#{lockName}, #{identifier},  #{readType}, 1, #{expireSeconds}, #{lockAt})</script>")

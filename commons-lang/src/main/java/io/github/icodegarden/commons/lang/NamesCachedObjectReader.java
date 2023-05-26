@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 
 /**
  * 只关注给定的names<br>
@@ -33,7 +33,7 @@ public class NamesCachedObjectReader implements NamedObjectReader<NamedObject>, 
 	/**
 	 * 每个对象独占1线程
 	 */
-	private final ScheduledThreadPoolExecutor scheduleRefreshCacheThreadPool = ThreadPoolUtils
+	private final ScheduledThreadPoolExecutor scheduleRefreshCacheThreadPool = ThreadUtils
 			.newSingleScheduledThreadPool("NamesCachedObjectReader-refreshCache");
 
 	private final Map<String, List<? extends NamedObject>> name_objects;

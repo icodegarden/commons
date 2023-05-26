@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.icodegarden.commons.lang.concurrent.lock.MysqlJdbcLock;
 import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLock;
 import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper;
+import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper;
 
 /**
  * 
@@ -21,6 +22,8 @@ public class DistributedLockController {
 
 	@Autowired
 	MysqlMybatisLockMapper mapper;
+	@Autowired
+	MysqlMybatisReadWriteLockMapper readWriteLockMapper;
 	@Autowired
 	DataSource dataSource;
 

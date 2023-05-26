@@ -28,7 +28,7 @@ public class MysqlJdbcReadWriteLockDao implements DatabaseReadWriteLockDao {
 	}
 
 	@Override
-	public List<LockDO> listLocks(String lockName, String nowStr) {
+	public List<LockDO> listLockedDatas(String lockName, String nowStr) {
 		try (Connection connection = dataSource.getConnection();) {
 			String sql = new StringBuilder(100).append("select identifier,is_read_type from ").append(TABLE_NAME)
 					.append(" where name = '").append(lockName).append("'")
@@ -47,6 +47,39 @@ public class MysqlJdbcReadWriteLockDao implements DatabaseReadWriteLockDao {
 						String identifier = rs.getString(1);
 						boolean readType = rs.getBoolean(2);
 						LockDO lockDO = new LockDO(identifier, readType);
+						list.add(lockDO);
+					}
+					return list;
+				}
+			}
+		} catch (SQLException e) {
+			throw new IllegalStateException("ex on getLockedIdentifier", e);
+		}
+	}
+	
+	@Override
+	public List<LockDO> listLockedDataInterProcess(String lockName, String identifier, boolean readType,
+			String nowStr) {
+		try (Connection connection = dataSource.getConnection();) {
+			String sql = new StringBuilder(100).append("select identifier,is_read_type from ").append(TABLE_NAME)
+					.append(" where name = '").append(lockName).append("'")//
+					.append(" and identifier='").append(identifier).append("'")//
+					.append(" and is_read_type=").append(readType)//
+					/*
+					 * 要求is_locked=1 并且 锁没有过期
+					 */
+					.append(" and is_locked=1 and DATE_ADD(lock_at,INTERVAL expire_seconds SECOND) >= '").append(nowStr)
+					.append("'").toString();
+			if (log.isInfoEnabled()) {
+				log.info("listLocks sql:{}", sql);
+			}
+			try (PreparedStatement ptmt = connection.prepareStatement(sql);) {
+				try (ResultSet rs = ptmt.executeQuery();) {
+					List<LockDO> list = new LinkedList<LockDO>();
+					while (rs.next()) {
+						String ident = rs.getString(1);
+						boolean rt = rs.getBoolean(2);
+						LockDO lockDO = new LockDO(ident, rt);
 						list.add(lockDO);
 					}
 					return list;
