@@ -8,7 +8,7 @@
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="com.mysql.jdbc.Driver"/>
-        <property name="url" value="jdbc:mysql://192.168.80.130:3306/commons"/>
+        <property name="url" value="jdbc:mysql://192.168.184.129:3306/commons"/>
         <property name="username" value="root" />
 		<property name="password" value="123456" />
       </dataSource>
@@ -17,5 +17,6 @@
   <mappers>
     <mapper class="io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase"/>
     <mapper class="io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper"/>
+    <mapper class="io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper"/>
   </mappers>
 </configuration>

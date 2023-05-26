@@ -2,6 +2,8 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LPosParams;
 import io.github.icodegarden.commons.redis.args.ListDirection;
@@ -14,6 +16,7 @@ import io.github.icodegarden.commons.redis.args.ListPosition;
  */
 public interface ListBinaryCommands {
 
+	@Nullable
 	byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, long timeout);
 	/**
 	 * <h1>从指定的list中pop元素，并push到另一个list。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
@@ -37,10 +40,12 @@ public interface ListBinaryCommands {
 	 * @param timeout 0表示超时时间无限大
 	 * @return
 	 */
+	@Nullable
 	byte[] blmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to, double timeout);
 	/**
 	 * <h1>从1个或多个list中pop一个元素，多个key时只会选择1个key进行pop。pop时阻塞直到有元素或超时，当没有元素时删除list</h1><br>
 	 */
+	@Nullable
 	KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, byte[]... keys);
 
 	/**
@@ -63,8 +68,10 @@ public interface ListBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@Nullable
 	KeyValue<byte[], List<byte[]>> blmpop(long timeout, ListDirection direction, long count, byte[]... keys);
 
+	@Nullable
 	KeyValue<byte[], byte[]> blpop(long timeout, byte[]... keys);
 
 	/**
@@ -88,8 +95,10 @@ public interface ListBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@Nullable
 	KeyValue<byte[], byte[]> blpop(double timeout, byte[]... keys);
 
+	@Nullable
 	KeyValue<byte[], byte[]> brpop(long timeout, byte[]... keys);
 
 	/**
@@ -113,6 +122,7 @@ public interface ListBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@Nullable
 	KeyValue<byte[], byte[]> brpop(double timeout, byte[]... keys);
 
 	/**
@@ -134,6 +144,7 @@ public interface ListBinaryCommands {
 	 * @param timeout 0表示超时时间无限大
 	 * @return
 	 */
+	@Nullable
 	byte[] brpoplpush(final byte[] source, final byte[] destination, final long timeout);
 
 	/**
@@ -164,6 +175,7 @@ public interface ListBinaryCommands {
 	 * @param index
 	 * @return
 	 */
+	@Nullable
 	byte[] lindex(final byte[] key, final long index);
 
 	/**
@@ -196,6 +208,7 @@ public interface ListBinaryCommands {
 	 * @param value
 	 * @return Integer reply: the list length after a successful insert operation, 0 if the key doesn't exist, and -1 when the pivot wasn't found.
 	 */
+	@NotNull
 	Long linsert(final byte[] key, final ListPosition where, final byte[] pivot, final byte[] value);
 
 	/**
@@ -217,6 +230,7 @@ public interface ListBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long llen(final byte[] key);
 
 	/**
@@ -265,8 +279,10 @@ public interface ListBinaryCommands {
 	 * @param to
 	 * @return
 	 */
+	@Nullable
 	byte[] lmove(byte[] srcKey, byte[] dstKey, ListDirection from, ListDirection to);
 
+	@Nullable
 	KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, byte[]... keys);
 
 	/**
@@ -337,8 +353,10 @@ public interface ListBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@Nullable
 	KeyValue<byte[], List<byte[]>> lmpop(ListDirection direction, long count, byte[]... keys);
 
+	@Nullable
 	byte[] lpop(final byte[] key);
 
 	/**
@@ -368,12 +386,16 @@ public interface ListBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@Nullable
 	List<byte[]> lpop(final byte[] key, final long count);
 
+	@Nullable
 	Long lpos(final byte[] key, final byte[] element);
 
+	@NotNull
 	List<Long> lpos(final byte[] key, final byte[] element, final long count);
 	
+	@Nullable
 	Long lpos(final byte[] key, final byte[] element, final LPosParams params);
 
 	/**
@@ -401,6 +423,7 @@ public interface ListBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@NotNull
 	List<Long> lpos(final byte[] key, final byte[] element, final LPosParams params, final long count);
 
 	/**
@@ -431,6 +454,7 @@ public interface ListBinaryCommands {
 	 * @param values
 	 * @return
 	 */
+	@NotNull
 	Long lpush(final byte[] key, final byte[]... values);
 
 	/**
@@ -458,6 +482,7 @@ public interface ListBinaryCommands {
 	 * @param values
 	 * @return
 	 */
+	@NotNull
 	Long lpushx(final byte[] key, final byte[]... values);
 
 	/**
@@ -497,6 +522,7 @@ public interface ListBinaryCommands {
 	 * @param stop
 	 * @return
 	 */
+	@NotNull
 	List<byte[]> lrange(final byte[] key, final long start, final long stop);
 
 	/**
@@ -535,6 +561,7 @@ public interface ListBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long lrem(final byte[] key, final long count, final byte[] value);
 
 	/**
@@ -567,6 +594,7 @@ public interface ListBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	String lset(final byte[] key, final long index, final byte[] value);
 
 	/**
@@ -608,8 +636,10 @@ public interface ListBinaryCommands {
 	 * @param stop
 	 * @return
 	 */
+	@NotNull
 	String ltrim(final byte[] key, final long start, final long stop);
 
+	@Nullable
 	byte[] rpop(final byte[] key);
 
 	/**
@@ -619,6 +649,7 @@ public interface ListBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@Nullable
 	List<byte[]> rpop(final byte[] key, final long count);
 
 	/**
@@ -657,6 +688,7 @@ public interface ListBinaryCommands {
 	 * @param dstkey
 	 * @return
 	 */
+	@Nullable
 	byte[] rpoplpush(final byte[] srckey, final byte[] dstkey);
 
 	/**
@@ -666,6 +698,7 @@ public interface ListBinaryCommands {
 	 * @param values
 	 * @return
 	 */
+	@NotNull
 	Long rpush(final byte[] key, final byte[]... values);
 
 	/**
@@ -675,5 +708,6 @@ public interface ListBinaryCommands {
 	 * @param values
 	 * @return
 	 */
+	@NotNull
 	Long rpushx(final byte[] key, final byte[]... values);
 }

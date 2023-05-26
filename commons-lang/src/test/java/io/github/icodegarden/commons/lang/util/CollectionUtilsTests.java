@@ -3,6 +3,7 @@ package io.github.icodegarden.commons.lang.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,26 @@ import io.github.icodegarden.commons.lang.tuple.Tuple2;
  *
  */
 class CollectionUtilsTests {
-
+	
+	@Test
+	void arrayStartWith() throws Exception {
+		String s1 = UUID.randomUUID().toString();
+		String s2 = s1+"_r";
+		String s3 = s1+"_w";
+		
+		//[49, 100, 56, 55, 52, 53, 50, 53, 45, 102, 100, 53, 98, 45, 52, 101, 54, 48, 45, 97, 57, 99, 99, 45, 101, 48, 102, 98, 55, 102, 56, 99, 54, 55, 50, 102]
+		byte[] bytes1 = s1.getBytes();
+		//[49, 100, 56, 55, 52, 53, 50, 53, 45, 102, 100, 53, 98, 45, 52, 101, 54, 48, 45, 97, 57, 99, 99, 45, 101, 48, 102, 98, 55, 102, 56, 99, 54, 55, 50, 102, 95, 114]
+		byte[] bytes2 = s2.getBytes();
+		//[49, 100, 56, 55, 52, 53, 50, 53, 45, 102, 100, 53, 98, 45, 52, 101, 54, 48, 45, 97, 57, 99, 99, 45, 101, 48, 102, 98, 55, 102, 56, 99, 54, 55, 50, 102, 95, 119]
+		byte[] bytes3 = s3.getBytes();
+		
+		boolean b = CollectionUtils.arrayStartWith(bytes2, bytes1);
+		Assertions.assertThat(b).isTrue();
+		b = CollectionUtils.arrayStartWith(bytes3, bytes1);
+		Assertions.assertThat(b).isTrue();
+	}
+	
 	@Test
 	void subSafely() throws Exception {
 		ArrayList<Integer> list = new ArrayList<Integer>() {

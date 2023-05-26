@@ -3,6 +3,8 @@ package io.github.icodegarden.commons.redis;
 import java.util.List;
 import java.util.Set;
 
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
@@ -80,6 +82,7 @@ public interface KeyBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@Nullable
 	byte[] dump(byte[] key);
 
 	boolean exists(byte[] key);
@@ -278,6 +281,7 @@ public interface KeyBinaryCommands {
 	 * @param pattern
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> keys(byte[] pattern);
 
 	String migrate(String host, int port, byte[] key, int timeout);
@@ -376,6 +380,7 @@ public interface KeyBinaryCommands {
 	 * @return Bulk string reply: the encoding of the object, or nil if the key
 	 *         doesn't exist
 	 */
+	@Nullable
 	byte[] objectEncoding(byte[] key);
 
 	/**
@@ -558,6 +563,7 @@ public interface KeyBinaryCommands {
 	 * 
 	 * @return Bulk string reply: the random key, or nil when the database is empty.
 	 */
+	@Nullable
 	byte[] randomBinaryKey();
 
 	/**

@@ -2,6 +2,8 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
@@ -34,6 +36,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long append(byte[] key, byte[] value);
 
 	/**
@@ -58,6 +61,7 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long decr(byte[] key);
 
 	/**
@@ -80,6 +84,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long decrBy(byte[] key, long value);
 
 	/**
@@ -100,6 +105,7 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@Nullable
 	byte[] get(final byte[] key);
 
 	/**
@@ -121,6 +127,7 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@Nullable
 	byte[] getDel(byte[] key);
 
 	/**
@@ -146,6 +153,7 @@ public interface StringBinaryCommands {
 	 * @param params
 	 * @return
 	 */
+	@Nullable
 	byte[] getEx(byte[] key, GetExArgs params);
 
 	/**
@@ -175,8 +183,9 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @param startOffset
 	 * @param endOffset
-	 * @return
+	 * @return key不存在或index超出返回""
 	 */
+	@NotNull
 	byte[] getrange(byte[] key, long startOffset, long endOffset);
 
 	/**
@@ -199,6 +208,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@Nullable
 	byte[] getSet(byte[] key, byte[] value);
 
 	/**
@@ -227,6 +237,7 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long incr(byte[] key);
 
 	/**
@@ -249,6 +260,7 @@ public interface StringBinaryCommands {
 	 * @param increment
 	 * @return
 	 */
+	@NotNull
 	Long incrBy(byte[] key, long increment);
 
 	/**
@@ -293,6 +305,7 @@ public interface StringBinaryCommands {
 	 * @param increment
 	 * @return
 	 */
+	@NotNull
 	Double incrByFloat(byte[] key, double increment);
 
 	/**
@@ -373,6 +386,7 @@ public interface StringBinaryCommands {
 	 * @param params
 	 * @return
 	 */
+	@NotNull
 	LCSMatchResult lcs(byte[] keyA, byte[] keyB, LCSParams params);
 
 	/**
@@ -396,6 +410,7 @@ public interface StringBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	List<byte[]> mget(final byte[]... keys);
 
 	/**
@@ -420,6 +435,7 @@ public interface StringBinaryCommands {
 	 * @param keysvalues
 	 * @return
 	 */
+	@NotNull
 	String mset(final byte[]... keysvalues);
 
 	/**
@@ -449,6 +465,7 @@ public interface StringBinaryCommands {
 	 * @param keysvalues
 	 * @return
 	 */
+	@NotNull
 	Long msetnx(final byte[]... keysvalues);
 
 	/**
@@ -471,6 +488,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	String psetex(final byte[] key, final long milliseconds, final byte[] value);
 
 	/**
@@ -493,6 +511,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	String set(final byte[] key, final byte[] value);
 
 	/**
@@ -515,6 +534,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	String setex(final byte[] key, final long seconds, final byte[] value);
 
 	/**
@@ -537,6 +557,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long setnx(final byte[] key, final byte[] value);
 
 	/**
@@ -583,6 +604,7 @@ public interface StringBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long setrange(final byte[] key, final long offset, final byte[] value);
 
 	/**
@@ -603,6 +625,7 @@ public interface StringBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long strlen(final byte[] key);
 
 	/**

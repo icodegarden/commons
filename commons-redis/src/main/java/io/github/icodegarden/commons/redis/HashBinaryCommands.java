@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 
@@ -34,6 +36,7 @@ public interface HashBinaryCommands {
 	 * @param fields
 	 * @return
 	 */
+	@NotNull
 	Long hdel(final byte[] key, final byte[]... fields);
 
 	/**
@@ -41,14 +44,17 @@ public interface HashBinaryCommands {
 	 * 
 	 * Returns if field is an existing field in the hash stored at key.
 	 * 
-	 * redis> HSET myhash field1 "foo" (integer) 1 redis> HEXISTS myhash field1
-	 * (integer) 1 redis> HEXISTS myhash field2 (integer) 0 redis>
+	 * redis> HSET myhash field1 "foo" (integer) 1<br>
+	 * redis> HEXISTS myhash field1 (integer) 1<br>
+	 * redis> HEXISTS myhash field2 (integer) 0<br>
+	 * redis><br>
 	 * 
 	 * 
 	 * @param key
 	 * @param field
 	 * @return
 	 */
+	@NotNull
 	Boolean hexists(final byte[] key, final byte[] field);
 
 	/**
@@ -69,6 +75,7 @@ public interface HashBinaryCommands {
 	 * @param field
 	 * @return
 	 */
+	@Nullable
 	byte[] hget(final byte[] key, final byte[] field);
 
 	/**
@@ -92,6 +99,7 @@ public interface HashBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Map<byte[], byte[]> hgetAll(final byte[] key);
 
 	/**
@@ -120,6 +128,7 @@ public interface HashBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long hincrBy(byte[] key, byte[] field, long value);
 
 	/**
@@ -154,6 +163,7 @@ public interface HashBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Double hincrByFloat(byte[] key, byte[] field, double value);
 
 	/**
@@ -174,6 +184,7 @@ public interface HashBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> hkeys(final byte[] key);
 
 	/**
@@ -193,6 +204,7 @@ public interface HashBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long hlen(final byte[] key);
 
 	/**
@@ -220,6 +232,7 @@ public interface HashBinaryCommands {
 	 * @param fields
 	 * @return
 	 */
+	@NotNull
 	List<byte[]> hmget(final byte[] key, final byte[]... fields);
 
 	/**
@@ -245,8 +258,10 @@ public interface HashBinaryCommands {
 	@Deprecated
 	String hmset(final byte[] key, final Map<byte[], byte[]> hash);
 
+	@Nullable
 	byte[] hrandfield(final byte[] key);
-
+	
+	@NotNull
 	List<byte[]> hrandfield(final byte[] key, final long count);
 
 	/**
@@ -290,8 +305,10 @@ public interface HashBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@NotNull
 	Map<byte[], byte[]> hrandfieldWithValues(final byte[] key, final long count);
-
+	
+	@NotNull
 	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor);
 
 	/**
@@ -304,9 +321,12 @@ public interface HashBinaryCommands {
 	 * @param cursor
 	 * @return
 	 */
+	@NotNull
 	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params);
 
+	@NotNull
 	Long hset(final byte[] key, final byte[] field, final byte[] value);
+
 	/**
 	 * <h1>创建或修改field的值</h1><br>
 	 * 
@@ -340,6 +360,7 @@ public interface HashBinaryCommands {
 	 * @param hash
 	 * @return
 	 */
+	@NotNull
 	Long hset(final byte[] key, final Map<byte[], byte[]> hash);
 
 	/**
@@ -363,6 +384,7 @@ public interface HashBinaryCommands {
 	 * @param value
 	 * @return
 	 */
+	@NotNull
 	Long hsetnx(final byte[] key, final byte[] field, final byte[] value);
 
 	/**
@@ -386,6 +408,7 @@ public interface HashBinaryCommands {
 	 * @param field
 	 * @return
 	 */
+	@NotNull
 	Long hstrlen(final byte[] key, final byte[] field);
 
 	/**
@@ -406,5 +429,6 @@ public interface HashBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	List<byte[]> hvals(final byte[] key);
 }

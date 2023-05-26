@@ -16,8 +16,6 @@ import io.github.icodegarden.commons.lang.util.SystemUtils;
  */
 public abstract class DatabaseLock implements DistributedLock {
 
-	public static final String TABLE_NAME = "distributed_lock";
-
 	private final String identifier = UUID.randomUUID().toString();
 
 	private final DatabaseLockDao lockDao;

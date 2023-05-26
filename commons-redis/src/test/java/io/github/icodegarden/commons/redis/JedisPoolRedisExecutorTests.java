@@ -19,6 +19,6 @@ public class JedisPoolRedisExecutorTests extends RedisExecutorTests {
 	}
 
 	public static JedisPool newJedisPool() {
-		return new JedisPool(new GenericObjectPoolConfig(), "192.168.184.128", 6379, 10000, null);
+		return new JedisPool(new GenericObjectPoolConfig(), "192.168.184.129", 6379, 10000, null);
 	}
 }

@@ -23,6 +23,24 @@ import io.github.icodegarden.commons.lang.tuple.Tuples;
 public abstract class CollectionUtils {
 
 	/**
+	 * 
+	 * @param arr 长的
+	 * @param startWith 短的
+	 * @return
+	 */
+	public static boolean arrayStartWith(byte[] arr, byte[] startWith) {
+		if (arr.length < startWith.length) {
+			return false;
+		}
+		for (int i = 0; i < startWith.length; i++) {
+			if (arr[i] != startWith[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
 	 * 这是个环形截取工具,不会越界<br>
 	 * 从fromIndex开始往后再取maxNum个
 	 * 
@@ -212,6 +230,12 @@ public abstract class CollectionUtils {
 		return splitByKeyGroup(Arrays.asList(params), keyCount);
 	}
 
+	/**
+	 * 
+	 * @param <T>
+	 * @param keysvalues key value key value ...
+	 * @return
+	 */
 	public static <T> Map<T, T> keysValuesToMap(Collection<T> keysvalues) {
 		Assert.notEmpty(keysvalues, "keysvalues must not empty");
 		Assert.isTrue(keysvalues.size() % 2 == 0, "invalid keysvalues size");
@@ -226,7 +250,12 @@ public abstract class CollectionUtils {
 		}
 		return map;
 	}
-
+	/**
+	 * 
+	 * @param <T>
+	 * @param keysvalues key value key value ...
+	 * @return
+	 */
 	public static <T> Map<T, T> keysValuesToMap(T[] keysvalues) {
 		Assert.notEmpty(keysvalues, "keysvalues must not empty");
 		return keysValuesToMap(Arrays.asList(keysvalues));

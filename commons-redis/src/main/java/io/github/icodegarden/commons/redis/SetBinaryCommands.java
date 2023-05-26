@@ -3,6 +3,8 @@ package io.github.icodegarden.commons.redis;
 import java.util.List;
 import java.util.Set;
 
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 
@@ -36,6 +38,7 @@ public interface SetBinaryCommands {
 	 * @param members
 	 * @return
 	 */
+	@NotNull
 	Long sadd(final byte[] key, final byte[]... members);
 
 	/**
@@ -55,6 +58,7 @@ public interface SetBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Long scard(final byte[] key);
 
 	/**
@@ -84,6 +88,7 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> sdiff(final byte[]... keys);
 
 	/**
@@ -117,6 +122,7 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Long sdiffstore(final byte[] dstkey, final byte[]... keys);
 
 	/**
@@ -145,6 +151,7 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> sinter(final byte[]... keys);
 
 	long sintercard(byte[]... keys);
@@ -228,6 +235,7 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Long sinterstore(final byte[] dstkey, final byte[]... keys);
 
 	/**
@@ -248,6 +256,7 @@ public interface SetBinaryCommands {
 	 * @param member
 	 * @return
 	 */
+	@NotNull
 	Boolean sismember(final byte[] key, final byte[] member);
 
 	/**
@@ -270,6 +279,7 @@ public interface SetBinaryCommands {
 	 * @param key
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> smembers(final byte[] key);
 
 	/**
@@ -292,6 +302,7 @@ public interface SetBinaryCommands {
 	 * @param members
 	 * @return
 	 */
+	@NotNull
 	List<Boolean> smismember(final byte[] key, final byte[]... members);
 
 	/**
@@ -328,8 +339,10 @@ public interface SetBinaryCommands {
 	 * @param member
 	 * @return
 	 */
+	@NotNull
 	Long smove(final byte[] srckey, final byte[] dstkey, final byte[] member);
 
+	@Nullable
 	byte[] spop(final byte[] key);
 
 	/**
@@ -371,8 +384,10 @@ public interface SetBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> spop(final byte[] key, final long count);
 
+	@Nullable
 	byte[] srandmember(final byte[] key);
 
 	/**
@@ -408,6 +423,7 @@ public interface SetBinaryCommands {
 	 * @param count
 	 * @return
 	 */
+	@NotNull
 	List<byte[]> srandmember(final byte[] key, final int count);
 
 	/**
@@ -438,8 +454,10 @@ public interface SetBinaryCommands {
 	 * @param members
 	 * @return
 	 */
+	@NotNull
 	Long srem(final byte[] key, final byte[]... members);
 
+	@NotNull
 	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor);
 
 	/**
@@ -452,6 +470,7 @@ public interface SetBinaryCommands {
 	 * @param params
 	 * @return
 	 */
+	@NotNull
 	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor, final ScanArgs params);
 
 	/**
@@ -483,6 +502,7 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Set<byte[]> sunion(final byte[]... keys);
 
 	/**
@@ -518,5 +538,6 @@ public interface SetBinaryCommands {
 	 * @param keys
 	 * @return
 	 */
+	@NotNull
 	Long sunionstore(final byte[] dstkey, final byte[]... keys);
 }

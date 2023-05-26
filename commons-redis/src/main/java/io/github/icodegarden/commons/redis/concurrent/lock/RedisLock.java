@@ -45,13 +45,17 @@ public class RedisLock implements DistributedLock {
 	 */
 	public RedisLock(RedisExecutor redisExecutor, String name, Long expireSeconds) {
 		this.redisExecutor = redisExecutor;
-		this.key = name.getBytes(CHARSET);
+		this.key = lockName(name).getBytes(CHARSET);
 		expireSecondsBytes = Long.toString(expireSeconds).getBytes(CHARSET);
 	}
 
 	public void setAcquiredIntervalMillis(long acquireIntervalMillis) {
 		Assert.isTrue(acquireIntervalMillis > 0, "acquireIntervalMillis must gt 0");
 		this.acquireIntervalMillis = acquireIntervalMillis;
+	}
+
+	private String lockName(String name) {
+		return "lock:"+name;
 	}
 
 	@Override
@@ -77,11 +81,11 @@ public class RedisLock implements DistributedLock {
 				List<Object> list = redisExecutor.eval(SCRIPT, 1, key, identifier, expireSecondsBytes);
 				Long result = (Long) list.get(0);
 				boolean success = result == 1;
-				
+
 				if (success) {
 					return true;
 				}
-				
+
 				if (SystemUtils.now().minus(timeoutMillis, ChronoUnit.MILLIS).isAfter(start)) {
 					return false;
 				}
