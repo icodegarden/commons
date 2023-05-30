@@ -122,12 +122,12 @@ public abstract class CollectionUtils {
 	 * 
 	 * @param <T>
 	 * @param keys   k1 k2 ...
-	 * @param values v1 v2 v3 v4 ...
+	 * @param values 可以为空集合 v1 v2 v3 v4 ...
 	 * @return k1 v1 v2 k2 v3 v4 ...
 	 */
 	public static <T> List<T> mergeByKeyGroup(Collection<T> keys, Collection<T> values) {
 		Assert.notEmpty(keys, "keys must not empty");
-		Assert.notEmpty(values, "values must not empty");
+//		Assert.notEmpty(values, "values must not empty");
 		Assert.isTrue(values.size() % keys.size() == 0, "values size invalid");
 
 		List<T> result = new ArrayList<T>(keys.size() + values.size());
@@ -151,9 +151,17 @@ public abstract class CollectionUtils {
 		return result;
 	}
 
+	/**
+	 * 分组合并
+	 * 
+	 * @param <T>
+	 * @param keys   k1 k2 ...
+	 * @param values 可以为空集合 v1 v2 v3 v4 ...
+	 * @return k1 v1 v2 k2 v3 v4 ...
+	 */
 	public static <T> List<T> mergeByKeyGroup(T[] keys, T[] values) {
 		Assert.notEmpty(keys, "keys must not empty");
-		Assert.notEmpty(values, "values must not empty");
+//		Assert.notEmpty(values, "values must not empty");
 		return mergeByKeyGroup(Arrays.asList(keys), Arrays.asList(values));
 
 //		Assert.isTrue(values.length % keys.length == 0, "values size invalid");

@@ -2,11 +2,13 @@ package io.github.icodegarden.commons.redis;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.assertj.core.api.Assertions;
@@ -211,7 +213,7 @@ public abstract class RedisExecutorTests {
 		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
 			return;
 		}
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 
@@ -1691,7 +1693,7 @@ public abstract class RedisExecutorTests {
 		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
 			return;
 		}
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 
@@ -1751,10 +1753,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void bzpopmax() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1.1, "a".getBytes());
 		redisExecutor.zadd(key, 2.2, "b".getBytes());
 		redisExecutor.zadd(k2, 0.1, "c".getBytes());
@@ -1786,10 +1788,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void bzpopmin() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1.1, "a".getBytes());
 		redisExecutor.zadd(key, 2.2, "b".getBytes());
 		redisExecutor.zadd(k2, 0.1, "c".getBytes());
@@ -1962,10 +1964,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zinter() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1, "a".getBytes());
 		redisExecutor.zadd(key, 2, "b".getBytes());
 		redisExecutor.zadd(key, 3, "c".getBytes());
@@ -2023,7 +2025,7 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zintercard() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
 		redisExecutor.zadd(key, 1, "a".getBytes());
@@ -2071,10 +2073,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zlexcount() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 0, "a".getBytes());
 		redisExecutor.zadd(key, 0, "b".getBytes());
 		redisExecutor.zadd(key, 0, "c".getBytes());
@@ -2095,10 +2097,10 @@ public abstract class RedisExecutorTests {
 		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
 			return;
 		}
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1.1, "a".getBytes());
 		redisExecutor.zadd(key, 2.2, "b".getBytes());
 		redisExecutor.zadd(k2, 0.1, "c".getBytes());
@@ -2249,10 +2251,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zrangeByLex() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 0, "a".getBytes());
 		redisExecutor.zadd(key, 0, "b".getBytes());
 		redisExecutor.zadd(key, 0, "c".getBytes());
@@ -2377,10 +2379,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zrangestore() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		byte[] k3 = "test{tag}key3".getBytes();
 		redisExecutor.del(k3);
 
@@ -2442,10 +2444,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zremrangeByLex() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1, "a".getBytes());
 		redisExecutor.zadd(key, 2, "b".getBytes());
 		redisExecutor.zadd(key, 3, "c".getBytes());
@@ -2457,10 +2459,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zremrangeByRank() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1, "a".getBytes());
 		redisExecutor.zadd(key, 2, "b".getBytes());
 		redisExecutor.zadd(key, 3, "c".getBytes());
@@ -2505,10 +2507,10 @@ public abstract class RedisExecutorTests {
 		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
 			return;
 		}
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 0, "a".getBytes());
 		redisExecutor.zadd(key, 0, "b".getBytes());
 		redisExecutor.zadd(key, 0, "c".getBytes());
@@ -2684,10 +2686,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	public void zunion() throws Exception {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
 			return;
 		}
-		
+
 		redisExecutor.zadd(key, 1, "a".getBytes());
 		redisExecutor.zadd(key, 2, "b".getBytes());
 		redisExecutor.zadd(key, 3, "c".getBytes());
@@ -2784,6 +2786,39 @@ public abstract class RedisExecutorTests {
 
 		l = redisExecutor.zcard(k3);
 		Assertions.assertThat(l).isEqualTo(4);
+	}
+
+	@Test
+	void eval() {
+		redisExecutor.set(key, "a".getBytes());
+
+		byte[] SCRIPT = "local v = redis.call('get','test{tag}key');return v;".getBytes();
+		List<Object> list = redisExecutor.eval(SCRIPT);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(new String((byte[]) list.get(0))).isEqualTo("a");
+
+		// ------------------------------------------------------------------------
+		redisExecutor.del(key);
+
+		SCRIPT = "local v = redis.call('hset',KEYS[1],ARGV[1],ARGV[2]);if(v==1) then redis.call('expire',KEYS[1],ARGV[3]); end;return v;"
+				.getBytes();
+		list = redisExecutor.eval(SCRIPT, 1, key, UUID.randomUUID().toString().getBytes(), "1".getBytes(),
+				"3".getBytes());
+		Long result = (Long) list.get(0);
+		Assertions.assertThat(result).isEqualTo(1);
+
+		// ------------------------------------------------------------------------
+
+		list = redisExecutor.eval(SCRIPT, Arrays.asList(key),
+				Arrays.asList(UUID.randomUUID().toString().getBytes(), "1".getBytes(),"3".getBytes()));
+		result = (Long) list.get(0);
+		Assertions.assertThat(result).isEqualTo(1);
+
+		// ------------------------------------------------------------------------
+		redisExecutor.del(key);
+		
+		SCRIPT = "local v = redis.call('get',KEYS[1]);return v;".getBytes();
+		redisExecutor.evalReadonly(SCRIPT, Arrays.asList(key), Collections.emptyList());
 	}
 
 	@Test

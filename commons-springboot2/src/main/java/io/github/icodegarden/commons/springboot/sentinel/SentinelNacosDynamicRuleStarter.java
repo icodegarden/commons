@@ -66,6 +66,9 @@ public abstract class SentinelNacosDynamicRuleStarter {
 			@Override
 			public void configUpdate(RuleProperties value) {
 				log.info("sentinel config update.");
+				if(value == null) {
+					return;
+				}
 
 				if (!CollectionUtils.isEmpty(value.getSystems())) {
 					log.info("sentinel SystemRule update, value:{}", value.getSystems());
@@ -92,7 +95,10 @@ public abstract class SentinelNacosDynamicRuleStarter {
 			@Override
 			public void configLoad(RuleProperties value) {
 				log.info("sentinel config load.");
-
+				if(value == null) {
+					return;
+				}
+				
 				if (!CollectionUtils.isEmpty(value.getSystems())) {
 					log.info("sentinel SystemRule load, value:{}", value.getSystems());
 					systemsSentinelProperty.updateValue(value.getSystems());
