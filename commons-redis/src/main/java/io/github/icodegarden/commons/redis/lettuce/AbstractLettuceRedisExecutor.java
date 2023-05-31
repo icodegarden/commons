@@ -2,18 +2,36 @@ package io.github.icodegarden.commons.redis.lettuce;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.util.Assert;
+
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
+import io.github.icodegarden.commons.redis.args.BitCountOption;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs;
+import io.github.icodegarden.commons.redis.args.BitOP;
+import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GeoAddArgs;
+import io.github.icodegarden.commons.redis.args.GeoArgs;
+import io.github.icodegarden.commons.redis.args.GeoCoordinate;
+import io.github.icodegarden.commons.redis.args.GeoRadiusStoreArgs;
+import io.github.icodegarden.commons.redis.args.GeoSearch;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoPredicate;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoRef;
+import io.github.icodegarden.commons.redis.args.GeoUnit;
+import io.github.icodegarden.commons.redis.args.GeoValue;
+import io.github.icodegarden.commons.redis.args.GeoWithin;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.KeyValue;
@@ -38,6 +56,7 @@ import io.github.icodegarden.commons.redis.util.EvalUtils;
 import io.github.icodegarden.commons.redis.util.LettuceUtils;
 import io.lettuce.core.CopyArgs;
 import io.lettuce.core.ExpireArgs;
+import io.lettuce.core.GeoCoordinates;
 import io.lettuce.core.LMPopArgs;
 import io.lettuce.core.LMoveArgs;
 import io.lettuce.core.LPosArgs;
@@ -46,6 +65,7 @@ import io.lettuce.core.MigrateArgs;
 import io.lettuce.core.RestoreArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.ScriptOutputType;
+import io.lettuce.core.Value;
 import io.lettuce.core.ZStoreArgs;
 import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
@@ -1244,7 +1264,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	public long zremrangeByLex(byte[] key, Range<byte[]> range) {
 //		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
 //		return syncRedisCommands.zremrangebylex(key, r);
-		
+
 		/**
 		 * FIXME 上面不准
 		 */
@@ -1279,7 +1299,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	public List<byte[]> zrevrangeByLex(byte[] key, Range<byte[]> range) {
 //		io.lettuce.core.Range<byte[]> r = LettuceUtils.convertRange(range);
 //		return syncRedisCommands.zrevrangebylex(key, r);
-		
+
 		/**
 		 * FIXME 上面不准
 		 */
@@ -1387,6 +1407,284 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	public long zunionstore(byte[] dstkey, ZAggregateArgs params, byte[]... sets) {
 		ZStoreArgs storeArgs = LettuceUtils.convertZStoreArgs(params);
 		return syncRedisCommands.zunionstore(dstkey, storeArgs, sets);
+	}
+
+	@Override
+	public long bitcount(byte[] key) {
+		return syncRedisCommands.bitcount(key);
+	}
+
+	@Override
+	public long bitcount(byte[] key, long start, long end) {
+		return syncRedisCommands.bitcount(key, start, end);
+	}
+
+	@Override
+	public long bitcount(byte[] key, long start, long end, BitCountOption option) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Long> bitfield(byte[] key, BitFieldArgs args) {
+		io.lettuce.core.BitFieldArgs bitFieldArgs = LettuceUtils.convertBitFieldArgs(args);
+		return syncRedisCommands.bitfield(key, bitFieldArgs);
+	}
+
+	@Override
+	public List<Long> bitfieldReadonly(byte[] key, BitFieldArgs args) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long bitop(BitOP op, byte[] destKey, byte[]... srcKeys) {
+		if (op.equals(BitOP.AND)) {
+			return syncRedisCommands.bitopAnd(destKey, srcKeys);
+		} else if (op.equals(BitOP.NOT)) {
+			Assert.isTrue(srcKeys.length == 1, "srcKeys length must eq 1 on bitopNot");
+			return syncRedisCommands.bitopNot(destKey, srcKeys[0]);
+		} else if (op.equals(BitOP.OR)) {
+			return syncRedisCommands.bitopOr(destKey, srcKeys);
+		} else if (op.equals(BitOP.XOR)) {
+			return syncRedisCommands.bitopXor(destKey, srcKeys);
+		}
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long bitpos(byte[] key, boolean value) {
+		return syncRedisCommands.bitpos(key, value);
+	}
+
+	@Override
+	public long bitpos(byte[] key, boolean value, BitPosParams params) {
+		if (params.getStart() == null) {
+			return syncRedisCommands.bitpos(key, value);
+		}
+
+		if (params.getEnd() == null) {
+			return syncRedisCommands.bitpos(key, value, params.getStart());
+		}
+		return syncRedisCommands.bitpos(key, value, params.getStart(), params.getEnd());
+	}
+
+	@Override
+	public boolean getbit(byte[] key, long offset) {
+		return syncRedisCommands.getbit(key, offset) == 1L;
+	}
+
+	@Override
+	public boolean setbit(byte[] key, long offset, boolean value) {
+		return syncRedisCommands.setbit(key, offset, value ? 1 : 0) == 1L;
+	}
+
+	@Override
+	public long geoadd(byte[] key, double longitude, double latitude, byte[] member) {
+		return syncRedisCommands.geoadd(key, longitude, latitude, member);
+	}
+
+	@Override
+	public long geoadd(byte[] key, double longitude, double latitude, byte[] member, GeoAddArgs args) {
+		io.lettuce.core.GeoAddArgs geoAddArgs = LettuceUtils.convertGeoAddArgs(args);
+		return syncRedisCommands.geoadd(key, longitude, latitude, member, geoAddArgs);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public long geoadd(byte[] key, GeoValue<byte[]>... geoValues) {
+		io.lettuce.core.GeoValue<byte[]>[] values = LettuceUtils.convertGeoValues(geoValues);
+		return syncRedisCommands.geoadd(key, values);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues) {
+		io.lettuce.core.GeoAddArgs geoAddArgs = LettuceUtils.convertGeoAddArgs(args);
+		io.lettuce.core.GeoValue<byte[]>[] values = LettuceUtils.convertGeoValues(geoValues);
+		return syncRedisCommands.geoadd(key, geoAddArgs, values);
+	}
+
+	@Override
+	public Double geodist(byte[] key, byte[] member1, byte[] member2) {
+		return syncRedisCommands.geodist(key, member1, member2, io.lettuce.core.GeoArgs.Unit.m);
+	}
+
+	@Override
+	public Double geodist(byte[] key, byte[] member1, byte[] member2, GeoUnit unit) {
+		return syncRedisCommands.geodist(key, member1, member2, io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+	}
+
+	@Override
+	public List<String> geohash(byte[] key, byte[]... members) {
+		List<Value<String>> list = syncRedisCommands.geohash(key, members);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> one.getValue()).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoCoordinate> geopos(byte[] key, byte[]... members) {
+		List<GeoCoordinates> geopos = syncRedisCommands.geopos(key, members);
+		if (geopos.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return geopos.stream().map(one -> {
+			return new GeoCoordinate(one.getX().doubleValue(), one.getY().doubleValue());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+		Set<byte[]> set = syncRedisCommands.georadius(key, longitude, latitude, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+		if (set.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return new ArrayList<>(set);
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
+			GeoArgs args) {
+		io.lettuce.core.GeoArgs geoArgs = LettuceUtils.convertGeoArgs(args);
+
+		List<io.lettuce.core.GeoWithin<byte[]>> list = syncRedisCommands.georadius(key, longitude, latitude, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoArgs);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+			if (one.getCoordinates() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinates().getX().doubleValue(),
+						one.getCoordinates().getY().doubleValue());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getGeohash(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long georadiusStore(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
+			GeoRadiusStoreArgs<byte[]> storeArgs) {
+		io.lettuce.core.GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = LettuceUtils
+				.convertGeoRadiusStoreArgs(storeArgs);
+		return syncRedisCommands.georadius(key, longitude, latitude, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoRadiusStoreArgs);
+	}
+
+	@Override
+	public List<byte[]> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+		return georadius(key, longitude, latitude, radius, unit);
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
+			GeoUnit unit, GeoArgs args) {
+		return georadius(key, longitude, latitude, radius, unit, args);
+	}
+
+	@Override
+	public List<byte[]> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit) {
+		Set<byte[]> set = syncRedisCommands.georadiusbymember(key, member, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+		if (set.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return new ArrayList<>(set);
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoArgs args) {
+		io.lettuce.core.GeoArgs geoArgs = LettuceUtils.convertGeoArgs(args);
+
+		List<io.lettuce.core.GeoWithin<byte[]>> list = syncRedisCommands.georadiusbymember(key, member, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoArgs);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+			if (one.getCoordinates() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinates().getX().doubleValue(),
+						one.getCoordinates().getY().doubleValue());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getGeohash(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long georadiusByMemberStore(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoRadiusStoreArgs<byte[]> storeArgs) {
+		io.lettuce.core.GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = LettuceUtils
+				.convertGeoRadiusStoreArgs(storeArgs);
+		return syncRedisCommands.georadiusbymember(key, member, radius,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoRadiusStoreArgs);
+	}
+
+	@Override
+	public List<byte[]> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit) {
+		return georadiusByMember(key, member, radius, unit);
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoArgs args) {
+		return georadiusByMember(key, member, radius, unit, args);
+	}
+
+	@Override
+	public List<byte[]> geosearch(byte[] key, GeoSearch.GeoRef<byte[]> reference, GeoSearch.GeoPredicate predicate) {
+		io.lettuce.core.GeoSearch.GeoRef<byte[]> ref = LettuceUtils.convertGeoRef(reference);
+		io.lettuce.core.GeoSearch.GeoPredicate geoPredicate = LettuceUtils.convertGeoPredicate(predicate);
+
+		Set<byte[]> set = syncRedisCommands.geosearch(key, ref, geoPredicate);
+		if (set.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return new ArrayList<>(set);
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> geosearch(byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
+			GeoArgs geoArgs) {
+		io.lettuce.core.GeoSearch.GeoRef<byte[]> ref = LettuceUtils.convertGeoRef(reference);
+		io.lettuce.core.GeoSearch.GeoPredicate geoPredicate = LettuceUtils.convertGeoPredicate(predicate);
+		io.lettuce.core.GeoArgs args = LettuceUtils.convertGeoArgs(geoArgs);
+
+		List<io.lettuce.core.GeoWithin<byte[]>> list = syncRedisCommands.geosearch(key, ref, geoPredicate, args);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+			if (one.getCoordinates() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinates().getX().doubleValue(),
+						one.getCoordinates().getY().doubleValue());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getGeohash(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long geosearchStore(byte[] destination, byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
+			GeoArgs geoArgs) {
+		io.lettuce.core.GeoSearch.GeoRef<byte[]> ref = LettuceUtils.convertGeoRef(reference);
+		io.lettuce.core.GeoSearch.GeoPredicate geoPredicate = LettuceUtils.convertGeoPredicate(predicate);
+		io.lettuce.core.GeoArgs args = LettuceUtils.convertGeoArgs(geoArgs);
+
+		return syncRedisCommands.geosearchstore(destination, key, ref, geoPredicate, args, false);
+	}
+
+	@Override
+	public long geosearchStoreStoreDist(byte[] destination, byte[] key, GeoRef<byte[]> reference,
+			GeoPredicate predicate, GeoArgs geoArgs) {
+		io.lettuce.core.GeoSearch.GeoRef<byte[]> ref = LettuceUtils.convertGeoRef(reference);
+		io.lettuce.core.GeoSearch.GeoPredicate geoPredicate = LettuceUtils.convertGeoPredicate(predicate);
+		io.lettuce.core.GeoArgs args = LettuceUtils.convertGeoArgs(geoArgs);
+
+		return syncRedisCommands.geosearchstore(destination, key, ref, geoPredicate, args, true);
 	}
 
 	@Override

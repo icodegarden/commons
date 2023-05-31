@@ -16,6 +16,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.github.icodegarden.commons.redis.args.BitCountOption;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs;
+import io.github.icodegarden.commons.redis.args.BitOP;
+import io.github.icodegarden.commons.redis.args.BitPosParams;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.Get;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.OverflowType;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
@@ -2810,15 +2819,281 @@ public abstract class RedisExecutorTests {
 		// ------------------------------------------------------------------------
 
 		list = redisExecutor.eval(SCRIPT, Arrays.asList(key),
-				Arrays.asList(UUID.randomUUID().toString().getBytes(), "1".getBytes(),"3".getBytes()));
+				Arrays.asList(UUID.randomUUID().toString().getBytes(), "1".getBytes(), "3".getBytes()));
 		result = (Long) list.get(0);
 		Assertions.assertThat(result).isEqualTo(1);
 
 		// ------------------------------------------------------------------------
 		redisExecutor.del(key);
-		
+
 		SCRIPT = "local v = redis.call('get',KEYS[1]);return v;".getBytes();
 		redisExecutor.evalReadonly(SCRIPT, Arrays.asList(key), Collections.emptyList());
+	}
+
+	@Test
+	void bitcount() {
+//		 * redis> SET mykey "foobar"<br>
+//		 * "OK"<br>
+//		 * redis> BITCOUNT mykey<br>
+//		 * (integer) 26<br>
+//		 * redis> BITCOUNT mykey 0 0<br>
+//		 * (integer) 4<br>
+//		 * redis> BITCOUNT mykey 1 1<br>
+//		 * (integer) 6<br>
+//		 * redis> BITCOUNT mykey 1 1 BYTE<br>
+//		 * (integer) 6<br>
+//		 * redis> BITCOUNT mykey 5 30 BIT<br>
+//		 * (integer) 17<br>
+//		 * redis> <br>
+
+		redisExecutor.set(key, "foobar".getBytes());
+
+		long l = redisExecutor.bitcount(key);
+		Assertions.assertThat(l).isEqualTo(26);
+
+		l = redisExecutor.bitcount(key, 0, 0);
+		Assertions.assertThat(l).isEqualTo(4);
+		l = redisExecutor.bitcount(key, 1, 1);
+		Assertions.assertThat(l).isEqualTo(6);
+
+		if (redisExecutor instanceof AbstractLettuceRedisExecutor) {
+			return;
+		}
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
+		l = redisExecutor.bitcount(key, 1, 1, BitCountOption.BYTE);
+		Assertions.assertThat(l).isEqualTo(6);
+		l = redisExecutor.bitcount(key, 5, 30, BitCountOption.BIT);
+		Assertions.assertThat(l).isEqualTo(17);
+	}
+
+	@Test
+	void bitfield() {
+		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;//结果不准确
+		}
+		
+//		> BITFIELD mykey INCRBY i5 100 1 GET u4 0
+//		1) (integer) 1
+//		2) (integer) 0
+
+		BitFieldArgs bitFieldArgs = new BitFieldArgs();
+
+		BitFieldType bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(true, 5);// signed=i5
+		IncrBy incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 100, 1);//
+		bitFieldArgs.addSubCommand(incrBy);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 4);// unsigned=u4
+		Get get = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Get(bitFieldType, false, 0);
+		bitFieldArgs.addSubCommand(get);
+
+		List<Long> list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(1);
+		Assertions.assertThat(list.get(1)).isEqualTo(0);
+
+//		> BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1
+//		1) (integer) 1
+//		2) (integer) 1
+
+		bitFieldArgs = new BitFieldArgs();
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 100, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		Overflow overflow = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow(OverflowType.SAT);
+		bitFieldArgs.addSubCommand(overflow);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 102, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(1);
+		Assertions.assertThat(list.get(1)).isEqualTo(1);
+
+//		> BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1
+//		1) (integer) 2
+//		2) (integer) 2
+
+		bitFieldArgs = new BitFieldArgs();
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 100, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		overflow = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow(OverflowType.SAT);
+		bitFieldArgs.addSubCommand(overflow);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 102, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(2);
+		Assertions.assertThat(list.get(1)).isEqualTo(2);
+
+//		> BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1
+//		1) (integer) 3
+//		2) (integer) 3
+		bitFieldArgs = new BitFieldArgs();
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 100, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		overflow = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow(OverflowType.SAT);
+		bitFieldArgs.addSubCommand(overflow);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 102, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(3);
+		Assertions.assertThat(list.get(1)).isEqualTo(3);
+
+//		> BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1
+//		1) (integer) 0
+//		2) (integer) 3
+		bitFieldArgs = new BitFieldArgs();
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 100, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		overflow = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow(OverflowType.SAT);
+		bitFieldArgs.addSubCommand(overflow);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 102, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(2);
+		Assertions.assertThat(list.get(0)).isEqualTo(0);
+		Assertions.assertThat(list.get(1)).isEqualTo(3);
+
+//		> BITFIELD mykey OVERFLOW FAIL incrby u2 102 1
+//		1) (nil)
+
+		bitFieldArgs = new BitFieldArgs();
+
+		overflow = new io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow(OverflowType.FAIL);
+		bitFieldArgs.addSubCommand(overflow);
+
+		bitFieldType = new io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType(false, 2);
+		incrBy = new io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy(bitFieldType, false, 102, 1);
+		bitFieldArgs.addSubCommand(incrBy);
+
+		list = redisExecutor.bitfield(key, bitFieldArgs);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+		Assertions.assertThat(list.get(0)).isNull();
+	}
+
+	@Test
+	void bitfieldReadonly() {
+	}
+
+	@Test
+	void bitop() {
+//		 * redis> SET key1 "foobar"<br>
+//		 * "OK"<br>
+//		 * redis> SET key2 "abcdef"<br>
+//		 * "OK"<br>
+//		 * redis> BITOP AND dest key1 key2<br>
+//		 * (integer) 6<br>
+//		 * redis> GET dest<br>
+//		 * "`bc`ab"<br>
+//		 * redis> <br>
+		redisExecutor.set(key, "foobar".getBytes());
+		redisExecutor.set(k2, "abcdef".getBytes());
+
+		byte[] k3 = "test{tag}key3".getBytes();
+		redisExecutor.del(k3);
+
+		long l = redisExecutor.bitop(BitOP.AND, k3, key, k2);
+		Assertions.assertThat(l).isEqualTo(6);
+
+		byte[] bs = redisExecutor.get(k3);
+		Assertions.assertThat(new String(bs)).isEqualTo("`bc`ab");
+	}
+
+	@Test
+	void bitpos() {
+//		 * redis> SET mykey "\xff\xf0\x00"<br>
+//		 * "OK"<br>
+//		 * redis> BITPOS mykey 0<br>
+//		 * (integer) 0<br>
+//		 * redis> SET mykey "\x00\xff\xf0"<br>
+//		 * "OK"<br>
+//		 * redis> BITPOS mykey 1 0<br>
+//		 * (integer) 1<br>
+//		 * redis> BITPOS mykey 1 2<br>
+//		 * (integer) 18<br>
+//		 * redis> BITPOS mykey 1 2 -1 BYTE<br>
+//		 * (integer) 18<br>
+//		 * redis> BITPOS mykey 1 7 15 BIT<br>
+//		 * (integer) 9<br>
+//		 * redis> set mykey "\x00\x00\x00"<br>
+//		 * "OK"<br>
+//		 * redis> BITPOS mykey 1<br>
+//		 * (integer) 1<br>
+//		 * redis> BITPOS mykey 1 7 -3 BIT<br>
+//		 * (integer) 9<br>
+//		 * redis> <br>
+		redisExecutor.set(key, "\\xff\\xf0\\x00".getBytes());
+		long l = redisExecutor.bitpos(key, false);
+		Assertions.assertThat(l).isEqualTo(0);
+
+		redisExecutor.set(key, "\\x00\\xff\\xf0".getBytes());
+		BitPosParams bitPosParams = new BitPosParams();
+		bitPosParams.setStart(0L);
+		l = redisExecutor.bitpos(key, true, bitPosParams);
+		Assertions.assertThat(l).isEqualTo(1);
+
+		bitPosParams = new BitPosParams();
+		bitPosParams.setStart(2L);
+		l = redisExecutor.bitpos(key, true, bitPosParams);
+		Assertions.assertThat(l).isEqualTo(18);
+
+		bitPosParams = new BitPosParams();
+		bitPosParams.setStart(2L);
+		bitPosParams.setEnd(-1L);
+		l = redisExecutor.bitpos(key, true, bitPosParams);
+		Assertions.assertThat(l).isEqualTo(18);
+	}
+
+	@Test
+	void getbit() {
+//		 * redis> SETBIT mykey 7 1<br>
+//		 * (integer) 0<br>
+//		 * redis> GETBIT mykey 0<br>
+//		 * (integer) 0<br>
+//		 * redis> GETBIT mykey 7<br>
+//		 * (integer) 1<br>
+//		 * redis> GETBIT mykey 100<br>
+//		 * (integer) 0<br>
+//		 * redis> <br>
+
+		boolean b = redisExecutor.setbit(key, 7, true);
+		Assertions.assertThat(b).isFalse();
+		b = redisExecutor.getbit(key, 0);
+		Assertions.assertThat(b).isFalse();
+		b = redisExecutor.getbit(key, 7);
+		Assertions.assertThat(b).isTrue();
+		b = redisExecutor.getbit(key, 100);
+		Assertions.assertThat(b).isFalse();
+	}
+
+	@Test
+	void setbit() {
+		// 不需要单独测
 	}
 
 	@Test

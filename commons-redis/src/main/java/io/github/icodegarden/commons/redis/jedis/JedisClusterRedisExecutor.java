@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,20 @@ import org.springframework.util.CollectionUtils;
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
+import io.github.icodegarden.commons.redis.args.BitCountOption;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs;
+import io.github.icodegarden.commons.redis.args.BitOP;
+import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GeoAddArgs;
+import io.github.icodegarden.commons.redis.args.GeoArgs;
+import io.github.icodegarden.commons.redis.args.GeoCoordinate;
+import io.github.icodegarden.commons.redis.args.GeoRadiusStoreArgs;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoPredicate;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoRef;
+import io.github.icodegarden.commons.redis.args.GeoUnit;
+import io.github.icodegarden.commons.redis.args.GeoValue;
+import io.github.icodegarden.commons.redis.args.GeoWithin;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.KeyValue;
@@ -45,9 +60,14 @@ import io.github.icodegarden.commons.redis.util.JedisUtils;
 import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.params.GeoAddParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.GeoRadiusStoreParam;
+import redis.clients.jedis.params.GeoSearchParam;
 import redis.clients.jedis.params.GetExParams;
 import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZParams;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 import redis.clients.jedis.resps.ScanResult;
 import redis.clients.jedis.resps.Tuple;
 
@@ -1360,6 +1380,303 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public List<Object> evalReadonly(byte[] script, List<byte[]> keys, List<byte[]> args) {
 		Object obj = jc.eval(script, keys, args);
 		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public long bitcount(byte[] key) {
+		return jc.bitcount(key);
+	}
+
+	@Override
+	public long bitcount(byte[] key, long start, long end) {
+		return jc.bitcount(key, start, end);
+	}
+
+	@Override
+	public long bitcount(byte[] key, long start, long end, BitCountOption option) {
+		redis.clients.jedis.args.BitCountOption valueOf = redis.clients.jedis.args.BitCountOption
+				.valueOf(option.name());
+		return jc.bitcount(key, start, end, valueOf);
+	}
+
+	@Override
+	public List<Long> bitfield(byte[] key, BitFieldArgs args) {
+		byte[][] bitFieldArgs = JedisUtils.convertBitFieldArgs(args);
+		return jc.bitfield(key, bitFieldArgs);
+	}
+
+	@Override
+	public List<Long> bitfieldReadonly(byte[] key, BitFieldArgs args) {
+		byte[][] bitFieldArgs = JedisUtils.convertBitFieldArgs(args);
+		return jc.bitfieldReadonly(key, bitFieldArgs);
+	}
+
+	@Override
+	public long bitop(BitOP op, byte[] destKey, byte[]... srcKeys) {
+		redis.clients.jedis.args.BitOP valueOf = redis.clients.jedis.args.BitOP.valueOf(op.name());
+		return jc.bitop(valueOf, destKey, srcKeys);
+	}
+
+	@Override
+	public long bitpos(byte[] key, boolean value) {
+		return jc.bitpos(key, value);
+	}
+
+	@Override
+	public long bitpos(byte[] key, boolean value, BitPosParams params) {
+		redis.clients.jedis.params.BitPosParams bitPosParams = JedisUtils.convertBitPosParams(params);
+		return jc.bitpos(key, value, bitPosParams);
+	}
+
+	@Override
+	public boolean getbit(byte[] key, long offset) {
+		return jc.getbit(key, offset);
+	}
+
+	@Override
+	public boolean setbit(byte[] key, long offset, boolean value) {
+		return jc.setbit(key, offset, value);
+	}
+
+	@Override
+	public long geoadd(byte[] key, double longitude, double latitude, byte[] member) {
+		return jc.geoadd(key, longitude, latitude, member);
+	}
+
+	@Override
+	public long geoadd(byte[] key, double longitude, double latitude, byte[] member, GeoAddArgs args) {
+		GeoAddParams geoAddParams = JedisUtils.convertGeoAddParams(args);
+		redis.clients.jedis.GeoCoordinate geoCoordinate = new redis.clients.jedis.GeoCoordinate(longitude, latitude);
+		Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>();
+		map.put(member, geoCoordinate);
+		return jc.geoadd(key, geoAddParams, map);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public long geoadd(byte[] key, GeoValue<byte[]>... geoValues) {
+		Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.length, 1);
+		for (GeoValue<byte[]> one : geoValues) {
+			redis.clients.jedis.GeoCoordinate geoCoordinate = new redis.clients.jedis.GeoCoordinate(one.getLongitude(),
+					one.getLatitude());
+			map.put(one.getValue(), geoCoordinate);
+		}
+		return jc.geoadd(key, map);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues) {
+		GeoAddParams geoAddParams = JedisUtils.convertGeoAddParams(args);
+
+		Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.length, 1);
+		for (GeoValue<byte[]> one : geoValues) {
+			redis.clients.jedis.GeoCoordinate geoCoordinate = new redis.clients.jedis.GeoCoordinate(one.getLongitude(),
+					one.getLatitude());
+			map.put(one.getValue(), geoCoordinate);
+		}
+		return jc.geoadd(key, geoAddParams, map);
+	}
+
+	@Override
+	public Double geodist(byte[] key, byte[] member1, byte[] member2) {
+		return jc.geodist(key, member1, member2);
+	}
+
+	@Override
+	public Double geodist(byte[] key, byte[] member1, byte[] member2, GeoUnit unit) {
+		return jc.geodist(key, member1, member2, redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
+	}
+
+	@Override
+	public List<String> geohash(byte[] key, byte[]... members) {
+		List<byte[]> list = jc.geohash(key, members);
+		return list.stream().map(one -> new String(one, StandardCharsets.UTF_8)).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoCoordinate> geopos(byte[] key, byte[]... members) {
+		List<redis.clients.jedis.GeoCoordinate> list = jc.geopos(key, members);
+		return list.stream().map(one -> {
+			return new GeoCoordinate(one.getLongitude(), one.getLatitude());
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+		List<GeoRadiusResponse> list = jc.georadius(key, longitude, latitude, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
+		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
+			GeoArgs args) {
+		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
+		List<GeoRadiusResponse> list = jc.georadius(key, longitude, latitude, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
+
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+
+			if (one.getCoordinate() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
+						one.getCoordinate().getLatitude());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long georadiusStore(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
+			GeoRadiusStoreArgs<byte[]> storeArgs) {
+		Tuple2<GeoRadiusParam, GeoRadiusStoreParam> tuple2 = JedisUtils.convertTuple(storeArgs);
+		GeoRadiusParam geoRadiusParam = tuple2.getT1();
+		GeoRadiusStoreParam geoRadiusStoreParam = tuple2.getT2();
+		return jc.georadiusStore(key, longitude, latitude, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam, geoRadiusStoreParam);
+	}
+
+	@Override
+	public List<byte[]> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+		List<GeoRadiusResponse> list = jc.georadiusReadonly(key, longitude, latitude, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
+		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
+			GeoUnit unit, GeoArgs args) {
+		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
+		List<GeoRadiusResponse> list = jc.georadiusReadonly(key, longitude, latitude, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
+
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+
+			if (one.getCoordinate() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
+						one.getCoordinate().getLatitude());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit) {
+		List<GeoRadiusResponse> list = jc.georadiusByMember(key, member, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
+		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoArgs args) {
+		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
+
+		List<GeoRadiusResponse> list = jc.georadiusByMember(key, member, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+
+			if (one.getCoordinate() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
+						one.getCoordinate().getLatitude());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long georadiusByMemberStore(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoRadiusStoreArgs<byte[]> storeArgs) {
+		Tuple2<GeoRadiusParam, GeoRadiusStoreParam> tuple2 = JedisUtils.convertTuple(storeArgs);
+		GeoRadiusParam geoRadiusParam = tuple2.getT1();
+		GeoRadiusStoreParam geoRadiusStoreParam = tuple2.getT2();
+		return jc.georadiusByMemberStore(key, member, radius, redis.clients.jedis.args.GeoUnit.valueOf(unit.name()),
+				geoRadiusParam, geoRadiusStoreParam);
+	}
+
+	@Override
+	public List<byte[]> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit) {
+		List<GeoRadiusResponse> list = jc.georadiusByMemberReadonly(key, member, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoArgs args) {
+		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
+		List<GeoRadiusResponse> list = jc.georadiusByMemberReadonly(key, member, radius,
+				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+
+			if (one.getCoordinate() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
+						one.getCoordinate().getLatitude());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<byte[]> geosearch(byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate) {
+		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate);
+		List<GeoRadiusResponse> list = jc.geosearch(key, geoSearchParam);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<GeoWithin<byte[]>> geosearch(byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
+			GeoArgs args) {
+		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
+		List<GeoRadiusResponse> list = jc.geosearch(key, geoSearchParam);
+		if (list.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return list.stream().map(one -> {
+			GeoCoordinate geoCoordinate = null;
+
+			if (one.getCoordinate() != null) {
+				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
+						one.getCoordinate().getLatitude());
+			}
+			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
+		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public long geosearchStore(byte[] destination, byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
+			GeoArgs args) {
+		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
+		return jc.geosearchStore(destination, key, geoSearchParam);
+	}
+
+	@Override
+	public long geosearchStoreStoreDist(byte[] destination, byte[] key, GeoRef<byte[]> reference,
+			GeoPredicate predicate, GeoArgs args) {
+		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
+		return jc.geosearchStoreStoreDist(destination, key, geoSearchParam);
 	}
 
 //	@Override

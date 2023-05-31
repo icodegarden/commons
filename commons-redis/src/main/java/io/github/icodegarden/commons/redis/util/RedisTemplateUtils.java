@@ -1,13 +1,26 @@
 package io.github.icodegarden.commons.redis.util;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import org.springframework.data.redis.connection.BitFieldSubCommands;
+import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldGet;
+import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldIncrBy;
+import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldSet;
+import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldSubCommand;
 import org.springframework.data.redis.connection.DefaultSortParameters;
 import org.springframework.data.redis.connection.SortParameters;
 import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.lang.tuple.NullableTuple2;
 import io.github.icodegarden.commons.lang.tuple.NullableTuples;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.Get;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.Range.Boundary;
@@ -139,5 +152,105 @@ public class RedisTemplateUtils {
 			weights = org.springframework.data.redis.connection.RedisZSetCommands.Weights.of(arr);
 		}
 		return NullableTuples.of(aggregate, weights);
+	}
+
+	public static BitFieldSubCommands convertBitFieldSubCommands(BitFieldArgs args) {
+		List<BitFieldSubCommand> list = new LinkedList<BitFieldSubCommand>();
+
+		if (CollectionUtils.isEmpty(args.getSubCommands())) {
+			return BitFieldSubCommands.create();
+		}
+
+		List<BitFieldArgs.Overflow> ofs = args.getSubCommands().stream().filter(c -> c instanceof BitFieldArgs.Overflow)
+				.map(c -> (BitFieldArgs.Overflow) c).collect(Collectors.toList());
+		LinkedList<BitFieldArgs.Overflow> linkedList = new LinkedList<>(ofs);
+
+		for (io.github.icodegarden.commons.redis.args.BitFieldArgs.SubCommand sc : args.getSubCommands()) {
+			if (sc instanceof BitFieldArgs.Set) {
+				BitFieldArgs.Set set = (BitFieldArgs.Set) sc;
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType bitFieldType;
+				if (set.getBitFieldType().isSigned()) {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.signed(set.getBitFieldType().getBits());
+				} else {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.unsigned(set.getBitFieldType().getBits());
+				}
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.Offset offset = org.springframework.data.redis.connection.BitFieldSubCommands.Offset
+						.offset(set.getOffset());
+				if (set.isBitOffset()) {
+					// 不用处理
+				} else {
+					offset = offset.multipliedByTypeLength();
+				}
+
+				BitFieldSet bitFieldSet = BitFieldSet.create(bitFieldType, offset, set.getValue());
+				list.add(bitFieldSet);
+			}
+
+			if (sc instanceof BitFieldArgs.Get) {
+				Get get = (BitFieldArgs.Get) sc;
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType bitFieldType;
+				if (get.getBitFieldType().isSigned()) {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.signed(get.getBitFieldType().getBits());
+				} else {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.unsigned(get.getBitFieldType().getBits());
+				}
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.Offset offset = org.springframework.data.redis.connection.BitFieldSubCommands.Offset
+						.offset(get.getOffset());
+				if (get.isBitOffset()) {
+					// 不用处理
+				} else {
+					offset = offset.multipliedByTypeLength();
+				}
+
+				BitFieldGet bitFieldGet = BitFieldGet.create(bitFieldType, offset);
+				list.add(bitFieldGet);
+			}
+
+			if (sc instanceof BitFieldArgs.IncrBy) {
+				IncrBy incrBy = (BitFieldArgs.IncrBy) sc;
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType bitFieldType;
+				if (incrBy.getBitFieldType().isSigned()) {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.signed(incrBy.getBitFieldType().getBits());
+				} else {
+					bitFieldType = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldType
+							.unsigned(incrBy.getBitFieldType().getBits());
+				}
+
+				org.springframework.data.redis.connection.BitFieldSubCommands.Offset offset = org.springframework.data.redis.connection.BitFieldSubCommands.Offset
+						.offset(incrBy.getOffset());
+				if (incrBy.isBitOffset()) {
+					// 不用处理
+				} else {
+					offset = offset.multipliedByTypeLength();
+				}
+
+				Overflow poll = linkedList.poll();
+
+				BitFieldIncrBy bitFieldIncrBy;
+				if (poll != null) {
+					Overflow overflow = (BitFieldArgs.Overflow) poll;
+
+					org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldIncrBy.Overflow valueOf = org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldIncrBy.Overflow
+							.valueOf(overflow.getOverflowType().name());
+
+					bitFieldIncrBy = BitFieldIncrBy.create(bitFieldType, offset, incrBy.getValue(), valueOf);
+				} else {
+					bitFieldIncrBy = BitFieldIncrBy.create(bitFieldType, offset, incrBy.getValue());
+				}
+				list.add(bitFieldIncrBy);
+			}
+		}
+
+		return BitFieldSubCommands.create(list.toArray(new BitFieldSubCommand[list.size()]));
 	}
 }

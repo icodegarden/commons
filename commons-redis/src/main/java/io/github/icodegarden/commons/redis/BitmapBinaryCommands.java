@@ -2,9 +2,10 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
-import redis.clients.jedis.args.BitCountOption;
-import redis.clients.jedis.args.BitOP;
-import redis.clients.jedis.params.BitPosParams;
+import io.github.icodegarden.commons.redis.args.BitCountOption;
+import io.github.icodegarden.commons.redis.args.BitFieldArgs;
+import io.github.icodegarden.commons.redis.args.BitOP;
+import io.github.icodegarden.commons.redis.args.BitPosParams;
 
 /**
  * 
@@ -89,11 +90,28 @@ public interface BitmapBinaryCommands {
 	 * 1) (integer) 1<br>
 	 * 2) (integer) 0<br>
 	 * 
+	 * 
+	 * > BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1<br>
+	 * 1) (integer) 1<br>
+	 * 2) (integer) 1<br>
+	 * > BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1<br>
+	 * 1) (integer) 2<br>
+	 * 2) (integer) 2<br>
+	 * > BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1<br>
+	 * 1) (integer) 3<br>
+	 * 2) (integer) 3<br>
+	 * > BITFIELD mykey incrby u2 100 1 OVERFLOW SAT incrby u2 102 1<br>
+	 * 1) (integer) 0<br>
+	 * 2) (integer) 3<br>
+	 * 
+	 * > BITFIELD mykey OVERFLOW FAIL incrby u2 102 1<br>
+	 * 1) (nil)<br>
+	 * 
 	 * @param key
-	 * @param arguments
+	 * @param args
 	 * @return
 	 */
-	List<Long> bitfield(final byte[] key, final byte[]... arguments);
+	List<Long> bitfield(final byte[] key, final BitFieldArgs args);
 
 	/**
 	 * <h1>Performs arbitrary read-only bitfield integer operations on
@@ -118,10 +136,10 @@ public interface BitmapBinaryCommands {
 	 * BITFIELD_RO hello GET i8 16
 	 * 
 	 * @param key
-	 * @param arguments
+	 * @param args
 	 * @return
 	 */
-	List<Long> bitfieldReadonly(byte[] key, final byte[]... arguments);
+	List<Long> bitfieldReadonly(byte[] key, final BitFieldArgs args);
 
 	/**
 	 * <h1>Performs bitwise operations on multiple strings, and stores the
@@ -290,7 +308,7 @@ public interface BitmapBinaryCommands {
 	 * @param key
 	 * @param offset
 	 * @param value
-	 * @return
+	 * @return Integer reply: the original bit value stored at offset.
 	 */
 	boolean setbit(final byte[] key, final long offset, final boolean value);
 }

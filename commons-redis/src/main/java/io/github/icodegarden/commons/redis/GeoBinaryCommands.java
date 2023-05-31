@@ -1,15 +1,17 @@
 package io.github.icodegarden.commons.redis;
 
 import java.util.List;
-import java.util.Map;
 
-import redis.clients.jedis.GeoCoordinate;
-import redis.clients.jedis.args.GeoUnit;
-import redis.clients.jedis.params.GeoAddParams;
-import redis.clients.jedis.params.GeoRadiusParam;
-import redis.clients.jedis.params.GeoRadiusStoreParam;
-import redis.clients.jedis.params.GeoSearchParam;
-import redis.clients.jedis.resps.GeoRadiusResponse;
+import io.github.icodegarden.commons.lang.annotation.NotNull;
+import io.github.icodegarden.commons.lang.annotation.Nullable;
+import io.github.icodegarden.commons.redis.args.GeoAddArgs;
+import io.github.icodegarden.commons.redis.args.GeoArgs;
+import io.github.icodegarden.commons.redis.args.GeoCoordinate;
+import io.github.icodegarden.commons.redis.args.GeoRadiusStoreArgs;
+import io.github.icodegarden.commons.redis.args.GeoSearch;
+import io.github.icodegarden.commons.redis.args.GeoUnit;
+import io.github.icodegarden.commons.redis.args.GeoValue;
+import io.github.icodegarden.commons.redis.args.GeoWithin;
 
 /**
  * 
@@ -20,7 +22,10 @@ public interface GeoBinaryCommands {
 
 	long geoadd(byte[] key, double longitude, double latitude, byte[] member);
 
-	long geoadd(byte[] key, Map<byte[], GeoCoordinate> memberCoordinateMap);
+	long geoadd(byte[] key, double longitude, double latitude, byte[] member, GeoAddArgs args);
+
+	@SuppressWarnings("unchecked")
+	long geoadd(byte[] key, GeoValue<byte[]>... geoValues);
 
 	/**
 	 * <h1>添加一个或多个对象的地理位置</h1><br>
@@ -58,12 +63,14 @@ public interface GeoBinaryCommands {
 	 * redis> <br>
 	 * 
 	 * @param key
-	 * @param params
-	 * @param memberCoordinateMap
+	 * @param args
+	 * @param geoValues
 	 * @return
 	 */
-	long geoadd(byte[] key, GeoAddParams params, Map<byte[], GeoCoordinate> memberCoordinateMap);
+	@SuppressWarnings("unchecked")
+	long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues);
 
+	@Nullable
 	Double geodist(byte[] key, byte[] member1, byte[] member2);
 
 	/**
@@ -111,6 +118,7 @@ public interface GeoBinaryCommands {
 	 *             string) in the specified unit, or NULL if one or both the
 	 *             elements are missing.
 	 */
+	@Nullable
 	Double geodist(byte[] key, byte[] member1, byte[] member2, GeoUnit unit);
 
 	/**
@@ -144,7 +152,8 @@ public interface GeoBinaryCommands {
 	 *         The command returns an array where each element is the Geohash
 	 *         corresponding to each member name passed as argument to the command.
 	 */
-	List<byte[]> geohash(byte[] key, byte[]... members);
+	@NotNull
+	List<String> geohash(byte[] key, byte[]... members);
 
 	/**
 	 * <h1>返回对象的地理位置</h1><br>
@@ -184,12 +193,18 @@ public interface GeoBinaryCommands {
 	 * 
 	 *         Non existing elements are reported as NULL elements of the array.
 	 */
+	@NotNull
 	List<GeoCoordinate> geopos(byte[] key, byte[]... members);
 
-	List<GeoRadiusResponse> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit);
+	/**
+	 * @return members
+	 */
+	@NotNull
+	List<byte[]> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit);
 
-	List<GeoRadiusResponse> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
-			GeoRadiusParam param);
+	@NotNull
+	List<GeoWithin<byte[]>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
+			GeoArgs args);
 
 	/**
 	 * <h1>查询距离坐标一定距离内成员的地理空间索引，并存储结果（可选）</h1><br>
@@ -301,10 +316,10 @@ public interface GeoBinaryCommands {
 	 *         ["Palermo","190.4424",["13.361389338970184","38.115556395496299"]]<br>
 	 */
 	long georadiusStore(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
-			GeoRadiusParam param, GeoRadiusStoreParam storeParam);
+			GeoRadiusStoreArgs<byte[]> storeArgs);
 
-	List<GeoRadiusResponse> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
-			GeoUnit unit);
+	@NotNull
+	List<byte[]> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit);
 
 	/**
 	 * <h1>查询距离坐标一定距离内成员的地理空间索引</h1><br>
@@ -325,13 +340,18 @@ public interface GeoBinaryCommands {
 	 * @return Array reply: An array with each entry being the corresponding result
 	 *         of the subcommand given at the same position.
 	 */
-	List<GeoRadiusResponse> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
-			GeoUnit unit, GeoRadiusParam param);
+	@NotNull
+	List<GeoWithin<byte[]>> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
+			GeoUnit unit, GeoArgs args);
 
-	List<GeoRadiusResponse> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit);
+	/**
+	 * @return members
+	 */
+	@NotNull
+	List<byte[]> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit);
 
-	List<GeoRadiusResponse> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit,
-			GeoRadiusParam param);
+	@NotNull
+	List<GeoWithin<byte[]>> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit, GeoArgs args);
 
 	/**
 	 * <h1>查询距离某个对象一定距离内成员的地理空间索引，并存储结果（可选）</h1><br>
@@ -371,10 +391,11 @@ public interface GeoBinaryCommands {
 	 * @param storeParam
 	 * @return
 	 */
-	long georadiusByMemberStore(byte[] key, byte[] member, double radius, GeoUnit unit, GeoRadiusParam param,
-			GeoRadiusStoreParam storeParam);
+	long georadiusByMemberStore(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoRadiusStoreArgs<byte[]> storeArgs);
 
-	List<GeoRadiusResponse> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit);
+	@NotNull
+	List<byte[]> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit);
 
 	/**
 	 * <h1>查询距离某个对象一定距离内成员的地理空间索引</h1><br>
@@ -393,26 +414,19 @@ public interface GeoBinaryCommands {
 	 * @param param
 	 * @return
 	 */
-	List<GeoRadiusResponse> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit,
-			GeoRadiusParam param);
+	@NotNull
+	List<GeoWithin<byte[]>> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit,
+			GeoArgs args);
 
-	List<GeoRadiusResponse> geosearch(byte[] key, byte[] member, double radius, GeoUnit unit);
+	@NotNull
+	List<byte[]> geosearch(byte[] key, GeoSearch.GeoRef<byte[]> reference, GeoSearch.GeoPredicate predicate);
 
-	List<GeoRadiusResponse> geosearch(byte[] key, GeoCoordinate coord, double radius, GeoUnit unit);
+	@NotNull
+	List<GeoWithin<byte[]>> geosearch(byte[] key, GeoSearch.GeoRef<byte[]> reference, GeoSearch.GeoPredicate predicate,
+			GeoArgs geoArgs);
 
-	List<GeoRadiusResponse> geosearch(byte[] key, byte[] member, double width, double height, GeoUnit unit);
-
-	List<GeoRadiusResponse> geosearch(byte[] key, GeoCoordinate coord, double width, double height, GeoUnit unit);
-
-	List<GeoRadiusResponse> geosearch(byte[] key, GeoSearchParam params);
-
-	long geosearchStore(byte[] dest, byte[] src, byte[] member, double radius, GeoUnit unit);
-
-	long geosearchStore(byte[] dest, byte[] src, GeoCoordinate coord, double radius, GeoUnit unit);
-
-	long geosearchStore(byte[] dest, byte[] src, byte[] member, double width, double height, GeoUnit unit);
-
-	long geosearchStore(byte[] dest, byte[] src, GeoCoordinate coord, double width, double height, GeoUnit unit);
+	long geosearchStore(byte[] destination, byte[] key, GeoSearch.GeoRef<byte[]> reference,
+			GeoSearch.GeoPredicate predicate, GeoArgs geoArgs);
 
 	/**
 	 * <h1>查询长方体或圆区域内成员的地理空间索引，并存储结果（可选）</h1><br>
@@ -510,7 +524,6 @@ public interface GeoBinaryCommands {
 	 *         unit specified in the shape. The geohash integer. The coordinates as
 	 *         a two items x,y array (longitude,latitude).
 	 */
-	long geosearchStore(byte[] dest, byte[] src, GeoSearchParam params);
-
-	long geosearchStoreStoreDist(byte[] dest, byte[] src, GeoSearchParam params);
+	long geosearchStoreStoreDist(byte[] destination, byte[] key, GeoSearch.GeoRef<byte[]> reference,
+			GeoSearch.GeoPredicate predicate, GeoArgs geoArgs);
 }
