@@ -24,8 +24,7 @@ public interface GeoBinaryCommands {
 
 	long geoadd(byte[] key, double longitude, double latitude, byte[] member, GeoAddArgs args);
 
-	@SuppressWarnings("unchecked")
-	long geoadd(byte[] key, GeoValue<byte[]>... geoValues);
+	long geoadd(byte[] key, List<GeoValue<byte[]>> geoValues);
 
 	/**
 	 * <h1>添加一个或多个对象的地理位置</h1><br>
@@ -67,8 +66,7 @@ public interface GeoBinaryCommands {
 	 * @param geoValues
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues);
+	long geoadd(byte[] key, GeoAddArgs args, List<GeoValue<byte[]>> geoValues);
 
 	@Nullable
 	Double geodist(byte[] key, byte[] member1, byte[] member2);

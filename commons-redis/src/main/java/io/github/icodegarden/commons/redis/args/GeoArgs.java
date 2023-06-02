@@ -24,7 +24,7 @@ public class GeoArgs {
 
 	private boolean any;
 
-	private Sort sort;
+	private Sort sort;//按距离排序
 
 	/**
 	 * Request coordinates for results.

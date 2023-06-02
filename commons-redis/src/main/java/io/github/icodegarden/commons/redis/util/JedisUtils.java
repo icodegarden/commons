@@ -414,7 +414,7 @@ public class JedisUtils {
 		}
 
 		if (args.getSort() != null) {
-			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder.valueOf(args.getSort().name());
+			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder.valueOf(args.getSort().name().toUpperCase());
 			geoRadiusParam.sortingOrder(valueOf);
 		}
 
@@ -428,7 +428,8 @@ public class JedisUtils {
 			geoRadiusParam.count(storeArgs.getCount().intValue());
 		}
 		if (storeArgs.getSort() != null) {
-			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder.valueOf(storeArgs.getSort().name());
+			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder
+					.valueOf(storeArgs.getSort().name().toUpperCase());
 			geoRadiusParam.sortingOrder(valueOf);
 		}
 
@@ -465,11 +466,12 @@ public class JedisUtils {
 
 		if (predicate instanceof GeoSearch.Radius) {
 			GeoSearch.Radius r = (GeoSearch.Radius) predicate;
-			geoSearchParam.byRadius(r.getDistance(), redis.clients.jedis.args.GeoUnit.valueOf(r.getUnit().name()));
+			geoSearchParam.byRadius(r.getDistance(),
+					redis.clients.jedis.args.GeoUnit.valueOf(r.getUnit().name().toUpperCase()));
 		} else if (predicate instanceof GeoSearch.Box) {
 			GeoSearch.Box b = (GeoSearch.Box) predicate;
 			geoSearchParam.byBox(b.getWidth(), b.getHeight(),
-					redis.clients.jedis.args.GeoUnit.valueOf(b.getUnit().name()));
+					redis.clients.jedis.args.GeoUnit.valueOf(b.getUnit().name().toUpperCase()));
 		}
 
 		return geoSearchParam;
@@ -494,7 +496,7 @@ public class JedisUtils {
 		}
 
 		if (args.getSort() != null) {
-			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder.valueOf(args.getSort().name());
+			SortingOrder valueOf = redis.clients.jedis.args.SortingOrder.valueOf(args.getSort().name().toUpperCase());
 			geoSearchParam.sortingOrder(valueOf);
 		}
 

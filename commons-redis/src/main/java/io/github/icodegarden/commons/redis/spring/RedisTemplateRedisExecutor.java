@@ -1970,10 +1970,9 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 		throw new UnsupportedOperationException();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoValue<byte[]>... geoValues) {
-		Map<byte[], Point> map = new HashMap<>(geoValues.length, 1);
+	public long geoadd(byte[] key, List<GeoValue<byte[]>> geoValues) {
+		Map<byte[], Point> map = new HashMap<>(geoValues.size(), 1);
 		for (GeoValue<byte[]> one : geoValues) {
 			Point point = new Point(one.getLongitude(), one.getLatitude());
 			map.put(one.getValue(), point);
@@ -1984,9 +1983,8 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 		});
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues) {
+	public long geoadd(byte[] key, GeoAddArgs args, List<GeoValue<byte[]>> geoValues) {
 		throw new UnsupportedOperationException();
 	}
 

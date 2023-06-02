@@ -18,14 +18,24 @@ import org.junit.jupiter.api.Test;
 
 import io.github.icodegarden.commons.redis.args.BitCountOption;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs;
-import io.github.icodegarden.commons.redis.args.BitOP;
-import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.BitFieldType;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.Get;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.OverflowType;
+import io.github.icodegarden.commons.redis.args.BitOP;
+import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.GeoAddArgs;
+import io.github.icodegarden.commons.redis.args.GeoArgs;
+import io.github.icodegarden.commons.redis.args.GeoCoordinate;
+import io.github.icodegarden.commons.redis.args.GeoRadiusStoreArgs;
+import io.github.icodegarden.commons.redis.args.GeoSearch;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoPredicate;
+import io.github.icodegarden.commons.redis.args.GeoSearch.GeoRef;
+import io.github.icodegarden.commons.redis.args.GeoUnit;
+import io.github.icodegarden.commons.redis.args.GeoValue;
+import io.github.icodegarden.commons.redis.args.GeoWithin;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.KeyValue;
@@ -58,6 +68,7 @@ public abstract class RedisExecutorTests {
 
 	static byte[] key = "test{tag}key".getBytes();
 	static byte[] k2 = "test{tag}key2".getBytes();
+	static byte[] k3 = "test{tag}key3".getBytes();
 
 	RedisExecutor redisExecutor;
 
@@ -67,6 +78,7 @@ public abstract class RedisExecutorTests {
 
 		redisExecutor.del(key);
 		redisExecutor.del(k2);
+		redisExecutor.del(k3);
 	}
 
 	@AfterEach
@@ -2870,10 +2882,10 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void bitfield() {
-		if(redisExecutor instanceof RedisTemplateRedisExecutor) {
-			return;//结果不准确
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;// 结果不准确
 		}
-		
+
 //		> BITFIELD mykey INCRBY i5 100 1 GET u4 0
 //		1) (integer) 1
 //		2) (integer) 0
@@ -3094,6 +3106,502 @@ public abstract class RedisExecutorTests {
 	@Test
 	void setbit() {
 		// 不需要单独测
+	}
+
+	@Test
+	void geoadd() {
+		long l = redisExecutor.geoadd(key, 13.361389, 38.115556, "A".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+
+		GeoAddArgs geoAddArgs = new GeoAddArgs();
+		geoAddArgs.nx();
+		l = redisExecutor.geoadd(key, 0.1, 0.1, "A".getBytes(), geoAddArgs);// Don't update already existing elements.
+																			// Always add new elements.
+		List<GeoCoordinate> list = redisExecutor.geopos(key, "A".getBytes());
+		Assertions.assertThat(list.get(0).getLongitude() + "").startsWith("13.361389");// 不变
+		Assertions.assertThat(list.get(0).getLatitude() + "").startsWith("38.115556");// 不变
+
+		geoAddArgs = new GeoAddArgs();
+		geoAddArgs.xx();
+		l = redisExecutor.geoadd(key, 0.1, 0.1, "A2".getBytes(), geoAddArgs);// Only update elements that already exist.
+																				// Never add elements.
+		list = redisExecutor.geopos(key, "Palermo".getBytes());
+		Assertions.assertThat(list.get(0)).isNull();// 没有新增
+
+		l = redisExecutor.geoadd(key, 2.0, 2.0, "A".getBytes(), geoAddArgs);// Only update elements that already exist.
+																			// Never add elements.
+		list = redisExecutor.geopos(key, "A".getBytes());
+		Assertions.assertThat(list.get(0).getLongitude() + "").startsWith("2.0");
+		Assertions.assertThat(list.get(0).getLatitude() + "").startsWith("2.0");
+
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEODIST Sicily Palermo Catania<br>
+//		 * "166274.1516"<br>
+//		 * redis> GEORADIUS Sicily 15 37 100 km<br>
+//		 * 1) "Catania"<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km<br>
+//		 * 1) "Palermo"<br>
+//		 * 2) "Catania"<br>
+//		 * redis> <br>
+		GeoValue<byte[]> geoValue = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue));
+
+		geoAddArgs = new GeoAddArgs();
+		geoAddArgs.nx();
+		geoValue = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, geoAddArgs, Arrays.asList(geoValue));
+
+		Double d = redisExecutor.geodist(key, "Palermo".getBytes(), "Catania".getBytes());
+		Assertions.assertThat(d).isEqualTo(166274.1516);
+	}
+
+	@Test
+	void geodist() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEODIST Sicily Palermo Catania<br>
+//		 * "166274.1516"<br>
+//		 * redis> GEODIST Sicily Palermo Catania km<br>
+//		 * "166.2742"<br>
+//		 * redis> GEODIST Sicily Palermo Catania mi<br>
+//		 * "103.3182"<br>
+//		 * redis> GEODIST Sicily Foo Bar<br>
+//		 * (nil)<br>
+//		 * redis> <br>
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		Double d = redisExecutor.geodist(key, "Palermo".getBytes(), "Catania".getBytes());
+		Assertions.assertThat(d).isEqualTo(166274.1516);
+		d = redisExecutor.geodist(key, "Palermo".getBytes(), "Catania".getBytes(), GeoUnit.KM);
+		Assertions.assertThat(d).isEqualTo(166.2742);
+		d = redisExecutor.geodist(key, "Palermo".getBytes(), "Catania".getBytes(), GeoUnit.MI);
+		Assertions.assertThat(d).isEqualTo(103.3182);
+
+		d = redisExecutor.geodist(key, "Foo".getBytes(), "Bar".getBytes(), GeoUnit.MI);
+		Assertions.assertThat(d).isNull();
+	}
+
+	@Test
+	void geohash() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOHASH Sicily Palermo Catania<br>
+//		 * 1) "sqc8b49rny0"<br>
+//		 * 2) "sqdtr74hyu0"<br>
+//		 * redis> <br>
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		List<String> list = redisExecutor.geohash(key, "Palermo".getBytes(), "Catania".getBytes());
+		Assertions.assertThat(list.get(0)).isEqualTo("sqc8b49rny0");
+		Assertions.assertThat(list.get(1)).isEqualTo("sqdtr74hyu0");
+	}
+
+	@Test
+	void geopos() {
+		// 不需要单独测
+	}
+
+	@Test
+	void georadius() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHDIST<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHCOORD<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHDIST WITHCOORD<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 3) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * 3) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		List<byte[]> members = redisExecutor.georadius(key, 15, 37, 200, GeoUnit.KM);
+		Assertions.assertThat(members.get(0)).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(members.get(1)).isEqualTo("Catania".getBytes());
+
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.withDistance();
+		List<GeoWithin<byte[]>> list = redisExecutor.georadius(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(0).getDistance() + "").startsWith("190.4424");
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getDistance() + "").startsWith("56.4413");
+
+		geoArgs.withCoordinates();
+		list = redisExecutor.georadius(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(0).getCoordinate().getLongitude() + "").startsWith("13.361");
+		Assertions.assertThat(list.get(0).getCoordinate().getLatitude() + "").startsWith("38.115");
+		Assertions.assertThat(list.get(0).getDistance()).isNotNull();
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getCoordinate().getLongitude() + "").startsWith("15.087");
+		Assertions.assertThat(list.get(1).getCoordinate().getLatitude() + "").startsWith("37.502");
+		Assertions.assertThat(list.get(1).getDistance()).isNotNull();
+
+		geoArgs.sort(GeoArgs.Sort.asc);
+		list = redisExecutor.georadius(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+
+		geoArgs.withCount(1);
+		list = redisExecutor.georadius(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+
+		// --------------------------------------------------------------------
+
+		redisExecutor.set(k2, "a".getBytes());// 测试key允许已存在且类型不同
+		redisExecutor.set(k3, "a".getBytes());// 测试key允许已存在且类型不同
+
+		GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = new GeoRadiusStoreArgs<>();
+		geoRadiusStoreArgs.withStore(k2);// 不能同时使用Store和StoreDist
+		redisExecutor.georadiusStore(key, 15, 37, 200, GeoUnit.KM, geoRadiusStoreArgs);
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrangeWithScores(k2, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
+
+		geoRadiusStoreArgs = new GeoRadiusStoreArgs<>();
+		geoRadiusStoreArgs.withStoreDist(k3);// 不能同时使用Store和StoreDist
+		redisExecutor.georadiusStore(key, 15, 37, 200, GeoUnit.KM, geoRadiusStoreArgs);
+
+		zrangeWithScores = redisExecutor.zrangeWithScores(k3, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
+	}
+
+	@Test
+	void georadiusReadonly() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHDIST<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHCOORD<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+//		 * redis> GEORADIUS Sicily 15 37 200 km WITHDIST WITHCOORD<br>
+//		 * 1) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 3) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 2) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * 3) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		List<byte[]> members = redisExecutor.georadiusReadonly(key, 15, 37, 200, GeoUnit.KM);
+		Assertions.assertThat(members.get(0)).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(members.get(1)).isEqualTo("Catania".getBytes());
+
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.withDistance();
+		List<GeoWithin<byte[]>> list = redisExecutor.georadiusReadonly(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(0).getDistance() + "").startsWith("190.4424");
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getDistance() + "").startsWith("56.4413");
+
+		geoArgs.withCoordinates();
+		list = redisExecutor.georadiusReadonly(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(0).getCoordinate().getLongitude() + "").startsWith("13.361");
+		Assertions.assertThat(list.get(0).getCoordinate().getLatitude() + "").startsWith("38.115");
+		Assertions.assertThat(list.get(0).getDistance()).isNotNull();
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getCoordinate().getLongitude() + "").startsWith("15.087");
+		Assertions.assertThat(list.get(1).getCoordinate().getLatitude() + "").startsWith("37.502");
+		Assertions.assertThat(list.get(1).getDistance()).isNotNull();
+
+		geoArgs.sort(GeoArgs.Sort.asc);
+		list = redisExecutor.georadiusReadonly(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+
+		geoArgs.withCount(1);
+		list = redisExecutor.georadiusReadonly(key, 15, 37, 200, GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.size()).isEqualTo(1);
+	}
+
+	@Test
+	void georadiusByMember() {
+//		 * redis> GEOADD Sicily 13.583333 37.316667 "Agrigento"<br>
+//		 * (integer) 1<br>
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEORADIUSBYMEMBER Sicily Agrigento 100 km<br>
+//		 * 1) "Agrigento"<br>
+//		 * 2) "Palermo"<br>
+//		 * redis> <br>
+
+		redisExecutor.geoadd(key, 13.583333, 37.316667, "Agrigento".getBytes());
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		List<byte[]> members = redisExecutor.georadiusByMember(key, "Agrigento".getBytes(), 100, GeoUnit.KM);
+		Assertions.assertThat(members.get(0)).isEqualTo("Agrigento".getBytes());
+		Assertions.assertThat(members.get(1)).isEqualTo("Palermo".getBytes());
+
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.withDistance();
+		geoArgs.withCoordinates();
+		List<GeoWithin<byte[]>> list = redisExecutor.georadiusByMember(key, "Agrigento".getBytes(), 100, GeoUnit.KM,
+				geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Agrigento".getBytes());
+		Assertions.assertThat(list.get(0).getCoordinate()).isNotNull();
+		Assertions.assertThat(list.get(0).getDistance()).isNotNull();
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(1).getCoordinate()).isNotNull();
+		Assertions.assertThat(list.get(1).getDistance()).isNotNull();
+
+		// --------------------------------------------------------------------------
+		redisExecutor.set(k2, "a".getBytes());// 测试key允许已存在且类型不同
+		redisExecutor.set(k3, "a".getBytes());// 测试key允许已存在且类型不同
+
+		GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = new GeoRadiusStoreArgs<>();
+		geoRadiusStoreArgs.withStore(k2);// 不能同时使用Store和StoreDist
+		redisExecutor.georadiusByMemberStore(key, "Agrigento".getBytes(), 100, GeoUnit.KM, geoRadiusStoreArgs);
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrangeWithScores(k2, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
+
+		geoRadiusStoreArgs = new GeoRadiusStoreArgs<>();
+		geoRadiusStoreArgs.withStoreDist(k3);// 不能同时使用Store和StoreDist
+		redisExecutor.georadiusByMemberStore(key, "Agrigento".getBytes(), 100, GeoUnit.KM, geoRadiusStoreArgs);
+
+		zrangeWithScores = redisExecutor.zrangeWithScores(k3, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
+	}
+
+	@Test
+	void georadiusByMemberReadonly() {
+//		 * redis> GEOADD Sicily 13.583333 37.316667 "Agrigento"<br>
+//		 * (integer) 1<br>
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEORADIUSBYMEMBER Sicily Agrigento 100 km<br>
+//		 * 1) "Agrigento"<br>
+//		 * 2) "Palermo"<br>
+//		 * redis> <br>
+
+		redisExecutor.geoadd(key, 13.583333, 37.316667, "Agrigento".getBytes());
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		List<byte[]> members = redisExecutor.georadiusByMemberReadonly(key, "Agrigento".getBytes(), 100, GeoUnit.KM);
+		Assertions.assertThat(members.get(0)).isEqualTo("Agrigento".getBytes());
+		Assertions.assertThat(members.get(1)).isEqualTo("Palermo".getBytes());
+
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.withDistance();
+		geoArgs.withCoordinates();
+		List<GeoWithin<byte[]>> list = redisExecutor.georadiusByMemberReadonly(key, "Agrigento".getBytes(), 100,
+				GeoUnit.KM, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Agrigento".getBytes());
+		Assertions.assertThat(list.get(0).getCoordinate()).isNotNull();
+		Assertions.assertThat(list.get(0).getDistance()).isNotNull();
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(1).getCoordinate()).isNotNull();
+		Assertions.assertThat(list.get(1).getDistance()).isNotNull();
+	}
+
+	@Test
+	void geosearch() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOADD Sicily 12.758489 38.788135 "edge1" 17.241510 38.788135
+//		 * "edge2"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYRADIUS 200 km ASC<br>
+//		 * 1) "Catania"<br>
+//		 * 2) "Palermo"<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYBOX 400 400 km ASC WITHCOORD
+//		 * WITHDIST<br>
+//		 * 1) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * 3) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+//		 * 2) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 3) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 3) 1) "edge2"<br>
+//		 * 2) "279.7403"<br>
+//		 * 3) 1) "17.24151045083999634"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * 4) 1) "edge1"<br>
+//		 * 2) "279.7405"<br>
+//		 * 3) 1) "12.7584877610206604"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * redis> <br>
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+		geoValue1 = new GeoValue<>(12.758489, 38.788135, "edge1".getBytes());
+		geoValue2 = new GeoValue<>(17.241510, 38.788135, "edge2".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		GeoRef<byte[]> geoRef = GeoSearch.fromCoordinates(15, 37);
+		GeoPredicate geoPredicate = GeoSearch.byRadius(200, GeoArgs.Unit.km);
+		List<byte[]> members = redisExecutor.geosearch(key, geoRef, geoPredicate);
+		Assertions.assertThat(members.get(0)).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(members.get(1)).isEqualTo("Catania".getBytes());
+
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.asc();
+		List<GeoWithin<byte[]>> list = redisExecutor.geosearch(key, geoRef, geoPredicate, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+
+		geoRef = GeoSearch.fromCoordinates(15, 37);
+		geoPredicate = GeoSearch.byBox(400, 400, GeoArgs.Unit.km);
+		geoArgs = new GeoArgs();
+		geoArgs.asc();
+		geoArgs.withCoordinates();
+		geoArgs.withDistance();
+		list = redisExecutor.geosearch(key, geoRef, geoPredicate, geoArgs);
+		Assertions.assertThat(list.get(0).getMember()).isEqualTo("Catania".getBytes());
+		Assertions.assertThat(list.get(0).getDistance() + "").startsWith("56.4413");
+		Assertions.assertThat(list.get(0).getCoordinate().getLongitude() + "").startsWith("15.087");
+		Assertions.assertThat(list.get(0).getCoordinate().getLatitude() + "").startsWith("37.502");
+		Assertions.assertThat(list.get(1).getMember()).isEqualTo("Palermo".getBytes());
+		Assertions.assertThat(list.get(1).getDistance() + "").startsWith("190.4424");
+		Assertions.assertThat(list.get(1).getCoordinate().getLongitude() + "").startsWith("13.361");
+		Assertions.assertThat(list.get(1).getCoordinate().getLatitude() + "").startsWith("38.115");
+	}
+
+	@Test
+	void geosearchStore() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOADD Sicily 12.758489 38.788135 "edge1" 17.241510 38.788135
+//		 * "edge2"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYRADIUS 200 km ASC<br>
+//		 * 1) "Catania"<br>
+//		 * 2) "Palermo"<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYBOX 400 400 km ASC WITHCOORD
+//		 * WITHDIST<br>
+//		 * 1) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * 3) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+//		 * 2) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 3) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 3) 1) "edge2"<br>
+//		 * 2) "279.7403"<br>
+//		 * 3) 1) "17.24151045083999634"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * 4) 1) "edge1"<br>
+//		 * 2) "279.7405"<br>
+//		 * 3) 1) "12.7584877610206604"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * redis> <br>
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+		geoValue1 = new GeoValue<>(12.758489, 38.788135, "edge1".getBytes());
+		geoValue2 = new GeoValue<>(17.241510, 38.788135, "edge2".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		GeoRef<byte[]> geoRef = GeoSearch.fromCoordinates(15, 37);
+		GeoPredicate geoPredicate = GeoSearch.byBox(400, 400, GeoArgs.Unit.km);
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.asc();
+		redisExecutor.geosearchStore(k2, key, geoRef, geoPredicate, geoArgs);
+
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrangeWithScores(k2, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
+	}
+
+	@Test
+	void geosearchStoreStoreDist() {
+//		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
+//		 * "Catania"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOADD Sicily 12.758489 38.788135 "edge1" 17.241510 38.788135
+//		 * "edge2"<br>
+//		 * (integer) 2<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYRADIUS 200 km ASC<br>
+//		 * 1) "Catania"<br>
+//		 * 2) "Palermo"<br>
+//		 * redis> GEOSEARCH Sicily FROMLONLAT 15 37 BYBOX 400 400 km ASC WITHCOORD
+//		 * WITHDIST<br>
+//		 * 1) 1) "Catania"<br>
+//		 * 2) "56.4413"<br>
+//		 * 3) 1) "15.08726745843887329"<br>
+//		 * 2) "37.50266842333162032"<br>
+//		 * 2) 1) "Palermo"<br>
+//		 * 2) "190.4424"<br>
+//		 * 3) 1) "13.36138933897018433"<br>
+//		 * 2) "38.11555639549629859"<br>
+//		 * 3) 1) "edge2"<br>
+//		 * 2) "279.7403"<br>
+//		 * 3) 1) "17.24151045083999634"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * 4) 1) "edge1"<br>
+//		 * 2) "279.7405"<br>
+//		 * 3) 1) "12.7584877610206604"<br>
+//		 * 2) "38.78813451624225195"<br>
+//		 * redis> <br>
+
+		GeoValue<byte[]> geoValue1 = new GeoValue<>(13.361389, 38.115556, "Palermo".getBytes());
+		GeoValue<byte[]> geoValue2 = new GeoValue<>(15.087269, 37.502669, "Catania".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+		geoValue1 = new GeoValue<>(12.758489, 38.788135, "edge1".getBytes());
+		geoValue2 = new GeoValue<>(17.241510, 38.788135, "edge2".getBytes());
+		redisExecutor.geoadd(key, Arrays.asList(geoValue1, geoValue2));
+
+		GeoRef<byte[]> geoRef = GeoSearch.fromCoordinates(15, 37);
+		GeoPredicate geoPredicate = GeoSearch.byBox(400, 400, GeoArgs.Unit.km);
+		GeoArgs geoArgs = new GeoArgs();
+		geoArgs.asc();
+		redisExecutor.geosearchStoreStoreDist(k2, key, geoRef, geoPredicate, geoArgs);
+
+		List<ScoredValue<byte[]>> zrangeWithScores = redisExecutor.zrangeWithScores(k2, 0, -1);
+		Assertions.assertThat(zrangeWithScores).isNotEmpty();
 	}
 
 	@Test

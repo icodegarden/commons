@@ -1489,16 +1489,14 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		return syncRedisCommands.geoadd(key, longitude, latitude, member, geoAddArgs);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoValue<byte[]>... geoValues) {
+	public long geoadd(byte[] key, List<GeoValue<byte[]>> geoValues) {
 		io.lettuce.core.GeoValue<byte[]>[] values = LettuceUtils.convertGeoValues(geoValues);
 		return syncRedisCommands.geoadd(key, values);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues) {
+	public long geoadd(byte[] key, GeoAddArgs args, List<GeoValue<byte[]>> geoValues) {
 		io.lettuce.core.GeoAddArgs geoAddArgs = LettuceUtils.convertGeoAddArgs(args);
 		io.lettuce.core.GeoValue<byte[]>[] values = LettuceUtils.convertGeoValues(geoValues);
 		return syncRedisCommands.geoadd(key, geoAddArgs, values);
@@ -1511,7 +1509,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 	@Override
 	public Double geodist(byte[] key, byte[] member1, byte[] member2, GeoUnit unit) {
-		return syncRedisCommands.geodist(key, member1, member2, io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+		return syncRedisCommands.geodist(key, member1, member2,
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()));
 	}
 
 	@Override
@@ -1530,6 +1529,9 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 			return Collections.emptyList();
 		}
 		return geopos.stream().map(one -> {
+			if (one == null) {
+				return null;
+			}
 			return new GeoCoordinate(one.getX().doubleValue(), one.getY().doubleValue());
 		}).collect(Collectors.toList());
 	}
@@ -1537,7 +1539,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	@Override
 	public List<byte[]> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
 		Set<byte[]> set = syncRedisCommands.georadius(key, longitude, latitude, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()));
 		if (set.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1550,7 +1552,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		io.lettuce.core.GeoArgs geoArgs = LettuceUtils.convertGeoArgs(args);
 
 		List<io.lettuce.core.GeoWithin<byte[]>> list = syncRedisCommands.georadius(key, longitude, latitude, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoArgs);
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()), geoArgs);
 		if (list.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1570,7 +1572,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		io.lettuce.core.GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = LettuceUtils
 				.convertGeoRadiusStoreArgs(storeArgs);
 		return syncRedisCommands.georadius(key, longitude, latitude, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoRadiusStoreArgs);
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()), geoRadiusStoreArgs);
 	}
 
 	@Override
@@ -1587,7 +1589,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	@Override
 	public List<byte[]> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit) {
 		Set<byte[]> set = syncRedisCommands.georadiusbymember(key, member, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()));
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()));
 		if (set.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1600,7 +1602,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		io.lettuce.core.GeoArgs geoArgs = LettuceUtils.convertGeoArgs(args);
 
 		List<io.lettuce.core.GeoWithin<byte[]>> list = syncRedisCommands.georadiusbymember(key, member, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoArgs);
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()), geoArgs);
 		if (list.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1620,7 +1622,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		io.lettuce.core.GeoRadiusStoreArgs<byte[]> geoRadiusStoreArgs = LettuceUtils
 				.convertGeoRadiusStoreArgs(storeArgs);
 		return syncRedisCommands.georadiusbymember(key, member, radius,
-				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name()), geoRadiusStoreArgs);
+				io.lettuce.core.GeoArgs.Unit.valueOf(unit.name().toLowerCase()), geoRadiusStoreArgs);
 	}
 
 	@Override

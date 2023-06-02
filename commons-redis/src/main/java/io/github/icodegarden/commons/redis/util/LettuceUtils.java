@@ -368,8 +368,8 @@ public class LettuceUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> io.lettuce.core.GeoValue<T>[] convertGeoValues(GeoValue<T>... geoValues) {
-		List<io.lettuce.core.GeoValue<T>> list = Arrays.asList(geoValues).stream().map(one -> {
+	public static <T> io.lettuce.core.GeoValue<T>[] convertGeoValues(List<GeoValue<byte[]>> geoValues) {
+		List<io.lettuce.core.GeoValue<byte[]>> list = geoValues.stream().map(one -> {
 			return io.lettuce.core.GeoValue.just(one.getLongitude(), one.getLatitude(), one.getValue());
 		}).collect(Collectors.toList());
 		return list.toArray(new io.lettuce.core.GeoValue[list.size()]);

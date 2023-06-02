@@ -1803,11 +1803,10 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoValue<byte[]>... geoValues) {
+	public long geoadd(byte[] key, List<GeoValue<byte[]>> geoValues) {
 		return execCommand(jedis -> {
-			Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.length, 1);
+			Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.size(), 1);
 			for (GeoValue<byte[]> one : geoValues) {
 				redis.clients.jedis.GeoCoordinate geoCoordinate = new redis.clients.jedis.GeoCoordinate(
 						one.getLongitude(), one.getLatitude());
@@ -1818,13 +1817,12 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public long geoadd(byte[] key, GeoAddArgs args, GeoValue<byte[]>... geoValues) {
+	public long geoadd(byte[] key, GeoAddArgs args, List<GeoValue<byte[]>> geoValues) {
 		return execCommand(jedis -> {
 			GeoAddParams geoAddParams = JedisUtils.convertGeoAddParams(args);
 
-			Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.length, 1);
+			Map<byte[], redis.clients.jedis.GeoCoordinate> map = new HashMap<>(geoValues.size(), 1);
 			for (GeoValue<byte[]> one : geoValues) {
 				redis.clients.jedis.GeoCoordinate geoCoordinate = new redis.clients.jedis.GeoCoordinate(
 						one.getLongitude(), one.getLatitude());
@@ -1865,10 +1863,12 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 		return execCommand(jedis -> {
 			List<redis.clients.jedis.GeoCoordinate> list = jedis.geopos(key, members);
 			return list.stream().map(one -> {
+				if (one == null) {
+					return null;
+				}
 				return new GeoCoordinate(one.getLongitude(), one.getLatitude());
 			}).collect(Collectors.toList());
 		});
-
 	}
 
 	@Override
