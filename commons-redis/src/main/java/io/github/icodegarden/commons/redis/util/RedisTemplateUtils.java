@@ -11,6 +11,7 @@ import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldInc
 import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldSet;
 import org.springframework.data.redis.connection.BitFieldSubCommands.BitFieldSubCommand;
 import org.springframework.data.redis.connection.DefaultSortParameters;
+import org.springframework.data.redis.connection.RedisGeoCommands.DistanceUnit;
 import org.springframework.data.redis.connection.SortParameters;
 import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.util.CollectionUtils;
@@ -21,6 +22,7 @@ import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.Get;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.IncrBy;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs.Overflow;
+import io.github.icodegarden.commons.redis.args.GeoUnit;
 import io.github.icodegarden.commons.redis.args.GetExArgs;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.Range.Boundary;
@@ -253,4 +255,19 @@ public class RedisTemplateUtils {
 
 		return BitFieldSubCommands.create(list.toArray(new BitFieldSubCommand[list.size()]));
 	}
+
+	public static DistanceUnit convertDistanceUnit(GeoUnit unit) {
+		DistanceUnit du = null;
+		if (unit.equals(GeoUnit.M)) {
+			du = DistanceUnit.METERS;
+		} else if (unit.equals(GeoUnit.MI)) {
+			du = DistanceUnit.MILES;
+		} else if (unit.equals(GeoUnit.KM)) {
+			du = DistanceUnit.KILOMETERS;
+		} else if (unit.equals(GeoUnit.FT)) {
+			du = DistanceUnit.FEET;
+		}
+		return du;
+	}
+
 }

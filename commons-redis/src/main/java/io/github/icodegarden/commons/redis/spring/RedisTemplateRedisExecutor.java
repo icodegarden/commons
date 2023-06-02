@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,13 +16,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.connection.DefaultSortParameters;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisGeoCommands.DistanceUnit;
+import org.springframework.data.redis.connection.RedisGeoCommands.GeoLocation;
 import org.springframework.data.redis.connection.RedisListCommands.Direction;
 import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.data.redis.connection.RedisStringCommands.BitOperation;
@@ -43,7 +46,6 @@ import org.springframework.data.redis.core.ScanOptions.ScanOptionsBuilder;
 import org.springframework.data.redis.core.types.Expiration;
 
 import io.github.icodegarden.commons.lang.tuple.NullableTuple2;
-import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.RedisPubSubListener;
@@ -82,12 +84,7 @@ import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 import io.github.icodegarden.commons.redis.args.ZAddArgs;
 import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
-import io.github.icodegarden.commons.redis.util.JedisUtils;
 import io.github.icodegarden.commons.redis.util.RedisTemplateUtils;
-import redis.clients.jedis.params.GeoRadiusParam;
-import redis.clients.jedis.params.GeoRadiusStoreParam;
-import redis.clients.jedis.params.GeoSearchParam;
-import redis.clients.jedis.resps.GeoRadiusResponse;
 
 /**
  * 
@@ -2004,17 +2001,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	@Override
 	public Double geodist(byte[] key, byte[] member1, byte[] member2, GeoUnit unit) {
 		return (Double) redisTemplate.execute((RedisCallback) connection -> {
-			DistanceUnit du = null;
-			if (unit.equals(GeoUnit.M)) {
-				du = DistanceUnit.METERS;
-			} else if (unit.equals(GeoUnit.MI)) {
-				du = DistanceUnit.MILES;
-			} else if (unit.equals(GeoUnit.KM)) {
-				du = DistanceUnit.KILOMETERS;
-			} else if (unit.equals(GeoUnit.FT)) {
-				du = DistanceUnit.FEET;
-			}
-
+			DistanceUnit du = RedisTemplateUtils.convertDistanceUnit(unit);
 			Distance distance = connection.geoCommands().geoDist(key, member1, member2, du);
 			return distance != null ? distance.getValue() : null;
 		});
@@ -2022,193 +2009,120 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 
 	@Override
 	public List<String> geohash(byte[] key, byte[]... members) {
-		List<byte[]> list = jc.geohash(key, members);
-		return list.stream().map(one -> new String(one, StandardCharsets.UTF_8)).collect(Collectors.toList());
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.geoCommands().geoHash(key, members);
+		});
 	}
 
 	@Override
 	public List<GeoCoordinate> geopos(byte[] key, byte[]... members) {
-		List<redis.clients.jedis.GeoCoordinate> list = jc.geopos(key, members);
-		return list.stream().map(one -> {
-			return new GeoCoordinate(one.getLongitude(), one.getLatitude());
-		}).collect(Collectors.toList());
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			List<Point> list = connection.geoCommands().geoPos(key, members);
+			return list.stream().map(one -> {
+				return new GeoCoordinate(one.getX(), one.getY());
+			}).collect(Collectors.toList());
+		});
 	}
 
 	@Override
 	public List<byte[]> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
-		List<GeoRadiusResponse> list = jc.georadius(key, longitude, latitude, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
-		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			Point point = new org.springframework.data.geo.Point(longitude, latitude);
+			DistanceUnit du = RedisTemplateUtils.convertDistanceUnit(unit);
+			Distance distance = new org.springframework.data.geo.Distance(radius, du);
+			Circle circle = new org.springframework.data.geo.Circle(point, distance);
+
+			GeoResults<GeoLocation<byte[]>> results = connection.geoCommands().geoRadius(key, circle);
+			List<GeoResult<GeoLocation<byte[]>>> list = results.getContent();
+
+			return list.stream().map(one -> {
+				return new GeoCoordinate(one.getContent().getPoint().getX(), one.getContent().getPoint().getY());
+			}).collect(Collectors.toList());
+		});
 	}
 
 	@Override
 	public List<GeoWithin<byte[]>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
 			GeoArgs args) {
-		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
-		List<GeoRadiusResponse> list = jc.georadius(key, longitude, latitude, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
-
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(one -> {
-			GeoCoordinate geoCoordinate = null;
-
-			if (one.getCoordinate() != null) {
-				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
-						one.getCoordinate().getLatitude());
-			}
-			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
-		}).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long georadiusStore(byte[] key, double longitude, double latitude, double radius, GeoUnit unit,
 			GeoRadiusStoreArgs<byte[]> storeArgs) {
-		Tuple2<GeoRadiusParam, GeoRadiusStoreParam> tuple2 = JedisUtils.convertTuple(storeArgs);
-		GeoRadiusParam geoRadiusParam = tuple2.getT1();
-		GeoRadiusStoreParam geoRadiusStoreParam = tuple2.getT2();
-		return jc.georadiusStore(key, longitude, latitude, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam, geoRadiusStoreParam);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<byte[]> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
-		List<GeoRadiusResponse> list = jc.georadiusReadonly(key, longitude, latitude, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
-		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<GeoWithin<byte[]>> georadiusReadonly(byte[] key, double longitude, double latitude, double radius,
 			GeoUnit unit, GeoArgs args) {
-		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
-		List<GeoRadiusResponse> list = jc.georadiusReadonly(key, longitude, latitude, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
-
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(one -> {
-			GeoCoordinate geoCoordinate = null;
-
-			if (one.getCoordinate() != null) {
-				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
-						one.getCoordinate().getLatitude());
-			}
-			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
-		}).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<byte[]> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit) {
-		List<GeoRadiusResponse> list = jc.georadiusByMember(key, member, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
-		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			DistanceUnit du = RedisTemplateUtils.convertDistanceUnit(unit);
+			Distance distance = new org.springframework.data.geo.Distance(radius, du);
+
+			GeoResults<GeoLocation<byte[]>> results = connection.geoCommands().geoRadiusByMember(key, member, distance);
+			List<GeoResult<GeoLocation<byte[]>>> list = results.getContent();
+
+			return list.stream().map(one -> {
+				return new GeoCoordinate(one.getContent().getPoint().getX(), one.getContent().getPoint().getY());
+			}).collect(Collectors.toList());
+		});
 	}
 
 	@Override
 	public List<GeoWithin<byte[]>> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit,
 			GeoArgs args) {
-		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
-
-		List<GeoRadiusResponse> list = jc.georadiusByMember(key, member, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(one -> {
-			GeoCoordinate geoCoordinate = null;
-
-			if (one.getCoordinate() != null) {
-				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
-						one.getCoordinate().getLatitude());
-			}
-			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
-		}).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long georadiusByMemberStore(byte[] key, byte[] member, double radius, GeoUnit unit,
 			GeoRadiusStoreArgs<byte[]> storeArgs) {
-		Tuple2<GeoRadiusParam, GeoRadiusStoreParam> tuple2 = JedisUtils.convertTuple(storeArgs);
-		GeoRadiusParam geoRadiusParam = tuple2.getT1();
-		GeoRadiusStoreParam geoRadiusStoreParam = tuple2.getT2();
-		return jc.georadiusByMemberStore(key, member, radius, redis.clients.jedis.args.GeoUnit.valueOf(unit.name()),
-				geoRadiusParam, geoRadiusStoreParam);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<byte[]> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit) {
-		List<GeoRadiusResponse> list = jc.georadiusByMemberReadonly(key, member, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()));
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<GeoWithin<byte[]>> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit,
 			GeoArgs args) {
-		GeoRadiusParam geoRadiusParam = JedisUtils.convertGeoRadiusParam(args);
-		List<GeoRadiusResponse> list = jc.georadiusByMemberReadonly(key, member, radius,
-				redis.clients.jedis.args.GeoUnit.valueOf(unit.name()), geoRadiusParam);
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(one -> {
-			GeoCoordinate geoCoordinate = null;
-
-			if (one.getCoordinate() != null) {
-				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
-						one.getCoordinate().getLatitude());
-			}
-			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
-		}).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<byte[]> geosearch(byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate) {
-		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate);
-		List<GeoRadiusResponse> list = jc.geosearch(key, geoSearchParam);
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(GeoRadiusResponse::getMember).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<GeoWithin<byte[]>> geosearch(byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
 			GeoArgs args) {
-		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
-		List<GeoRadiusResponse> list = jc.geosearch(key, geoSearchParam);
-		if (list.isEmpty()) {
-			return Collections.emptyList();
-		}
-		return list.stream().map(one -> {
-			GeoCoordinate geoCoordinate = null;
-
-			if (one.getCoordinate() != null) {
-				geoCoordinate = new GeoCoordinate(one.getCoordinate().getLongitude(),
-						one.getCoordinate().getLatitude());
-			}
-			return new GeoWithin<>(one.getMember(), one.getDistance(), one.getRawScore(), geoCoordinate);
-		}).collect(Collectors.toList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long geosearchStore(byte[] destination, byte[] key, GeoRef<byte[]> reference, GeoPredicate predicate,
 			GeoArgs args) {
-		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
-		return jc.geosearchStore(destination, key, geoSearchParam);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long geosearchStoreStoreDist(byte[] destination, byte[] key, GeoRef<byte[]> reference,
 			GeoPredicate predicate, GeoArgs args) {
-		GeoSearchParam geoSearchParam = JedisUtils.convertGeoSearchParam(reference, predicate, args);
-		return jc.geosearchStoreStoreDist(destination, key, geoSearchParam);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
