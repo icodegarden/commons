@@ -131,7 +131,7 @@ public class JedisUtils {
 	}
 
 	public static <T> KeyScanCursor<T> convertKeyScanCursor(ScanResult<T> scanResult) {
-		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor(),
+		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor().getBytes(StandardCharsets.UTF_8),
 				"0".equals(scanResult.getCursor()), scanResult.getResult());
 		return keyScanCursor;
 	}

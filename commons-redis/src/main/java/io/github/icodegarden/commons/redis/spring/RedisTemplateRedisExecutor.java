@@ -328,17 +328,18 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		return scan(cursor, null);
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params) {
 		return scan(cursor, params, null);
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params,
+			byte[] type) {
 		return (KeyScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
 
 			ScanOptionsBuilder builder = ScanOptions.scanOptions();
@@ -552,12 +553,13 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		return hscan(key, cursor, null);
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		return (MapScanCursor<byte[], byte[]>) redisTemplate.execute((RedisCallback) connection -> {
 
 			ScanOptionsBuilder builder = ScanOptions.scanOptions();
@@ -1293,12 +1295,13 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		return sscan(key, cursor, null);
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		return (ValueScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
 
 			ScanOptionsBuilder builder = ScanOptions.scanOptions();
@@ -1866,12 +1869,13 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		return zscan(key, cursor, null);
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		return (ScoredValueScanCursor<byte[]>) redisTemplate.execute((RedisCallback) connection -> {
 
 			ScanOptionsBuilder builder = ScanOptions.scanOptions();
@@ -2034,6 +2038,9 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 			List<GeoResult<GeoLocation<byte[]>>> list = results.getContent();
 
 			return list.stream().map(one -> {
+				if (one == null || one.getContent() == null || one.getContent().getPoint() == null) {
+					return null;
+				}
 				return new GeoCoordinate(one.getContent().getPoint().getX(), one.getContent().getPoint().getY());
 			}).collect(Collectors.toList());
 		});
@@ -2072,6 +2079,9 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 			List<GeoResult<GeoLocation<byte[]>>> list = results.getContent();
 
 			return list.stream().map(one -> {
+				if (one == null || one.getContent() == null || one.getContent().getPoint() == null) {
+					return null;
+				}
 				return new GeoCoordinate(one.getContent().getPoint().getX(), one.getContent().getPoint().getY());
 			}).collect(Collectors.toList());
 		});

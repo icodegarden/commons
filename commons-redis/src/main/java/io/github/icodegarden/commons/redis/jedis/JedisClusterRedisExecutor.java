@@ -255,20 +255,22 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor) {
-		ScanResult<byte[]> scanResult = jc.scan(cursor);
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
+		ScanResult<byte[]> scanResult = jc.scan((byte[]) cursor.getCursor());
 		return JedisUtils.convertKeyScanCursor(scanResult);
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
-		ScanResult<byte[]> scanResult = jc.scan(cursor, JedisUtils.convertScanParams(params));
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params) {
+		ScanResult<byte[]> scanResult = jc.scan((byte[]) cursor.getCursor(), JedisUtils.convertScanParams(params));
 		return JedisUtils.convertKeyScanCursor(scanResult);
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
-		ScanResult<byte[]> scanResult = jc.scan(cursor, JedisUtils.convertScanParams(params), type);
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params,
+			byte[] type) {
+		ScanResult<byte[]> scanResult = jc.scan((byte[]) cursor.getCursor(), JedisUtils.convertScanParams(params),
+				type);
 		return JedisUtils.convertKeyScanCursor(scanResult);
 	}
 
@@ -518,14 +520,16 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
-		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, cursor);
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
+		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, (byte[]) cursor.getCursor());
 		return JedisUtils.convertMapScanCursor(scanResult);
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
-		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, cursor, JedisUtils.convertScanParams(params));
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
+		ScanResult<Entry<byte[], byte[]>> scanResult = jc.hscan(key, (byte[]) cursor.getCursor(),
+				JedisUtils.convertScanParams(params));
 		return JedisUtils.convertMapScanCursor(scanResult);
 	}
 
@@ -834,14 +838,16 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
-		ScanResult<byte[]> scanResult = jc.sscan(key, cursor);
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
+		ScanResult<byte[]> scanResult = jc.sscan(key, (byte[]) cursor.getCursor());
 		return JedisUtils.convertValueScanCursor(scanResult);
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
-		ScanResult<byte[]> scanResult = jc.sscan(key, cursor, JedisUtils.convertScanParams(params));
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
+		ScanResult<byte[]> scanResult = jc.sscan(key, (byte[]) cursor.getCursor(),
+				JedisUtils.convertScanParams(params));
 		return JedisUtils.convertValueScanCursor(scanResult);
 	}
 
@@ -1303,14 +1309,15 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
-		ScanResult<Tuple> scanResult = jc.zscan(key, cursor);
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
+		ScanResult<Tuple> scanResult = jc.zscan(key, (byte[]) cursor.getCursor());
 		return JedisUtils.convertScoredValueScanCursor(scanResult);
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
-		ScanResult<Tuple> scanResult = jc.zscan(key, cursor, JedisUtils.convertScanParams(params));
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
+		ScanResult<Tuple> scanResult = jc.zscan(key, (byte[]) cursor.getCursor(), JedisUtils.convertScanParams(params));
 		return JedisUtils.convertScoredValueScanCursor(scanResult);
 	}
 
@@ -1496,7 +1503,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public List<GeoCoordinate> geopos(byte[] key, byte[]... members) {
 		List<redis.clients.jedis.GeoCoordinate> list = jc.geopos(key, members);
 		return list.stream().map(one -> {
-			if(one == null) {
+			if (one == null) {
 				return null;
 			}
 			return new GeoCoordinate(one.getLongitude(), one.getLatitude());

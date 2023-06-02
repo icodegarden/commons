@@ -6,6 +6,7 @@ import java.util.Set;
 import io.github.icodegarden.commons.lang.annotation.NotNull;
 import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScanCursor;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
 
 /**
@@ -458,7 +459,7 @@ public interface SetBinaryCommands {
 	Long srem(final byte[] key, final byte[]... members);
 
 	@NotNull
-	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor);
+	ValueScanCursor<byte[]> sscan(final byte[] key, final ScanCursor cursor);
 
 	/**
 	 * <h1>迭代set的元素</h1> <br>
@@ -471,7 +472,7 @@ public interface SetBinaryCommands {
 	 * @return
 	 */
 	@NotNull
-	ValueScanCursor<byte[]> sscan(final byte[] key, final byte[] cursor, final ScanArgs params);
+	ValueScanCursor<byte[]> sscan(final byte[] key, final ScanCursor cursor, final ScanArgs params);
 
 	/**
 	 * <h1>返回多个set的并集</h1> <br>

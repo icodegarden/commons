@@ -248,7 +248,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.KeyScanCursor<byte[]> scanResult = syncRedisCommands.scan(scanCursor);
@@ -256,7 +256,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
@@ -266,7 +266,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type) {
+	public KeyScanCursor<byte[]> scan(io.github.icodegarden.commons.redis.args.ScanCursor cursor, ScanArgs params,
+			byte[] type) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.KeyScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
@@ -421,7 +422,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor) {
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.MapScanCursor<byte[], byte[]> scanResult = syncRedisCommands.hscan(key, scanCursor);
@@ -429,7 +430,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public MapScanCursor<byte[], byte[]> hscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
@@ -909,7 +911,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor) {
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ValueScanCursor<byte[]> scanResult = syncRedisCommands.sscan(key, scanCursor);
@@ -917,7 +919,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ValueScanCursor<byte[]> sscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public ValueScanCursor<byte[]> sscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);
@@ -1350,7 +1353,7 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor) {
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScoredValueScanCursor<byte[]> scanResult = syncRedisCommands.zscan(key, scanCursor);
@@ -1358,7 +1361,8 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
-	public ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params) {
+	public ScoredValueScanCursor<byte[]> zscan(byte[] key, io.github.icodegarden.commons.redis.args.ScanCursor cursor,
+			ScanArgs params) {
 		ScanCursor scanCursor = LettuceUtils.convertScanCursor(cursor);
 
 		io.lettuce.core.ScanArgs scanArgs = LettuceUtils.convertScanArgs(params);

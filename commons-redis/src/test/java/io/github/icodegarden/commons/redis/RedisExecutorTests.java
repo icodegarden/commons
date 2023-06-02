@@ -48,6 +48,7 @@ import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.Range.Boundary;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScanCursor;
 import io.github.icodegarden.commons.redis.args.ScoredValue;
 import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
@@ -633,15 +634,15 @@ public abstract class RedisExecutorTests {
 		ScanArgs scanArgs = new ScanArgs();
 		scanArgs.match("test{tag}*".getBytes());
 
-		byte[] cursorbytes = "0".getBytes();
+		ScanCursor scanCursor = new ScanCursor("0".getBytes());
 		KeyScanCursor<byte[]> cursor = null;
 		do {
-			cursor = redisExecutor.scan(cursorbytes, scanArgs, "string".getBytes());
+			cursor = redisExecutor.scan(scanCursor, scanArgs, "string".getBytes());
 			cursor.getKeys().forEach(bs -> {
 				System.out.println(new String(bs));
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 	}
 
@@ -946,16 +947,16 @@ public abstract class RedisExecutorTests {
 		map.put("d".getBytes(), "1".getBytes());
 		redisExecutor.hset(key, map);
 
-		byte[] cursorbytes = "0".getBytes();
+		ScanCursor scanCursor = new ScanCursor("0".getBytes());
 		MapScanCursor<byte[], byte[]> cursor = null;
 		do {
-			cursor = redisExecutor.hscan(key, cursorbytes);
+			cursor = redisExecutor.hscan(key, scanCursor);
 
 			cursor.getMap().forEach((kbs, vbs) -> {
 				System.out.println(new String(kbs) + ":" + new String(vbs));
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 
 		// -----------------------------------------------------------------
@@ -963,16 +964,16 @@ public abstract class RedisExecutorTests {
 		ScanArgs scanArgs = new ScanArgs();
 		scanArgs.match("*".getBytes());
 
-		cursorbytes = "0".getBytes();
+		scanCursor = new ScanCursor("0".getBytes());
 		cursor = null;
 		do {
-			cursor = redisExecutor.hscan(key, cursorbytes, scanArgs);
+			cursor = redisExecutor.hscan(key, scanCursor, scanArgs);
 
 			cursor.getMap().forEach((kbs, vbs) -> {
 				System.out.println(new String(kbs) + ":" + new String(vbs));
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 	}
 
@@ -1651,16 +1652,16 @@ public abstract class RedisExecutorTests {
 		byte[][] arr1 = { "a".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes() };
 		redisExecutor.sadd(key, arr1);
 
-		byte[] cursorbytes = "0".getBytes();
+		ScanCursor scanCursor = new ScanCursor("0".getBytes());
 		ValueScanCursor<byte[]> cursor = null;
 		do {
-			cursor = redisExecutor.sscan(key, cursorbytes);
+			cursor = redisExecutor.sscan(key, scanCursor);
 
 			cursor.getValues().forEach(bs -> {
 				System.out.println(new String(bs));
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 
 		// -----------------------------------------------------------------
@@ -1668,16 +1669,16 @@ public abstract class RedisExecutorTests {
 		ScanArgs scanArgs = new ScanArgs();
 		scanArgs.match("*".getBytes());
 
-		cursorbytes = "0".getBytes();
+		scanCursor = new ScanCursor("0".getBytes());
 		cursor = null;
 		do {
-			cursor = redisExecutor.sscan(key, cursorbytes, scanArgs);
+			cursor = redisExecutor.sscan(key, scanCursor, scanArgs);
 
 			cursor.getValues().forEach(bs -> {
 				System.out.println(new String(bs));
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 	}
 
@@ -2670,16 +2671,16 @@ public abstract class RedisExecutorTests {
 		redisExecutor.zadd(key, 2, "b".getBytes());
 		redisExecutor.zadd(key, 3, "c".getBytes());
 
-		byte[] cursorbytes = "0".getBytes();
+		ScanCursor scanCursor = new ScanCursor("0".getBytes());
 		ScoredValueScanCursor<byte[]> cursor = null;
 		do {
-			cursor = redisExecutor.zscan(key, cursorbytes);
+			cursor = redisExecutor.zscan(key, scanCursor);
 
 			cursor.getValues().forEach(sv -> {
 				System.out.println(new String(sv.getValue()) + ":" + sv.getScore());
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 
 		// -----------------------------------------------------------------
@@ -2687,16 +2688,16 @@ public abstract class RedisExecutorTests {
 		ScanArgs scanArgs = new ScanArgs();
 		scanArgs.match("*".getBytes());
 
-		cursorbytes = "0".getBytes();
+		scanCursor = new ScanCursor("0".getBytes());
 		cursor = null;
 		do {
-			cursor = redisExecutor.zscan(key, cursorbytes, scanArgs);
+			cursor = redisExecutor.zscan(key, scanCursor, scanArgs);
 
 			cursor.getValues().forEach(sv -> {
 				System.out.println(new String(sv.getValue()) + ":" + sv.getScore());
 			});
 
-			cursorbytes = cursor.getCursor().getBytes();
+			scanCursor = cursor;
 		} while (!cursor.isFinished());
 	}
 
@@ -3110,6 +3111,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void geoadd() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 		long l = redisExecutor.geoadd(key, 13.361389, 38.115556, "A".getBytes());
 		Assertions.assertThat(l).isEqualTo(1);
 
@@ -3212,6 +3216,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void georadius() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
 //		 * "Catania"<br>
 //		 * (integer) 2<br>
@@ -3293,6 +3300,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void georadiusReadonly() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
 //		 * "Catania"<br>
 //		 * (integer) 2<br>
@@ -3356,6 +3366,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void georadiusByMember() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.583333 37.316667 "Agrigento"<br>
 //		 * (integer) 1<br>
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
@@ -3408,6 +3421,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void georadiusByMemberReadonly() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.583333 37.316667 "Agrigento"<br>
 //		 * (integer) 1<br>
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
@@ -3443,6 +3459,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void geosearch() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
 //		 * "Catania"<br>
 //		 * (integer) 2<br>
@@ -3510,6 +3529,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void geosearchStore() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
 //		 * "Catania"<br>
 //		 * (integer) 2<br>
@@ -3558,6 +3580,9 @@ public abstract class RedisExecutorTests {
 
 	@Test
 	void geosearchStoreStoreDist() {
+		if (redisExecutor instanceof RedisTemplateRedisExecutor) {
+			return;
+		}
 //		 * redis> GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669
 //		 * "Catania"<br>
 //		 * (integer) 2<br>

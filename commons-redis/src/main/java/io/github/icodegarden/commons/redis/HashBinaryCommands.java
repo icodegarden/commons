@@ -8,6 +8,7 @@ import io.github.icodegarden.commons.lang.annotation.NotNull;
 import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScanCursor;
 
 /**
  * 
@@ -260,7 +261,7 @@ public interface HashBinaryCommands {
 
 	@Nullable
 	byte[] hrandfield(final byte[] key);
-	
+
 	@NotNull
 	List<byte[]> hrandfield(final byte[] key, final long count);
 
@@ -307,9 +308,9 @@ public interface HashBinaryCommands {
 	 */
 	@NotNull
 	Map<byte[], byte[]> hrandfieldWithValues(final byte[] key, final long count);
-	
+
 	@NotNull
-	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor);
+	MapScanCursor<byte[], byte[]> hscan(byte[] key, ScanCursor cursor);
 
 	/**
 	 * <h1>迭代所有field的值</h1><br>
@@ -322,7 +323,7 @@ public interface HashBinaryCommands {
 	 * @return
 	 */
 	@NotNull
-	MapScanCursor<byte[], byte[]> hscan(byte[] key, byte[] cursor, ScanArgs params);
+	MapScanCursor<byte[], byte[]> hscan(byte[] key, ScanCursor cursor, ScanArgs params);
 
 	@NotNull
 	Long hset(final byte[] key, final byte[] field, final byte[] value);

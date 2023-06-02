@@ -141,7 +141,7 @@ public class LettuceUtils {
 	}
 
 	public static <T> KeyScanCursor<T> convertKeyScanCursor(io.lettuce.core.KeyScanCursor<T> scanResult) {
-		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult.getCursor(), scanResult.isFinished(),
+		KeyScanCursor<T> keyScanCursor = new KeyScanCursor<T>(scanResult, scanResult.isFinished(),
 				scanResult.getKeys());
 		return keyScanCursor;
 	}
@@ -195,14 +195,24 @@ public class LettuceUtils {
 		return getExArgs;
 	}
 
-	public static ScanCursor convertScanCursor(byte[] cursor) {
+	public static ScanCursor convertScanCursor(io.github.icodegarden.commons.redis.args.ScanCursor cursor) {
+		if (cursor.getCursor() instanceof ScanCursor) {
+			return (ScanCursor) cursor.getCursor();
+		}
+
+		if (!(cursor.getCursor() instanceof byte[])) {
+			throw new IllegalArgumentException("cursor must be byte[]");
+		}
+
 		ScanCursor scanCursor;
 
-		if (Arrays.equals("0".getBytes(StandardCharsets.UTF_8), cursor)) {
+		if (Arrays.equals("0".getBytes(StandardCharsets.UTF_8), (byte[]) cursor.getCursor())) {
 			scanCursor = ScanCursor.INITIAL;// redis集群lettuce的首次得这样，不然报错
 		} else {
-			scanCursor = new ScanCursor();
-			scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+//			scanCursor = new ScanCursor();
+//			scanCursor.setCursor(new String(cursor, StandardCharsets.UTF_8));
+
+			throw new IllegalArgumentException("cursor must be io.lettuce.core.ScanCursor");
 		}
 		return scanCursor;
 	}

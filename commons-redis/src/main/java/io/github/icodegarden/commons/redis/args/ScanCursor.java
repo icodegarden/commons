@@ -12,11 +12,15 @@ import lombok.ToString;
 @ToString
 public class ScanCursor {
 
-	private String cursor;
+	private Object cursor;
 
 	private boolean finished;
 
-	public ScanCursor(String cursor, boolean finished) {
+	public ScanCursor(byte[] cursor) {
+		this.cursor = cursor;
+	}
+	
+	protected ScanCursor(Object cursor, boolean finished) {
 		this.cursor = cursor;
 		this.finished = finished;
 	}

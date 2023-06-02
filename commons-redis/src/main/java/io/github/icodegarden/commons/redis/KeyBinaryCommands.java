@@ -10,6 +10,7 @@ import io.github.icodegarden.commons.redis.args.KeyScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 
 /**
@@ -663,9 +664,9 @@ public interface KeyBinaryCommands {
 	 */
 	String restore(byte[] key, long ttl, byte[] serializedValue, RestoreParams params);
 
-	KeyScanCursor<byte[]> scan(byte[] cursor);
+	KeyScanCursor<byte[]> scan(ScanCursor cursor);
 
-	KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params);
+	KeyScanCursor<byte[]> scan(ScanCursor cursor, ScanArgs params);
 
 	/**
 	 * <h1>遍历所有key</h1><br>
@@ -726,7 +727,7 @@ public interface KeyBinaryCommands {
 	 * @param type
 	 * @return cursor=0表示结束
 	 */
-	KeyScanCursor<byte[]> scan(byte[] cursor, ScanArgs params, byte[] type);
+	KeyScanCursor<byte[]> scan(ScanCursor cursor, ScanArgs params, byte[] type);
 
 	List<byte[]> sort(byte[] key);
 

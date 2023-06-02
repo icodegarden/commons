@@ -8,6 +8,7 @@ import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
+import io.github.icodegarden.commons.redis.args.ScanCursor;
 import io.github.icodegarden.commons.redis.args.ScoredValue;
 import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortedSetOption;
@@ -1126,7 +1127,7 @@ public interface SortedSetBinaryCommands {
 	Long zrevrank(byte[] key, byte[] member);
 
 	@NotNull
-	ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor);
+	ScoredValueScanCursor<byte[]> zscan(byte[] key, ScanCursor cursor);
 
 	/**
 	 * <h1>迭代zset</h1><br>
@@ -1137,7 +1138,7 @@ public interface SortedSetBinaryCommands {
 	 * @return
 	 */
 	@NotNull
-	ScoredValueScanCursor<byte[]> zscan(byte[] key, byte[] cursor, ScanArgs params);
+	ScoredValueScanCursor<byte[]> zscan(byte[] key, ScanCursor cursor, ScanArgs params);
 
 	/**
 	 * <h1>返回元素的score</h1><br>
