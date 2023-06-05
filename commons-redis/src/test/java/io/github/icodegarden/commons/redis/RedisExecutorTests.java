@@ -3630,6 +3630,48 @@ public abstract class RedisExecutorTests {
 	}
 
 	@Test
+	void pfadd() {
+//		 * redis> PFADD hll a b c d e f g<br>
+//		 * (integer) 1<br>
+//		 * redis> PFCOUNT hll<br>
+//		 * (integer) 7<br>
+//		 * redis> <br>
+		long l = redisExecutor.pfadd(key, "a".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+		l = redisExecutor.pfadd(key, "b".getBytes(), "c".getBytes(), "d".getBytes(), "e".getBytes(), "f".getBytes(),
+				"g".getBytes());
+		Assertions.assertThat(l).isEqualTo(1);
+		l = redisExecutor.pfcount(key);
+		Assertions.assertThat(l).isEqualTo(7);
+	}
+
+	@Test
+	void pfcount() {
+		// 不需要单独测
+	}
+
+	@Test
+	void pfmerge() {
+//		 * redis> PFADD hll1 foo bar zap a<br>
+//		 * (integer) 1<br>
+//		 * redis> PFADD hll2 a b c foo<br>
+//		 * (integer) 1<br>
+//		 * redis> PFMERGE hll3 hll1 hll2<br>
+//		 * "OK"<br>
+//		 * redis> PFCOUNT hll3<br>
+//		 * (integer) 6<br>
+//		 * redis> <br>
+		redisExecutor.pfadd(key, "foo".getBytes(), "bar".getBytes(), "zap".getBytes(), "a".getBytes());
+		redisExecutor.pfadd(k2, "a".getBytes(), "b".getBytes(), "c".getBytes(), "foo".getBytes());
+
+		String s = redisExecutor.pfmerge(k3, key, k2);
+		Assertions.assertThat(s).isEqualTo("OK");
+
+		long l = redisExecutor.pfcount(k3);
+		Assertions.assertThat(l).isEqualTo(6);
+	}
+
+	@Test
 	void pubsub() throws Exception {
 		byte[] channel = "test.channel".getBytes("utf-8");
 

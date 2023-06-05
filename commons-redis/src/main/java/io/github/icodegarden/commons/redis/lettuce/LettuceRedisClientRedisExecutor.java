@@ -34,6 +34,10 @@ public class LettuceRedisClientRedisExecutor extends AbstractLettuceRedisExecuto
 		return this;
 	}
 	
+	public RedisClient getClient() {
+		return client;
+	}
+	
 	@Override
 	protected StatefulRedisPubSubConnection<byte[], byte[]> connectPubSub() {
 		return client.connectPubSub(new ByteArrayCodec());

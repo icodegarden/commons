@@ -90,6 +90,10 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			boolean ssl) {
 		this.jedisPool = new JedisPool(poolConfig, host, port, timeout, password, ssl);
 	}
+	
+	public JedisPool getJedisPool() {
+		return jedisPool;
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -2097,6 +2101,37 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 		});
 	}
 
+	@Override
+	public long pfadd(byte[] key, byte[]... elements) {
+		return execCommand(jedis -> {
+			return jedis.pfadd(key, elements);
+		});
+
+	}
+
+	@Override
+	public long pfcount(byte[] key) {
+		return execCommand(jedis -> {
+			return jedis.pfcount(key);
+		});
+
+	}
+
+	@Override
+	public long pfcount(byte[]... keys) {
+		return execCommand(jedis -> {
+			return jedis.pfcount(keys);
+		});
+
+	}
+
+	@Override
+	public String pfmerge(byte[] destkey, byte[]... sourcekeys) {
+		return execCommand(jedis -> {
+			return jedis.pfmerge(destkey, sourcekeys);
+		});
+
+	}
 //	@Override
 //	public void subscribe(byte[] channel, BinaryJedisPubSub jedisPubSub, Consumer<Unsubscribe> unsubscribeReceiver) {
 //		execCommand(jedis -> {
@@ -2173,5 +2208,97 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			return null;
 		});
 	}
+	@Override
+	public List<byte[]> pubsubShardChannels() {
+		throw new UnsupportedOperationException();
+	}
 
+	@Override
+	public List<byte[]> pubsubShardChannels(byte[] pattern) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubShardNumsub(byte[]... shardchannels) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void spublish(byte[] shardchannel, byte[] message) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void ssubscribe(byte[] shardchannel, RedisPubSubListener<byte[], byte[]> listener) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void sunsubscribe(byte[] shardchannel) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void psubscribe(List<byte[]> patterns, RedisPubSubListener<byte[], byte[]> listener) {
+		new Thread("Jedis-Sub-Patterns") {
+			@Override
+			public void run() {
+				execCommand(jedis -> {
+					BinaryJedisPubSub jedisPubSub = new BinaryJedisPubSub() {
+						@Override
+						public void onSubscribe(byte[] channel, int subscribedChannels) {
+							listener.subscribed(channel, subscribedChannels);
+						}
+
+						@Override
+						public void onUnsubscribe(byte[] channel, int subscribedChannels) {
+							listener.unsubscribed(channel, subscribedChannels);
+						}
+
+						@Override
+						public void onMessage(byte[] channel, byte[] message) {
+							listener.message(channel, message);
+						}
+					};
+
+					for(byte[] pattern:patterns) {
+						subMap.put(pattern, jedisPubSub);
+					}
+
+					jedis.psubscribe(jedisPubSub, patterns.toArray(new byte[patterns.size()][]));
+					return null;
+				});
+			}
+		}.start();
+	}
+
+	@Override
+	public List<byte[]> pubsubChannels() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> pubsubChannels(byte[] pattern) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long pubsubNumpat() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubNumsub(byte[]... channels) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void punsubscribe(List<byte[]> patterns) {
+		for(byte[] pattern:patterns) {
+			BinaryJedisPubSub jedisPubSub = subMap.get(pattern);
+			if (jedisPubSub != null) {
+				jedisPubSub.punsubscribe();
+			}
+		}
+	}
 }

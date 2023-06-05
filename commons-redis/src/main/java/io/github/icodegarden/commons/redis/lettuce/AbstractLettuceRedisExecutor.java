@@ -1694,7 +1694,42 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public long pfadd(byte[] key, byte[]... elements) {
+		return syncRedisCommands.pfadd(key, elements);
+	}
+
+	@Override
+	public long pfcount(byte[] key) {
+		return syncRedisCommands.pfcount(key);
+	}
+
+	@Override
+	public long pfcount(byte[]... keys) {
+		return syncRedisCommands.pfcount(keys);
+	}
+
+	@Override
+	public String pfmerge(byte[] destkey, byte[]... sourcekeys) {
+		return syncRedisCommands.pfmerge(destkey, sourcekeys);
+	}
+
+	@Override
 	public void subscribe(byte[] channel, RedisPubSubListener<byte[], byte[]> listener) {
+		initSubscribe(listener);
+
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		sync.subscribe(channel);
+	}
+
+	@Override
+	public void psubscribe(List<byte[]> patterns, RedisPubSubListener<byte[], byte[]> listener) {
+		initSubscribe(listener);
+
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		sync.psubscribe(patterns.toArray(new byte[patterns.size()][]));
+	}
+
+	private void initSubscribe(RedisPubSubListener<byte[], byte[]> listener) {
 		/**
 		 * lettuce
 		 * 同一个1个Connection，可以订阅很多个不同channel，并可以addListener很多个，有消息时所有Listener都会遍历触发<br>
@@ -1738,19 +1773,76 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 
 				@Override
 				public void punsubscribed(byte[] pattern, long count) {
-					listener.punsubscribed(channel, count);
+					listener.punsubscribed(pattern, count);
 				}
 			});
 		}
+	}
 
+	@Override
+	public List<byte[]> pubsubChannels() {
 		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
-		sync.subscribe(channel);
+		return sync.pubsubChannels();
+	}
+
+	@Override
+	public List<byte[]> pubsubChannels(byte[] pattern) {
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		return sync.pubsubChannels(pattern);
+	}
+
+	@Override
+	public long pubsubNumpat() {
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		return sync.pubsubNumpat();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubNumsub(byte[]... channels) {
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		return sync.pubsubNumsub(channels);
 	}
 
 	@Override
 	public void unsubscribe(byte[] channel) {
 		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
 		sync.unsubscribe(channel);
+	}
+
+	@Override
+	public void punsubscribe(List<byte[]> patterns) {
+		RedisPubSubCommands<byte[], byte[]> sync = connectPubSub.sync();
+		sync.punsubscribe(patterns.toArray(new byte[patterns.size()][]));
+	}
+
+	@Override
+	public List<byte[]> pubsubShardChannels() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> pubsubShardChannels(byte[] pattern) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubShardNumsub(byte[]... shardchannels) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void spublish(byte[] shardchannel, byte[] message) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void ssubscribe(byte[] shardchannel, RedisPubSubListener<byte[], byte[]> listener) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void sunsubscribe(byte[] shardchannel) {
+		throw new UnsupportedOperationException();
 	}
 
 	protected abstract StatefulRedisPubSubConnection<byte[], byte[]> connectPubSub();

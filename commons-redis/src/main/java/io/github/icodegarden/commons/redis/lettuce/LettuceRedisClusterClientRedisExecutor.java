@@ -33,6 +33,10 @@ public class LettuceRedisClusterClientRedisExecutor extends AbstractLettuceRedis
 		this.shutdownClientOnClose = shutdownClientOnClose;
 		return this;
 	}
+	
+	public RedisClusterClient getClient() {
+		return client;
+	}
 
 	@Override
 	protected StatefulRedisPubSubConnection<byte[], byte[]> connectPubSub() {

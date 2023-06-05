@@ -101,6 +101,10 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	public RedisTemplateRedisExecutor(RedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
+	
+	public RedisTemplate getRedisTemplate() {
+		return redisTemplate;
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -2134,6 +2138,35 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public long pfadd(byte[] key, byte[]... elements) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hyperLogLogCommands().pfAdd(key, elements);
+		});
+	}
+
+	@Override
+	public long pfcount(byte[] key) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hyperLogLogCommands().pfCount(key);
+		});
+	}
+
+	@Override
+	public long pfcount(byte[]... keys) {
+		return (Long) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.hyperLogLogCommands().pfCount(keys);
+		});
+	}
+
+	@Override
+	public String pfmerge(byte[] destkey, byte[]... sourcekeys) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.hyperLogLogCommands().pfMerge(destkey, sourcekeys);
+			return "OK";
+		});
+	}
+
+	@Override
 	public void subscribe(byte[] channel, RedisPubSubListener<byte[], byte[]> listener) {
 		Thread thread = new Thread("Jedis-Sub-" + new String(channel, StandardCharsets.UTF_8)) {
 			@Override
@@ -2180,4 +2213,91 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 			return null;
 		});
 	}
+
+	@Override
+	public void psubscribe(List<byte[]> patterns, RedisPubSubListener<byte[], byte[]> listener) {
+		Thread thread = new Thread("Jedis-Sub-Patterns") {
+			@Override
+			public void run() {
+				redisTemplate.execute((RedisCallback) connection -> {
+					for (byte[] pattern : patterns) {
+						subMap.put(pattern, connection);
+					}
+
+					connection.pSubscribe((message, pattern) -> {
+						listener.message(message.getChannel(), message.getBody());
+					}, patterns.toArray(new byte[patterns.size()][]));
+					return null;
+				});
+			}
+		};
+
+		RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
+		if (connectionFactory instanceof JedisConnectionFactory) {
+			thread.start();// jedis是阻塞的
+		} else {
+			thread.run();// lettuce不阻塞
+		}
+	}
+
+	@Override
+	public List<byte[]> pubsubChannels() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> pubsubChannels(byte[] pattern) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long pubsubNumpat() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubNumsub(byte[]... channels) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> pubsubShardChannels() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<byte[]> pubsubShardChannels(byte[] pattern) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<byte[], Long> pubsubShardNumsub(byte[]... shardchannels) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void punsubscribe(List<byte[]> patterns) {
+		for (byte[] pattern : patterns) {
+			RedisConnection connection = subMap.get(pattern);
+			if (connection != null) {
+				connection.getSubscription().pUnsubscribe();
+			}
+		}
+	}
+
+	@Override
+	public void spublish(byte[] shardchannel, byte[] message) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void ssubscribe(byte[] shardchannel, RedisPubSubListener<byte[], byte[]> listener) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void sunsubscribe(byte[] shardchannel) {
+		throw new UnsupportedOperationException();
+	}
+
 }
