@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 public interface RedisExecutor extends KeyBinaryCommands, StringBinaryCommands, HashBinaryCommands, ListBinaryCommands,
 		SetBinaryCommands, SortedSetBinaryCommands, BitmapBinaryCommands, GeoBinaryCommands, HyperLogLogBinaryCommands,
-		ScriptingKeyBinaryCommands, PubSubBinaryCommands {
+		ScriptingBinaryCommands, PubSubBinaryCommands {
 
 	void close() throws IOException;
 

@@ -7,7 +7,7 @@ import java.util.List;
  * @author Fangfang.Xu
  *
  */
-public interface ScriptingKeyBinaryCommands {
+public interface ScriptingBinaryCommands {
 
 	/**
 	 * EVAL script numkeys [key [key ...]] [arg [arg ...]]
@@ -63,11 +63,11 @@ public interface ScriptingKeyBinaryCommands {
 
 	List<Object> evalReadonly(byte[] script, List<byte[]> keys, List<byte[]> args);
 
-//	List<Object> evalsha(byte[] sha1);
-//
-//	List<Object> evalsha(byte[] sha1, int keyCount, byte[]... params);
-//
-//	List<Object> evalsha(byte[] sha1, List<byte[]> keys, List<byte[]> args);
-//
-//	List<Object> evalshaReadonly(byte[] sha1, List<byte[]> keys, List<byte[]> args);
+	List<Object> evalsha(String sha1);
+
+	List<Object> evalsha(String sha1, int keyCount, byte[]... params);
+
+	List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args);
+
+	List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args);
 }

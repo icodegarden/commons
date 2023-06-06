@@ -497,6 +497,37 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public List<Object> evalsha(String sha1) {
+		Object obj = syncRedisCommands.evalsha(sha1, ScriptOutputType.MULTI, new byte[0]);
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, int keyCount, byte[]... params) {
+		Tuple2<List<byte[]>, List<byte[]>> tuple2 = CollectionUtils.splitByKeyGroup(params, keyCount);
+		List<byte[]> keys = tuple2.getT1();
+		List<byte[]> args = tuple2.getT2();
+
+		Object obj = syncRedisCommands.evalsha(sha1, ScriptOutputType.MULTI, keys.toArray(new byte[keys.size()][]),
+				args.toArray(new byte[args.size()][]));
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args) {
+		Object obj = syncRedisCommands.evalsha(sha1, ScriptOutputType.MULTI, keys.toArray(new byte[keys.size()][]),
+				args.toArray(new byte[args.size()][]));
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args) {
+		Object obj = syncRedisCommands.evalshaReadOnly(sha1, ScriptOutputType.MULTI,
+				keys.toArray(new byte[keys.size()][]), args.toArray(new byte[args.size()][]));
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
 	public Long append(byte[] key, byte[] value) {
 		return syncRedisCommands.append(key, value);
 	}

@@ -101,7 +101,7 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 	public RedisTemplateRedisExecutor(RedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
-	
+
 	public RedisTemplate getRedisTemplate() {
 		return redisTemplate;
 	}
@@ -659,6 +659,41 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 		 * 语句自己控制只读
 		 */
 		return eval(script, keys, args);
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1) {
+		return (List<Object>) redisTemplate.execute((RedisCallback) connection -> {
+			Object obj = connection.evalSha(sha1, ReturnType.MULTI, 0, new byte[0]);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, int keyCount, byte[]... params) {
+		return (List<Object>) redisTemplate.execute((RedisCallback) connection -> {
+			Object obj = connection.evalSha(sha1, ReturnType.MULTI, keyCount, params);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args) {
+		List<byte[]> keysAndArgs = CollectionUtils.mergeByKeyGroup(keys, args);
+
+		return (List<Object>) redisTemplate.execute((RedisCallback) connection -> {
+			Object obj = connection.evalSha(sha1, ReturnType.MULTI, keys.size(),
+					keysAndArgs.toArray(new byte[keysAndArgs.size()][]));
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+	}
+
+	@Override
+	public List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args) {
+		/**
+		 * 语句自己控制只读
+		 */
+		return evalsha(sha1, keys, args);
 	}
 
 	@Override

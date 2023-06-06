@@ -90,7 +90,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 			int maxAttempts, String password, GenericObjectPoolConfig poolConfig) {
 		this(new JedisCluster(clusterNodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig));
 	}
-	
+
 	public JedisCluster getJedisCluster() {
 		return jc;
 	}
@@ -1394,6 +1394,30 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public List<Object> evalsha(String sha1) {
+		Object obj = jc.evalsha(sha1);
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, int keyCount, byte[]... params) {
+		Object obj = jc.evalsha(sha1.getBytes(StandardCharsets.UTF_8), keyCount, params);
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args) {
+		Object obj = jc.evalsha(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args) {
+		Object obj = jc.evalshaReadonly(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
+		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
 	public long bitcount(byte[] key) {
 		return jc.bitcount(key);
 	}
@@ -1777,7 +1801,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public void publish(byte[] channel, byte[] message) {
 		jc.publish(channel, message);
 	}
-	
+
 	@Override
 	public List<byte[]> pubsubShardChannels() {
 		throw new UnsupportedOperationException();
@@ -1830,14 +1854,14 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 					}
 				};
 
-				for(byte[] pattern:patterns) {
+				for (byte[] pattern : patterns) {
 					subMap.put(pattern, jedisPubSub);
 				}
-				
+
 				jc.psubscribe(jedisPubSub, patterns.toArray(new byte[patterns.size()][]));
 			}
 		}.start();
-		
+
 	}
 
 	@Override
@@ -1862,7 +1886,7 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 
 	@Override
 	public void punsubscribe(List<byte[]> patterns) {
-		for(byte[] pattern:patterns) {
+		for (byte[] pattern : patterns) {
 			BinaryJedisPubSub jedisPubSub = subMap.get(pattern);
 			if (jedisPubSub != null) {
 				jedisPubSub.punsubscribe();

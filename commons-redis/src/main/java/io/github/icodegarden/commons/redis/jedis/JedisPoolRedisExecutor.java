@@ -90,7 +90,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			boolean ssl) {
 		this.jedisPool = new JedisPool(poolConfig, host, port, timeout, password, ssl);
 	}
-	
+
 	public JedisPool getJedisPool() {
 		return jedisPool;
 	}
@@ -1718,6 +1718,42 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	}
 
 	@Override
+	public List<Object> evalsha(String sha1) {
+		return execCommand(jedis -> {
+			Object obj = jedis.evalsha(sha1);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, int keyCount, byte[]... params) {
+		return execCommand(jedis -> {
+			Object obj = jedis.evalsha(sha1.getBytes(StandardCharsets.UTF_8), keyCount, params);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+
+	}
+
+	@Override
+	public List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args) {
+		return execCommand(jedis -> {
+			Object obj = jedis.evalsha(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+
+	}
+
+	@Override
+	public List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args) {
+		return execCommand(jedis -> {
+			Object obj = jedis.evalshaReadonly(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
+			return EvalUtils.ofMultiReturnType(obj);
+		});
+
+	}
+
+	@Override
 	public long bitcount(byte[] key) {
 		return execCommand(jedis -> {
 			return jedis.bitcount(key);
@@ -2208,6 +2244,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 			return null;
 		});
 	}
+
 	@Override
 	public List<byte[]> pubsubShardChannels() {
 		throw new UnsupportedOperationException();
@@ -2237,7 +2274,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 	public void sunsubscribe(byte[] shardchannel) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	public void psubscribe(List<byte[]> patterns, RedisPubSubListener<byte[], byte[]> listener) {
 		new Thread("Jedis-Sub-Patterns") {
@@ -2261,7 +2298,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 						}
 					};
 
-					for(byte[] pattern:patterns) {
+					for (byte[] pattern : patterns) {
 						subMap.put(pattern, jedisPubSub);
 					}
 
@@ -2294,7 +2331,7 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 
 	@Override
 	public void punsubscribe(List<byte[]> patterns) {
-		for(byte[] pattern:patterns) {
+		for (byte[] pattern : patterns) {
 			BinaryJedisPubSub jedisPubSub = subMap.get(pattern);
 			if (jedisPubSub != null) {
 				jedisPubSub.punsubscribe();
