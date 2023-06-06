@@ -3,6 +3,7 @@ package io.github.icodegarden.commons.redis.jedis;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
 import io.github.icodegarden.commons.redis.args.GeoArgs;
 import io.github.icodegarden.commons.redis.args.GeoCoordinate;
@@ -1415,6 +1417,32 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 	public List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args) {
 		Object obj = jc.evalshaReadonly(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
 		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Boolean> scriptExists(String... sha1s) {
+		if (sha1s.length == 1) {
+			return jc.scriptExists(sha1s[0]);
+		}
+		List<String> list = io.github.icodegarden.commons.lang.util.CollectionUtils.subSafely(Arrays.asList(sha1s), 1,
+				sha1s.length - 1);
+		return jc.scriptExists(sha1s[0], list.toArray(new String[list.size()]));
+	}
+
+	@Override
+	public String scriptFlush(FlushMode flushMode) {
+		return jc.scriptFlush((String) null, redis.clients.jedis.args.FlushMode.valueOf(flushMode.name()));
+	}
+
+	@Override
+	public String scriptKill() {
+		return jc.scriptKill((String) null);
+	}
+
+	@Override
+	public String scriptLoad(byte[] script) {
+		byte[] bs = jc.scriptLoad(script, null);
+		return new String(bs, StandardCharsets.UTF_8);
 	}
 
 	@Override

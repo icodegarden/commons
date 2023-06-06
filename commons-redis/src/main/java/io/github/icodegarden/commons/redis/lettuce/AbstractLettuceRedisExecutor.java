@@ -22,6 +22,7 @@ import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
 import io.github.icodegarden.commons.redis.args.GeoArgs;
 import io.github.icodegarden.commons.redis.args.GeoCoordinate;
@@ -525,6 +526,26 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 		Object obj = syncRedisCommands.evalshaReadOnly(sha1, ScriptOutputType.MULTI,
 				keys.toArray(new byte[keys.size()][]), args.toArray(new byte[args.size()][]));
 		return EvalUtils.ofMultiReturnType(obj);
+	}
+
+	@Override
+	public List<Boolean> scriptExists(String... sha1s) {
+		return syncRedisCommands.scriptExists(sha1s);
+	}
+
+	@Override
+	public String scriptFlush(FlushMode flushMode) {
+		return syncRedisCommands.scriptFlush(io.lettuce.core.FlushMode.valueOf(flushMode.name()));
+	}
+
+	@Override
+	public String scriptKill() {
+		return syncRedisCommands.scriptKill();
+	}
+
+	@Override
+	public String scriptLoad(byte[] script) {
+		return syncRedisCommands.scriptLoad(script);
 	}
 
 	@Override

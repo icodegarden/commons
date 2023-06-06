@@ -25,6 +25,7 @@ import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
 import io.github.icodegarden.commons.redis.args.GeoArgs;
 import io.github.icodegarden.commons.redis.args.GeoCoordinate;
@@ -1749,6 +1750,38 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 		return execCommand(jedis -> {
 			Object obj = jedis.evalshaReadonly(sha1.getBytes(StandardCharsets.UTF_8), keys, args);
 			return EvalUtils.ofMultiReturnType(obj);
+		});
+
+	}
+
+	@Override
+	public List<Boolean> scriptExists(String... sha1s) {
+		return execCommand(jedis -> {
+			return jedis.scriptExists(sha1s);
+		});
+	}
+
+	@Override
+	public String scriptFlush(FlushMode flushMode) {
+		return execCommand(jedis -> {
+			return jedis.scriptFlush(redis.clients.jedis.args.FlushMode.valueOf(flushMode.name()));
+		});
+
+	}
+
+	@Override
+	public String scriptKill() {
+		return execCommand(jedis -> {
+			return jedis.scriptKill();
+		});
+
+	}
+
+	@Override
+	public String scriptLoad(byte[] script) {
+		return execCommand(jedis -> {
+			byte[] bs = jedis.scriptLoad(script);
+			return new String(bs, StandardCharsets.UTF_8);
 		});
 
 	}

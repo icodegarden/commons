@@ -2,6 +2,8 @@ package io.github.icodegarden.commons.redis;
 
 import java.util.List;
 
+import io.github.icodegarden.commons.redis.args.FlushMode;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -70,4 +72,12 @@ public interface ScriptingBinaryCommands {
 	List<Object> evalsha(String sha1, List<byte[]> keys, List<byte[]> args);
 
 	List<Object> evalshaReadonly(String sha1, List<byte[]> keys, List<byte[]> args);
+
+	List<Boolean> scriptExists(String... sha1s);
+
+	String scriptFlush(FlushMode flushMode);
+
+	String scriptKill();
+
+	String scriptLoad(byte[] script);
 }

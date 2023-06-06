@@ -54,6 +54,7 @@ import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
+import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
 import io.github.icodegarden.commons.redis.args.GeoArgs;
 import io.github.icodegarden.commons.redis.args.GeoCoordinate;
@@ -694,6 +695,38 @@ public class RedisTemplateRedisExecutor implements RedisExecutor {
 		 * 语句自己控制只读
 		 */
 		return evalsha(sha1, keys, args);
+	}
+
+	@Override
+	public List<Boolean> scriptExists(String... sha1s) {
+		return (List) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.scriptingCommands().scriptExists(sha1s);
+		});
+	}
+
+	@Override
+	public String scriptFlush(FlushMode flushMode) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.scriptingCommands().scriptFlush();
+			return "OK";
+		});
+
+	}
+
+	@Override
+	public String scriptKill() {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			connection.scriptingCommands().scriptKill();
+			return "OK";
+		});
+
+	}
+
+	@Override
+	public String scriptLoad(byte[] script) {
+		return (String) redisTemplate.execute((RedisCallback) connection -> {
+			return connection.scriptingCommands().scriptLoad(script);
+		});
 	}
 
 	@Override
