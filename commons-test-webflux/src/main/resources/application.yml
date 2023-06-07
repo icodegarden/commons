@@ -16,24 +16,24 @@ server:
   port: 18080
 spring:
   application:
-    name: commons-test-web
+    name: commons-test-webflux
   mvc.servlet.load-on-startup: 1
   
-  r2dbc:
-    name: r2dbc
-    url: r2dbcs:mysql://192.168.80.130:3306/gddc_admin
-    username: root
-    password: 123456
-    pool:
-      enabled: true
-      max-size: 10
-      initial-size: 10
-      validation-query: select 1
+#  r2dbc:
+#    name: r2dbc
+#    url: r2dbcs:mysql://192.168.80.130:3306/gddc_admin
+#    username: root
+#    password: 123456
+#    pool:
+#      enabled: true
+#      max-size: 10
+#      initial-size: 10
+#      validation-query: select 1
   
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://192.168.80.130:3306/gddc_admin?setUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowMultiQueries=true
+    url: jdbc:mysql://192.168.184.129:3306/commons?setUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowMultiQueries=true
     username: root
     password: 123456
     hikari:

@@ -1,13 +1,7 @@
 package io.github.icodegarden.commons.test.web;
 
-import javax.sql.DataSource;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.transaction.ReactiveTransactionManager;
-
-import io.github.icodegarden.commons.test.web.MyReactiveTransactionManager.ExtendDataSourceTransactionManager;
 
 /**
  * 
@@ -15,12 +9,20 @@ import io.github.icodegarden.commons.test.web.MyReactiveTransactionManager.Exten
  *
  */
 @SpringBootApplication
-public class TestWebApplication {
+public class TestWebFluxApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TestWebApplication.class, args);
+		SpringApplication.run(TestWebFluxApplication.class, args);
 	}
 
+//	@Bean
+//	public ReactiveTransactionManager myReactiveTransactionManager(DataSource dataSource) {
+//		ExtendDataSourceTransactionManager dataSourceTransactionManager = new ExtendDataSourceTransactionManager(dataSource);
+//		return new MyReactiveTransactionManager(dataSourceTransactionManager);
+//	}
+
+	//-----------------------------------------------------------------------------------------------
+	
 //	@Bean
 //	public TransactionManager reactiveTransactionManager() {
 ////		ConnectionFactoryUtils.getConnection(connectionFactory);
@@ -28,7 +30,7 @@ public class TestWebApplication {
 //		ConnectionPool connectionPool = new ConnectionPool(configuration);
 //		return new R2dbcTransactionManager(connectionPool);
 //	}
-	
+
 //	@Bean
 //	public ConnectionFactory connectionFactory() {
 //		ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder().build();
@@ -39,10 +41,4 @@ public class TestWebApplication {
 //	public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
 //		return new R2dbcTransactionManager(connectionFactory);
 //	}
-	
-	@Bean
-	public ReactiveTransactionManager myReactiveTransactionManager(DataSource dataSource) {
-		ExtendDataSourceTransactionManager dataSourceTransactionManager = new ExtendDataSourceTransactionManager(dataSource);
-		return new MyReactiveTransactionManager(dataSourceTransactionManager);
-	}
 }

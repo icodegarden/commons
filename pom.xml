@@ -64,6 +64,7 @@
 		<module>commons-elasticsearch</module>
 		<module>commons-test</module>
 		<module>commons-test-web</module>
+		<module>commons-test-webflux</module>
 	</modules>
 
 	<distributionManagement>

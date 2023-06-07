@@ -16,11 +16,13 @@ public class ConsumerSystemService {
 	ConsumerSystemMapper consumerSystemMapper;
 	
 	// single TransactionalOperator shared amongst all methods in this instance
-    private final TransactionalOperator transactionalOperator;
+    private TransactionalOperator transactionalOperator;
 
     // use constructor-injection to supply the ReactiveTransactionManager
-    public ConsumerSystemService(ReactiveTransactionManager transactionManager) {
-        this.transactionalOperator = TransactionalOperator.create(transactionManager);
+    public ConsumerSystemService(@Autowired(required = false) ReactiveTransactionManager transactionManager) {
+    	if(transactionManager != null) {
+    		this.transactionalOperator = TransactionalOperator.create(transactionManager);
+    	}
     }
 
 
