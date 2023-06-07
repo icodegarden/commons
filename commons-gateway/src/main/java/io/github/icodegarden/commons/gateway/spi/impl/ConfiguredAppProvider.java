@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import io.github.icodegarden.commons.gateway.core.security.signature.App;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.spi.AppProvider;
-import io.github.icodegarden.commons.lang.util.ThreadPoolUtils;
+import io.github.icodegarden.commons.lang.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,7 +33,7 @@ public class ConfiguredAppProvider implements AppProvider {
 	}
 
 	private void init() {
-		ScheduledThreadPoolExecutor scheduledThreadPool = ThreadPoolUtils
+		ScheduledThreadPoolExecutor scheduledThreadPool = ThreadUtils
 				.newSingleScheduledThreadPool(this.getClass().getSimpleName());
 		scheduledThreadPool.scheduleWithFixedDelay(() -> {
 			try {
