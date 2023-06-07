@@ -254,7 +254,10 @@ public class CommonsWebAutoConfiguration {
 					Integer.MAX_VALUE, 30 * 1000 + 10 * 1000/* 写死固定值，基本不需要配置化 */);
 			processingRequestCountWebFilter.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
 
-			GracefullyShutdown.Registry.singleton().register(processingRequestCountWebFilter);
+			/*
+			 * 由CommonsBeanAutoConfiguration无损下线注册
+			 */
+//			GracefullyShutdown.Registry.singleton().register(processingRequestCountWebFilter);
 
 			return processingRequestCountWebFilter;
 		}
