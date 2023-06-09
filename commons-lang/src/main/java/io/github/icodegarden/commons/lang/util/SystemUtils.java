@@ -705,16 +705,14 @@ public abstract class SystemUtils {
 		private static final String DEFAULT_SERVER_NAME = "NotConfig";
 
 		private static String serverName = DEFAULT_SERVER_NAME;
+		private static String ip;
 
 		static {
 			if (ClassUtils.isPresent("io.github.icodegarden.commons.springboot.SpringContext",
 					ClassUtils.getDefaultClassLoader())) {
 				new Thread() {
 					public void run() {
-						try {
-							Thread.sleep(30000);
-						} catch (InterruptedException e) {
-						}
+						ThreadUtils.sleep(30000);
 
 						long start = System.currentTimeMillis();
 						while (DEFAULT_SERVER_NAME.equals(Server.serverName)
@@ -739,10 +737,7 @@ public abstract class SystemUtils {
 								log.warn("failed on init configServerName");
 							}
 
-							try {
-								Thread.sleep(30000);
-							} catch (InterruptedException e) {
-							}
+							ThreadUtils.sleep(30000);
 						}
 					};
 				}.start();
@@ -755,6 +750,13 @@ public abstract class SystemUtils {
 
 		public static String getServerName() {
 			return serverName;
+		}
+
+		public static String getIp() {
+			if (ip != null) {
+				return ip;
+			}
+			return ip = SystemUtils.getIp();
 		}
 	}
 

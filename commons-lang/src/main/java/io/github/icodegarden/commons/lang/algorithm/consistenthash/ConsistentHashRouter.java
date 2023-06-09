@@ -20,6 +20,10 @@ public class ConsistentHashRouter<T extends Node> {
 	private final SortedMap<Number, VirtualNode<T>> ring = new TreeMap<Number, VirtualNode<T>>();
 	private final HashFunction hashFunc;
 
+	public ConsistentHashRouter(Collection<T> pNodes) {
+		this(pNodes, 160/*默认每个物理节点有160个虚拟节点*/);
+	}
+	
 	public ConsistentHashRouter(Collection<T> pNodes, int vNodeCount) {
 		this(pNodes, vNodeCount, new MD5Function());
 	}
