@@ -9,8 +9,8 @@ import io.github.icodegarden.commons.lang.query.BaseQuery;
  * @author Fangfang.Xu
  *
  */
-public interface MybatisDao<PO, U, Q extends BaseQuery, W, DO> extends Dao<PO, U, Q, W, DO, Long> {
+public interface MybatisDao<PO, U, Q extends BaseQuery, W, DO> extends Dao<PO, U, Q, W, DO, Object> {
 
-	DO findOne(@Param("id") Long id, @Param("with") W with);
+	DO findOne(@Param("id") Object id, @Param("with") W with);
 
 }

@@ -14,6 +14,10 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
  * 
+ * <result property="brushSequences" column="brush_sequences" 
+			javaType="com.geely.ros.common.vo.ota.BrushSequence"
+			typeHandler="io.github.icodegarden.commons.mybatis.handler.JsonArrayHandler"/>
+ * 
  * @author Fangfang.Xu
  *
  * @param <T>

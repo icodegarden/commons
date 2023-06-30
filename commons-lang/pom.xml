@@ -93,6 +93,12 @@
 			<version>${lombok.version}</version>
 		</dependency>
 		<dependency>
+		    <groupId>io.projectreactor</groupId>
+		    <artifactId>reactor-core</artifactId>
+		    <version>${reactor.version}</version>
+		    <optional>true</optional><!-- 可选的 -->
+		</dependency>
+		<dependency>
 			<groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper</artifactId>
 		    <version>${pagehelper.version}</version>

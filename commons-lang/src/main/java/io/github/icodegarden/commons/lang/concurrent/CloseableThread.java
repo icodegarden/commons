@@ -24,4 +24,6 @@ public abstract class CloseableThread extends Thread implements Closeable {
 	public CloseableThread(String name) {
 		super(name);
 	}
+	
+	public abstract void close();
 }

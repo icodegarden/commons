@@ -256,7 +256,7 @@ public class ReactorApiTests {
 				.publishOn(s) // 3 publish切换到1对应的线程
 				.map(i -> i + "(" + Thread.currentThread().getName() + ")"); // 4 第二个map执行在1对应的线程
 
-		new Thread(() -> flux.subscribe(i -> System.out.println(i + "(" + Thread.currentThread().getName() + ")")))
+		new Thread(() -> flux.subscribe(i -> System.out.println(i + "(" + Thread.currentThread().getName() + ")")), "匿名线程")
 				.start();// 5 这个匿名线程是发生订阅的线程。打印发生在最新的执行上下文上，该上下文来自publishOn。
 
 		Thread.sleep(500);
@@ -273,7 +273,7 @@ public class ReactorApiTests {
 				.subscribeOn(s) // 3 subscribe切换到1对应的线程，在5订阅时就起作用
 				.map(i -> i + "(" + Thread.currentThread().getName() + ")"); // 4 第二个map跟第一个map一样
 
-		new Thread(() -> flux.subscribe(i -> System.out.println(i + "(" + Thread.currentThread().getName() + ")")))
+		new Thread(() -> flux.subscribe(i -> System.out.println(i + "(" + Thread.currentThread().getName() + ")")), "匿名线程")
 				.start(); // 5 这个匿名线程是最初进行订阅的线程，但subscribeOn会立即将其转移到四个调度程序线程之一
 
 		Thread.sleep(500);
@@ -327,7 +327,7 @@ public class ReactorApiTests {
 				.map(i -> "100 / " + i + " = " + (100 / i)) //
 				.doOnComplete(() -> System.out.println("Completed"))// 会触发
 				/**
-				 * onErrorContinue系列遇到异常时fallback消费异常，切继续下一个元素的消费
+				 * onErrorContinue系列遇到异常时fallback消费异常，且继续下一个元素的消费
 				 */
 //				.onErrorContinue((e, i) -> System.out.println(e + "   " + i))
 				.onErrorContinue(Exception.class, (e, i) -> System.out.println(e + "   " + i))

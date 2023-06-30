@@ -9,6 +9,14 @@ import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
  */
 public abstract class GracefullyShutdownSchedule extends AbstractSchedule implements GracefullyShutdown {
 
+	public GracefullyShutdownSchedule() {
+		super();
+	}
+
+	public GracefullyShutdownSchedule(String name) {
+		super(name);
+	}
+
 	@Override
 	public String shutdownName() {
 		return this.getClass().getSimpleName();

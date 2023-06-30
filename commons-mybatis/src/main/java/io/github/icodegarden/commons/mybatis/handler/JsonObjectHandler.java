@@ -13,6 +13,10 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
  * 
+ * <result property="content" column="content" 
+			javaType="com.geely.ros.common.po.FunctionAssignmentPO$Content"
+			typeHandler="io.github.icodegarden.commons.mybatis.handler.JsonObjectHandler"/>
+ * 
  * @author Fangfang.Xu
  *
  * @param <T>

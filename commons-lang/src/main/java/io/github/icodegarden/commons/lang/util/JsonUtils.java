@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.core.ParameterizedTypeReference;
 
@@ -78,34 +79,6 @@ public abstract class JsonUtils {
 		}
 	}
 
-	public static <T> List<T> deserializeArray(String jsonArray, Class<T> cla) throws IllegalArgumentException {
-		try {
-			JavaType javaType = om.getTypeFactory().constructParametricType(ArrayList.class, cla);
-			return om.readValue(jsonArray, javaType);
-		} catch (Exception e) {
-			throw new IllegalArgumentException("deserialize json error", e);
-		}
-	}
-
-	/**
-	 * 
-	 * @param <P>
-	 * @param jsonArray
-	 * @param cla
-	 * @param parametrized 某集合的类型
-	 * @return
-	 * @throws IllegalArgumentException
-	 */
-	public static <P> P deserializeArray(String jsonArray, Class<?> cla, Class<P> parametrized)
-			throws IllegalArgumentException {
-		try {
-			JavaType javaType = om.getTypeFactory().constructParametricType(parametrized, cla);
-			return om.readValue(jsonArray, javaType);
-		} catch (Exception e) {
-			throw new IllegalArgumentException("deserialize json error", e);
-		}
-	}
-
 	/**
 	 * 可以反序列化为jsonObject或jsonArray，取决于{@link ParameterizedTypeReference<T>}的泛型类型
 	 * 
@@ -152,6 +125,44 @@ public abstract class JsonUtils {
 		try {
 			JavaType javaType = om.constructType(responseType);
 			return om.readValue(in, javaType);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("deserialize json error", e);
+		}
+	}
+
+	public static <T> List<T> deserializeArray(String jsonArray, Class<T> cla) throws IllegalArgumentException {
+		try {
+			JavaType javaType = om.getTypeFactory().constructParametricType(ArrayList.class, cla);
+			return om.readValue(jsonArray, javaType);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("deserialize json error", e);
+		}
+	}
+
+	/**
+	 * 
+	 * @param <P>
+	 * @param jsonArray
+	 * @param cla
+	 * @param parametrized 某集合的类型
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	public static <P> P deserializeArray(String jsonArray, Class<?> cla, Class<P> parametrized)
+			throws IllegalArgumentException {
+		try {
+			JavaType javaType = om.getTypeFactory().constructParametricType(parametrized, cla);
+			return om.readValue(jsonArray, javaType);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("deserialize json error", e);
+		}
+	}
+
+	public static <K, V> Map<K, V> deserializeMap(String jsonObject, Class<K> k, Class<V> v)
+			throws IllegalArgumentException {
+		try {
+			JavaType javaType = om.getTypeFactory().constructParametricType(Map.class, k, v);
+			return om.readValue(jsonObject, javaType);
 		} catch (Exception e) {
 			throw new IllegalArgumentException("deserialize json error", e);
 		}

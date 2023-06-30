@@ -52,7 +52,7 @@ public abstract class AbstractProcessingRequestCount implements GracefullyShutdo
 					.getBean(ReadinessEndpoint.class);
 			readinessEndpointClosed = readinessEndpoint.isClosed();
 		} catch (Exception ignore) {
-			log.warn("", ignore);
+			log.warn(ignore.getMessage());
 		}
 
 		/**

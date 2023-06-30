@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.lang.util.CronUtils;
+import io.github.icodegarden.commons.lang.util.LogUtils;
 import io.github.icodegarden.commons.lang.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,11 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractSchedule implements Schedule {
 
-	private final ScheduledThreadPoolExecutor scheduleThreadPool = ThreadUtils
-			.newSingleScheduledThreadPool(AbstractSchedule.this.getClass().getSimpleName());
-	{
-		scheduleThreadPool.setRemoveOnCancelPolicy(true);
-	}
+	private final String name;
+	
+	private final ScheduledThreadPoolExecutor scheduleThreadPool;
 
 	private long scheduleTimes;
 
@@ -31,6 +30,28 @@ public abstract class AbstractSchedule implements Schedule {
 	private final AtomicBoolean closed = new AtomicBoolean(false);
 
 	private ScheduledFuture<?> future;
+
+	public AbstractSchedule() {
+		this.name = AbstractSchedule.this.getClass().getSimpleName();
+		
+		scheduleThreadPool = ThreadUtils.newSingleScheduledThreadPool(name);
+		scheduleThreadPool.setRemoveOnCancelPolicy(true);
+	}
+
+	public AbstractSchedule(String name) {
+		this.name = name;
+		
+		scheduleThreadPool = ThreadUtils.newSingleScheduledThreadPool(name);
+		scheduleThreadPool.setRemoveOnCancelPolicy(true);
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public long getScheduleTimes() {
+		return scheduleTimes;
+	}
 
 	@Override
 	public boolean scheduleWithFixedDelay(long initialDelayMillis, long scheduleMillis) {
@@ -112,15 +133,21 @@ public abstract class AbstractSchedule implements Schedule {
 	 */
 	@Override
 	public void close() {
+		LogUtils.infoIfEnabled(log, () -> log.info("{} start close.", getName()));
+
 		if (future != null) {
-			future.cancel(true);
+			future.cancel(false);//不要使用true，会使执行中的调度由于需要获取连接池中的连接抛出InterruptedException
 		}
 		closed.set(true);
+		
+		scheduleThreadPool.shutdown();//这一步是必须的，但以上future.cancel却不是必须的
 
 		/**
 		 * 使用synchronized保障如果任务正在处理中，则等待任务处理完毕
 		 */
 		synchronized (this) {
 		}
+
+		LogUtils.infoIfEnabled(log, () -> log.info("{} complete close.", getName()));
 	}
 }
