@@ -3,6 +3,8 @@ package io.github.icodegarden.commons.springboot.build;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
 import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.redis.jedis.JedisClusterRedisExecutor;
 import io.github.icodegarden.commons.redis.jedis.JedisPoolRedisExecutor;
@@ -33,6 +35,7 @@ public class JedisRedisExecutorBuilder {
 					.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
 
 			ConnectionPoolConfig connectionPoolConfig = new ConnectionPoolConfig();// 使用默认值
+			configGenericObjectPoolConfig(connectionPoolConfig, cluster);
 
 			JedisCluster jc = new JedisCluster(clusterNodes, cluster.getConnectionTimeout(), cluster.getSoTimeout(),
 					cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
@@ -45,6 +48,7 @@ public class JedisRedisExecutorBuilder {
 			log.info("create RedisExecutor by Pool");
 
 			JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();// 使用默认值
+			configGenericObjectPoolConfig(jedisPoolConfig, pool);
 
 			JedisPool jp = new JedisPool(jedisPoolConfig, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
 					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
@@ -53,5 +57,15 @@ public class JedisRedisExecutorBuilder {
 		}
 
 		return null;
+	}
+
+	private static void configGenericObjectPoolConfig(GenericObjectPoolConfig<?> genericObjectPoolConfig,
+			CommonsRedisProperties.JedisCommon common) {
+		genericObjectPoolConfig.setMaxIdle(common.getMaxIdle());
+		genericObjectPoolConfig.setMaxTotal(common.getMaxTotal());
+		genericObjectPoolConfig.setMaxWaitMillis(common.getMaxWaitMillis());
+		genericObjectPoolConfig.setMinEvictableIdleTimeMillis(common.getMinEvictableIdleTimeMillis());
+		genericObjectPoolConfig.setMinIdle(common.getMinIdle());
+		genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(common.getTimeBetweenEvictionRunsMillis());
 	}
 }

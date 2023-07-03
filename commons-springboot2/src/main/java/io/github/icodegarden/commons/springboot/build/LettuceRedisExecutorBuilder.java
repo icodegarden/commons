@@ -9,12 +9,15 @@ import io.github.icodegarden.commons.redis.lettuce.LettuceRedisClientRedisExecut
 import io.github.icodegarden.commons.redis.lettuce.LettuceRedisClusterClientRedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Lettuce;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.RedisURI.Builder;
 import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
+import io.lettuce.core.resource.Delay;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,11 +48,8 @@ public class LettuceRedisExecutorBuilder {
 				return builder.build();
 			}).collect(Collectors.toSet());
 
-			DefaultClientResources clientResources = DefaultClientResources.builder()
-//						.ioThreadPoolSize()//使用默认值
-//						.computationThreadPoolSize()//使用默认值
-//						.reconnectDelay(reconnectDelay)//使用默认值
-					.build();
+			ClientResources clientResources = buildClientResources(cluster.getLettuce());
+
 			RedisClusterClient client = RedisClusterClient.create(clientResources, redisURIs);
 			return new LettuceRedisClusterClientRedisExecutor(client);
 		}
@@ -71,15 +71,28 @@ public class LettuceRedisExecutorBuilder {
 			}
 			RedisURI redisURI = builder.build();
 
-			DefaultClientResources clientResources = DefaultClientResources.builder()
-//						.ioThreadPoolSize()//使用默认值
-//						.computationThreadPoolSize()//使用默认值
-//						.reconnectDelay(reconnectDelay)//使用默认值
-					.build();
+			ClientResources clientResources = buildClientResources(pool.getLettuce());
+
 			RedisClient client = RedisClient.create(clientResources, redisURI);
 			return new LettuceRedisClientRedisExecutor(client);
 		}
 
 		return null;
+	}
+
+	private static ClientResources buildClientResources(Lettuce lettuce) {
+		DefaultClientResources.Builder builder = DefaultClientResources.builder();
+		if (lettuce != null) {
+			if (lettuce.getIoThreadPoolSize() != null) {
+				builder.ioThreadPoolSize(lettuce.getIoThreadPoolSize());
+			}
+			if (lettuce.getComputationThreadPoolSize() != null) {
+				builder.computationThreadPoolSize(lettuce.getComputationThreadPoolSize());
+			}
+			if (lettuce.getReconnectDelayMs() != null) {
+				builder.reconnectDelay(Delay.constant(Duration.ofMillis(lettuce.getReconnectDelayMs())));
+			}
+		}
+		return builder.build();
 	}
 }
