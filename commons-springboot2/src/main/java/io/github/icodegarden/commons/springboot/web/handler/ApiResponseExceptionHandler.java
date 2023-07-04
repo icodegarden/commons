@@ -18,9 +18,7 @@ import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
-import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 
 /**
  * 使用 @Bean
@@ -41,12 +39,18 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 		if (log.isWarnEnabled()) {
 			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 	@Override
@@ -58,12 +62,18 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 		if (log.isWarnEnabled()) {
 			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 	@Override
@@ -91,12 +101,18 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
 
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 	@Override
@@ -112,25 +128,37 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 		if (log.isWarnEnabled()) {
 			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
 		}
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 	@Override
 	public ResponseEntity<ApiResponse> onException(HttpServletRequest request, Exception cause) {
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
 
-		ErrorCodeException ece = convertErrorCodeException(cause, body);
+		ErrorCodeException ece = convertErrorCodeException(cause);
 
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 }

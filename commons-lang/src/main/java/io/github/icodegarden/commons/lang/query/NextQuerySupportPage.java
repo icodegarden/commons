@@ -14,6 +14,10 @@ public class NextQuerySupportPage<E> extends Page<E> implements NextQuerySupport
 
 	private final NextQuerySupportList<? extends E> nextQuerySupportList;
 
+	public NextQuerySupportPage(Page<E> p, NextQuerySupportList<? extends E> nextQuerySupportList) {
+		this(p.getPageNum(), p.getPageSize(), p.getTotal(), p.isCount(), p.getOrderBy(), nextQuerySupportList);
+	}
+
 	public NextQuerySupportPage(int pageNum, int pageSize, long total, boolean count, String orderBy,
 			NextQuerySupportList<? extends E> nextQuerySupportList) {
 		super(pageNum, pageSize);

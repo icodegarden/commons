@@ -2,6 +2,8 @@ package io.github.icodegarden.commons.lang.spec.response;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -17,6 +19,7 @@ public class ApiResponse {
 	private String sub_code;
 	private String sub_msg;
 
+	@JsonIgnore
 	public boolean isSuccess() {
 		return CODE_SUCCESS.equals(code);
 	}

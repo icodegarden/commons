@@ -46,6 +46,10 @@ public abstract class AbstractProcessingRequestCount implements GracefullyShutdo
 	 */
 	@Override
 	public void shutdown() {
+		if(closed) {
+			return;
+		}
+		
 		boolean readinessEndpointClosed = false;
 		try {
 			ReadinessEndpoint readinessEndpoint = SpringContext.getApplicationContext()

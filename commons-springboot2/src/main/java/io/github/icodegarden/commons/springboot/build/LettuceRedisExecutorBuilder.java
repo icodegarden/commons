@@ -9,8 +9,10 @@ import io.github.icodegarden.commons.redis.lettuce.LettuceRedisClientRedisExecut
 import io.github.icodegarden.commons.redis.lettuce.LettuceRedisClusterClientRedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
-import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Lettuce;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster.ClusterLettuce;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.LettuceCommon;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool.PoolLettuce;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.RedisURI.Builder;
@@ -32,23 +34,24 @@ public class LettuceRedisExecutorBuilder {
 		Cluster cluster = redisProperties.getCluster();
 		if (cluster != null) {
 			log.info("create RedisExecutor by Cluster");
+			ClusterLettuce lettuce = cluster.getLettuce();
 
-			Set<RedisURI> redisURIs = cluster.getNodes().stream().map(node -> {
+			Set<RedisURI> redisURIs = lettuce.getNodes().stream().map(node -> {
 				Builder builder = RedisURI.builder()//
 						.withHost(node.getHost())//
 						.withPort(node.getPort())//
-						.withTimeout(Duration.ofMillis(cluster.getSoTimeout()))//
-						.withPassword(cluster.getPassword() != null ? cluster.getPassword().toCharArray() : null)//
+						.withTimeout(Duration.ofMillis(lettuce.getSoTimeout()))//
+						.withPassword(lettuce.getPassword() != null ? lettuce.getPassword().toCharArray() : null)//
 //							.withDatabase(0)//
-						.withClientName(cluster.getClientName()).withSsl(cluster.isSsl());//
+						.withClientName(lettuce.getClientName()).withSsl(lettuce.isSsl());//
 
-				if (cluster.getUser() != null) {
-					builder.withAuthentication(cluster.getUser(), cluster.getPassword());
+				if (lettuce.getUser() != null) {
+					builder.withAuthentication(lettuce.getUser(), lettuce.getPassword());
 				}
 				return builder.build();
 			}).collect(Collectors.toSet());
 
-			ClientResources clientResources = buildClientResources(cluster.getLettuce());
+			ClientResources clientResources = buildClientResources(lettuce);
 
 			RedisClusterClient client = RedisClusterClient.create(clientResources, redisURIs);
 			return new LettuceRedisClusterClientRedisExecutor(client);
@@ -57,21 +60,22 @@ public class LettuceRedisExecutorBuilder {
 		Pool pool = redisProperties.getPool();
 		if (pool != null) {
 			log.info("create RedisExecutor by Pool");
+			PoolLettuce lettuce = pool.getLettuce();
 
 			Builder builder = RedisURI.builder()//
-					.withHost(pool.getHost())//
-					.withPort(pool.getPort())//
-					.withTimeout(Duration.ofMillis(pool.getSoTimeout()))//
-					.withPassword(pool.getPassword() != null ? pool.getPassword().toCharArray() : null)//
-//						.withDatabase(0)//
-					.withClientName(pool.getClientName()).withSsl(pool.isSsl());//
+					.withHost(lettuce.getHost())//
+					.withPort(lettuce.getPort())//
+					.withTimeout(Duration.ofMillis(lettuce.getSoTimeout()))//
+					.withPassword(lettuce.getPassword() != null ? lettuce.getPassword().toCharArray() : null)//
+					.withDatabase(lettuce.getDatabase())//
+					.withClientName(lettuce.getClientName()).withSsl(lettuce.isSsl());//
 
-			if (pool.getUser() != null) {
-				builder.withAuthentication(pool.getUser(), pool.getPassword());
+			if (lettuce.getUser() != null) {
+				builder.withAuthentication(lettuce.getUser(), lettuce.getPassword());
 			}
 			RedisURI redisURI = builder.build();
 
-			ClientResources clientResources = buildClientResources(pool.getLettuce());
+			ClientResources clientResources = buildClientResources(lettuce);
 
 			RedisClient client = RedisClient.create(clientResources, redisURI);
 			return new LettuceRedisClientRedisExecutor(client);
@@ -80,17 +84,17 @@ public class LettuceRedisExecutorBuilder {
 		return null;
 	}
 
-	private static ClientResources buildClientResources(Lettuce lettuce) {
+	private static ClientResources buildClientResources(LettuceCommon common) {
 		DefaultClientResources.Builder builder = DefaultClientResources.builder();
-		if (lettuce != null) {
-			if (lettuce.getIoThreadPoolSize() != null) {
-				builder.ioThreadPoolSize(lettuce.getIoThreadPoolSize());
+		if (common != null) {
+			if (common.getIoThreadPoolSize() != null) {
+				builder.ioThreadPoolSize(common.getIoThreadPoolSize());
 			}
-			if (lettuce.getComputationThreadPoolSize() != null) {
-				builder.computationThreadPoolSize(lettuce.getComputationThreadPoolSize());
+			if (common.getComputationThreadPoolSize() != null) {
+				builder.computationThreadPoolSize(common.getComputationThreadPoolSize());
 			}
-			if (lettuce.getReconnectDelayMs() != null) {
-				builder.reconnectDelay(Delay.constant(Duration.ofMillis(lettuce.getReconnectDelayMs())));
+			if (common.getReconnectDelayMs() != null) {
+				builder.reconnectDelay(Delay.constant(Duration.ofMillis(common.getReconnectDelayMs())));
 			}
 		}
 		return builder.build();

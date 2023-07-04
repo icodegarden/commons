@@ -84,7 +84,7 @@ public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<Stri
 
 	@Override
 	public ResponseEntity<String> onException(HttpServletRequest request, Exception cause) {
-		ErrorCodeException ece = convertErrorCodeException(cause, null);
+		ErrorCodeException ece = convertErrorCodeException(cause);
 
 		return ResponseEntity.status(ece.httpStatus()).body(ece.getMessage());
 	}

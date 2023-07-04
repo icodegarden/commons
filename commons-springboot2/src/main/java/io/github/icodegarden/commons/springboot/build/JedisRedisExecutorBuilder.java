@@ -10,7 +10,9 @@ import io.github.icodegarden.commons.redis.jedis.JedisClusterRedisExecutor;
 import io.github.icodegarden.commons.redis.jedis.JedisPoolRedisExecutor;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Cluster.ClusterRedis;
 import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool;
+import io.github.icodegarden.commons.springboot.properties.CommonsRedisProperties.Pool.PoolRedis;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.ConnectionPoolConfig;
 import redis.clients.jedis.HostAndPort;
@@ -30,29 +32,31 @@ public class JedisRedisExecutorBuilder {
 		Cluster cluster = redisProperties.getCluster();
 		if (cluster != null) {
 			log.info("create RedisExecutor by Cluster");
+			ClusterRedis redis = cluster.getRedis();
 
-			Set<HostAndPort> clusterNodes = cluster.getNodes().stream()
+			Set<HostAndPort> clusterNodes = redis.getNodes().stream()
 					.map(node -> new HostAndPort(node.getHost(), node.getPort())).collect(Collectors.toSet());
 
 			ConnectionPoolConfig connectionPoolConfig = new ConnectionPoolConfig();// 使用默认值
-			configGenericObjectPoolConfig(connectionPoolConfig, cluster);
+			configGenericObjectPoolConfig(connectionPoolConfig, cluster.getRedis());
 
-			JedisCluster jc = new JedisCluster(clusterNodes, cluster.getConnectionTimeout(), cluster.getSoTimeout(),
-					cluster.getMaxAttempts(), cluster.getUser(), cluster.getPassword(), cluster.getClientName(),
-					connectionPoolConfig, cluster.isSsl());
+			JedisCluster jc = new JedisCluster(clusterNodes, redis.getConnectionTimeout(), redis.getSoTimeout(),
+					redis.getMaxAttempts(), redis.getUser(), redis.getPassword(), redis.getClientName(),
+					connectionPoolConfig, redis.isSsl());
 			return new JedisClusterRedisExecutor(jc);
 		}
 
 		Pool pool = redisProperties.getPool();
 		if (pool != null) {
 			log.info("create RedisExecutor by Pool");
+			PoolRedis redis = pool.getRedis();
 
 			JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();// 使用默认值
-			configGenericObjectPoolConfig(jedisPoolConfig, pool);
+			configGenericObjectPoolConfig(jedisPoolConfig, redis);
 
-			JedisPool jp = new JedisPool(jedisPoolConfig, pool.getHost(), pool.getPort(), pool.getConnectionTimeout(),
-					pool.getSoTimeout(), pool.getUser(), pool.getPassword(), pool.getDatabase(), pool.getClientName(),
-					pool.isSsl());
+			JedisPool jp = new JedisPool(jedisPoolConfig, redis.getHost(), redis.getPort(),
+					redis.getConnectionTimeout(), redis.getSoTimeout(), redis.getUser(), redis.getPassword(),
+					redis.getDatabase(), redis.getClientName(), redis.isSsl());
 			return new JedisPoolRedisExecutor(jp);
 		}
 

@@ -1,6 +1,5 @@
 package io.github.icodegarden.commons.springboot.web.handler;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.UndeclaredThrowableException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,15 +15,11 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 
-import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
-import io.github.icodegarden.commons.lang.util.JsonUtils;
 
 /**
  * 使用 @Bean <br>
@@ -107,7 +102,7 @@ public abstract class AbstractExceptionHandler<T> {
 	@ExceptionHandler(Exception.class)
 	public abstract ResponseEntity<T> onException(HttpServletRequest request, Exception cause);
 
-	protected ErrorCodeException convertErrorCodeException(Exception e, @Nullable Object requestBody) {
+	protected ErrorCodeException convertErrorCodeException(Exception e) {
 		ErrorCodeException ece = null;
 		if (e instanceof ErrorCodeException) {
 			ece = (ErrorCodeException) e;
@@ -145,13 +140,13 @@ public abstract class AbstractExceptionHandler<T> {
 		}
 
 		if (ece instanceof ServerErrorCodeException) {
-			log.error("{} ex on handle request, requestBody:{}", EXCEPTION_LOG_MODULE, requestBody, ece);
+			log.error("{} ex on handle request", EXCEPTION_LOG_MODULE, ece);
 		} else {
 			if (log.isWarnEnabled()) {
 				if (printErrorStackOnWarn) {
-					log.warn("request has a Client Exception:{}, requestBody:{}", ece.getMessage(), requestBody, ece);
+					log.warn("request has a Client Exception:{}", ece.getMessage(), ece);
 				} else {
-					log.warn("request has a Client Exception:{}, requestBody:{}", ece.getMessage(), requestBody);
+					log.warn("request has a Client Exception:{}", ece.getMessage());
 				}
 			}
 		}
@@ -177,40 +172,40 @@ public abstract class AbstractExceptionHandler<T> {
 	}
 
 	/**
-	 * 
 	 * @return Nullable
 	 */
-	protected OpenApiRequestBody extractOpenApiRequestBody(HttpServletRequest request) {
-		if (request != null && request instanceof ContentCachingRequestWrapper) {
-			ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
-
-			byte[] bs = wrapper.getContentAsByteArray();
-			if (bs == null || bs.length == 0) {
-				return null;
-			}
-
-			String content;
-			try {
-				content = new String(bs, "utf-8");
-			} catch (UnsupportedEncodingException e) {
-				log.error("WARN ex on extractOpenApiRequestBody convert String", e);
-				return null;
-			}
-
-			if (!StringUtils.hasText(content) || !content.startsWith("{") || !content.endsWith("}")) {
-				return null;
-			}
-
-			try {
-				OpenApiRequestBody body = JsonUtils.deserialize(content, OpenApiRequestBody.class);
-				if (StringUtils.hasText(body.getSign())) {
-					return body;
-				}
-			} catch (Exception e) {
-				log.error("WARN ex on extractOpenApiRequestBody deserialize", e);
-				return null;
-			}
-		}
-		return null;
-	}
+//	@Deprecated //使用该方法判断有性能损失
+//	protected OpenApiRequestBody extractOpenApiRequestBody(HttpServletRequest request) {
+//		if (request != null && request instanceof ContentCachingRequestWrapper) {
+//			ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
+//
+//			byte[] bs = wrapper.getContentAsByteArray();
+//			if (bs == null || bs.length == 0) {
+//				return null;
+//			}
+//
+//			String content;
+//			try {
+//				content = new String(bs, "utf-8");
+//			} catch (UnsupportedEncodingException e) {
+//				log.error("WARN ex on extractOpenApiRequestBody convert String", e);
+//				return null;
+//			}
+//
+//			if (!StringUtils.hasText(content) || !content.startsWith("{") || !content.endsWith("}")) {
+//				return null;
+//			}
+//
+//			try {
+//				OpenApiRequestBody body = JsonUtils.deserialize(content, OpenApiRequestBody.class);
+//				if (StringUtils.hasText(body.getSign())) {
+//					return body;
+//				}
+//			} catch (Exception e) {
+//				log.error("WARN ex on extractOpenApiRequestBody deserialize", e);
+//				return null;
+//			}
+//		}
+//		return null;
+//	}
 }

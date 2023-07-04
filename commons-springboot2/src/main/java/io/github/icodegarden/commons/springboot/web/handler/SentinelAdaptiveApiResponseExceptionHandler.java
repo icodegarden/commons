@@ -21,10 +21,8 @@ import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ClientLimitedErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.InternalApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRegistry;
 
 /**
@@ -70,12 +68,18 @@ public class SentinelAdaptiveApiResponseExceptionHandler extends ApiResponseExce
 		if (log.isWarnEnabled()) {
 			log.warn("{} {}", CLIENT_LIMITED_LOG_MODULE, ece.getMessage(), e);
 		}
-		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-		if (body != null) {
-			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-		}
-
-		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
+//		if (body != null) {
+//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
+//		}
+//
+//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
 	}
 
 	/**

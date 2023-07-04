@@ -50,7 +50,7 @@ public class CommonsRedisAutoConfiguration {
 	@ConditionalOnProperty(value = "commons.redis.executor.enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	@Bean
-	public RedisExecutor lettuceRedisExecutor(CommonsRedisProperties redisProperties) {
+	public RedisExecutor redisExecutor(CommonsRedisProperties redisProperties) {
 		log.info("commons init bean of RedisExecutor");
 
 		/**
