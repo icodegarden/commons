@@ -11,6 +11,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -30,6 +33,57 @@ public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiRes
 
 	private static final Logger log = LoggerFactory.getLogger(ApiResponseExceptionHandler.class);
 
+	@Override
+	public ResponseEntity<ApiResponse> onPathVariableMissing(HttpServletRequest request,
+			MissingPathVariableException cause) throws Exception {
+		ErrorCodeException ece = new ClientParameterMissingErrorCodeException(
+				ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
+				"pathVariable:" + cause.getVariableName());
+		if (log.isWarnEnabled()) {
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
+		}
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
+	}
+	
+	@Override
+	public ResponseEntity<ApiResponse> onRequestHeaderMissing(HttpServletRequest request,
+			MissingRequestHeaderException cause) throws Exception {
+		ErrorCodeException ece = new ClientParameterMissingErrorCodeException(
+				ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
+				"header:" + cause.getHeaderName());
+		if (log.isWarnEnabled()) {
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
+		}
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
+	}
+	
+	@Override
+	public ResponseEntity<ApiResponse> onRequestCookieMissing(HttpServletRequest request,
+			MissingRequestCookieException cause) throws Exception {
+		ErrorCodeException ece = new ClientParameterMissingErrorCodeException(
+				ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
+				"cookie:" + cause.getCookieName());
+		if (log.isWarnEnabled()) {
+			log.warn("{} {}", PARAMETER_INVALID_LOG_MODULE, ece.getMessage(), cause);
+		}
+		
+		/**
+		 * 一律使用OpenApiResponse来构造即可<br>
+		 * biz_code会被gateway补充，那里有BodyCache<br>
+		 */
+		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
+	}
+	
 	@Override
 	public ResponseEntity<ApiResponse> onParameterMissing(HttpServletRequest request,
 			MissingServletRequestParameterException cause) throws Exception {

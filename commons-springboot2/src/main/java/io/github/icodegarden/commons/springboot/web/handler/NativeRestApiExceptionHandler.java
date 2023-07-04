@@ -11,6 +11,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -26,6 +29,33 @@ import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<String> {
 
 	private static final Logger log = LoggerFactory.getLogger(NativeRestApiExceptionHandler.class);
+
+	@Override
+	public ResponseEntity<String> onPathVariableMissing(HttpServletRequest request, MissingPathVariableException cause)
+			throws Exception {
+		if (log.isWarnEnabled()) {
+			log.warn("{}", PARAMETER_INVALID_LOG_MODULE, cause);
+		}
+		return ResponseEntity.status(400).body("Missing Path Variable:" + cause.getVariableName());
+	}
+
+	@Override
+	public ResponseEntity<String> onRequestHeaderMissing(HttpServletRequest request,
+			MissingRequestHeaderException cause) throws Exception {
+		if (log.isWarnEnabled()) {
+			log.warn("{}", PARAMETER_INVALID_LOG_MODULE, cause);
+		}
+		return ResponseEntity.status(400).body("Missing Header:" + cause.getHeaderName());
+	}
+
+	@Override
+	public ResponseEntity<String> onRequestCookieMissing(HttpServletRequest request,
+			MissingRequestCookieException cause) throws Exception {
+		if (log.isWarnEnabled()) {
+			log.warn("{}", PARAMETER_INVALID_LOG_MODULE, cause);
+		}
+		return ResponseEntity.status(400).body("Missing Cookie:" + cause.getCookieName());
+	}
 
 	@Override
 	public ResponseEntity<String> onParameterMissing(HttpServletRequest request,

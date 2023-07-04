@@ -11,6 +11,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +43,18 @@ public abstract class AbstractExceptionHandler<T> {
 		this.printErrorStackOnWarn = printErrorStackOnWarn;
 	}
 
+	@ExceptionHandler(MissingPathVariableException.class)
+	public abstract ResponseEntity<T> onPathVariableMissing(HttpServletRequest request,
+			MissingPathVariableException cause) throws Exception;
+
+	@ExceptionHandler(MissingRequestHeaderException.class)
+	public abstract ResponseEntity<T> onRequestHeaderMissing(HttpServletRequest request,
+			MissingRequestHeaderException cause) throws Exception;
+
+	@ExceptionHandler(MissingRequestCookieException.class)
+	public abstract ResponseEntity<T> onRequestCookieMissing(HttpServletRequest request,
+			MissingRequestCookieException cause) throws Exception;
+	
 	/**
 	 * spring参数缺失，不会进aop
 	 * 
