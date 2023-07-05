@@ -27,9 +27,13 @@ import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticat
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountWebFilter;
 import io.github.icodegarden.commons.springboot.web.handler.ApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ApiResponseReactiveExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.NativeRestApiExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.NativeRestApiReactiveExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseReactiveExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveNativeRestApiExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveNativeRestApiReactiveExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.util.MappingJackson2HttpMessageConverters;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,6 +90,7 @@ public class CommonsWebAutoConfiguration {
 
 	/**
 	 * 有webmvc <br>
+	 * spring对webmvc比webflux优先
 	 * 
 	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 	 */
@@ -132,9 +137,7 @@ public class CommonsWebAutoConfiguration {
 		}
 
 		/**
-		 * 网关是webflux不会有这个
-		 */
-		/**
+		 * gateway是webflux因此不会有这个<br>
 		 * 只对没有spring-security依赖的起作用，有依赖的认为自己认证
 		 */
 		@ConditionalOnMissingClass({ "org.springframework.security.core.Authentication" })
@@ -267,7 +270,79 @@ public class CommonsWebAutoConfiguration {
 		 */
 
 		/**
-		 * 暂无Flux的ExceptionHandler
+		 * 
+		 * 有webflux且没有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 		 */
+		@ConditionalOnClass({ DispatcherHandler.class , SphU.class })
+		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+				"org.glassfish.jersey.servlet.ServletContainer" })
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@Configuration
+		protected static class SentinelAdaptiveApiResponseReactiveExceptionHandlerAutoConfiguration {
+			@Bean
+			public SentinelAdaptiveApiResponseReactiveExceptionHandler sentinelAdaptiveApiResponseReactiveExceptionHandler() {
+				log.info("commons init bean of SentinelAdaptiveApiResponseReactiveExceptionHandler");
+				return new SentinelAdaptiveApiResponseReactiveExceptionHandler();
+			}
+		}
+
+		/**
+		 * 
+		 * 有webflux且没有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+		 */
+		@ConditionalOnClass({ DispatcherHandler.class , SphU.class })
+		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+				"org.glassfish.jersey.servlet.ServletContainer" })
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@Configuration
+		protected static class SentinelAdaptiveNativeRestApiReactiveExceptionHandlerAutoConfiguration {
+			@Bean
+			public SentinelAdaptiveNativeRestApiReactiveExceptionHandler sentinelAdaptiveNativeRestApiReactiveExceptionHandler() {
+				log.info("commons init bean of SentinelAdaptiveNativeRestReactiveApiExceptionHandler");
+				return new SentinelAdaptiveNativeRestApiReactiveExceptionHandler();
+			}
+		}
+
+		/**
+		 * 
+		 * 有webflux且没有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+		 */
+		@ConditionalOnClass({ DispatcherHandler.class })
+		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+				"org.glassfish.jersey.servlet.ServletContainer","com.alibaba.csp.sentinel.SphU" })
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@Configuration
+		protected static class ApiResponseReactiveExceptionHandlerAutoConfiguration {
+			@Bean
+			public ApiResponseReactiveExceptionHandler apiResponseReactiveExceptionHandler() {
+				log.info("commons init bean of ApiResponseReactiveExceptionHandler");
+				return new ApiResponseReactiveExceptionHandler();
+			}
+		}
+
+		/**
+		 * 
+		 * 有webflux且没有webmvc <br>
+		 * 
+		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+		 */
+		@ConditionalOnClass({ DispatcherHandler.class })
+		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+				"org.glassfish.jersey.servlet.ServletContainer","com.alibaba.csp.sentinel.SphU" })
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@Configuration
+		protected static class NativeRestApiReactiveExceptionHandlerAutoConfiguration {
+			@Bean
+			public NativeRestApiReactiveExceptionHandler nativeRestApiReactiveExceptionHandler() {
+				log.info("commons init bean of NativeRestApiReactiveExceptionHandler");
+				return new NativeRestApiReactiveExceptionHandler();
+			}
+		}
 	}
 }
