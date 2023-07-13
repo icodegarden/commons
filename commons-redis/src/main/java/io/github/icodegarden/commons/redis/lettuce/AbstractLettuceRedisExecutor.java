@@ -21,6 +21,7 @@ import io.github.icodegarden.commons.redis.args.BitCountOption;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
+import io.github.icodegarden.commons.redis.args.ClaimedMessages;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
@@ -50,7 +51,11 @@ import io.github.icodegarden.commons.redis.args.ScoredValue;
 import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortedSetOption;
+import io.github.icodegarden.commons.redis.args.StreamMessage;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.XAddArgs;
+import io.github.icodegarden.commons.redis.args.XAutoClaimArgs;
+import io.github.icodegarden.commons.redis.args.XClaimArgs;
 import io.github.icodegarden.commons.redis.args.ZAddArgs;
 import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
@@ -1898,4 +1903,130 @@ public abstract class AbstractLettuceRedisExecutor implements RedisExecutor {
 	}
 
 	protected abstract StatefulRedisPubSubConnection<byte[], byte[]> connectPubSub();
+
+//	@Override
+//	public long xack(byte[] key, byte[] group, String... ids) {
+//		return syncRedisCommands.xack(key, group, ids);
+//	}
+//
+//	@Override
+//	public byte[] xadd(byte[] key, Map<byte[], byte[]> hash) {
+//		String s = syncRedisCommands.xadd(key, hash);
+//		if (s != null) {
+//			return s.getBytes(StandardCharsets.UTF_8);
+//		}
+//		return null;
+//	}
+//
+//	@Override
+//	public byte[] xadd(byte[] key, XAddArgs args, Map<byte[], byte[]> hash) {
+//		io.lettuce.core.XAddArgs xAddArgs = new io.lettuce.core.XAddArgs();
+//		if (args.getId() != null) {
+//			xAddArgs.id(args.getId());
+//		}
+//		if (args.getMaxlen() != null) {
+//			xAddArgs.maxlen(args.getMaxlen());
+//		}
+//
+//		xAddArgs.approximateTrimming(args.isApproximateTrimming());
+//		xAddArgs.exactTrimming(args.isExactTrimming());
+//		xAddArgs.nomkstream(args.isNomkstream());
+//
+//		if (args.getMinid() != null) {
+//			xAddArgs.minId(args.getMinid());
+//		}
+//		if (args.getLimit() != null) {
+//			xAddArgs.limit(args.getLimit());
+//		}
+//
+//		String s = syncRedisCommands.xadd(key, xAddArgs, hash);
+//		if (s != null) {
+//			return s.getBytes(StandardCharsets.UTF_8);
+//		}
+//		return null;
+//	}
+//
+//	@Override
+//	public ClaimedMessages<byte[], byte[]> xautoclaim(byte[] key, XAutoClaimArgs<byte[]> args) {
+//		io.lettuce.core.XAutoClaimArgs<byte[]> xAutoClaimArgs = new io.lettuce.core.XAutoClaimArgs<byte[]>();
+//		Consumer<byte[]> consumer = io.lettuce.core.Consumer.from(args.getGroup(), args.getConsumer());
+//		xAutoClaimArgs.consumer(consumer);
+//		xAutoClaimArgs.minIdleTime(args.getMinIdleTime());
+//		if (args.getStartId() != null) {
+//			xAutoClaimArgs.startId(args.getStartId());
+//		}
+//		if (args.getCount() != null) {
+//			xAutoClaimArgs.count(args.getCount());
+//		}
+//		if (args.isJustid()) {
+//			xAutoClaimArgs.isJustid();
+//		}
+//
+//		io.lettuce.core.models.stream.ClaimedMessages<byte[], byte[]> claimedMessages = syncRedisCommands
+//				.xautoclaim(key, xAutoClaimArgs);
+//
+//		List<StreamMessage<byte[], byte[]>> msgs = null;
+//
+//		List<io.lettuce.core.StreamMessage<byte[], byte[]>> messages = claimedMessages.getMessages();
+//		if (messages != null) {
+//			msgs = messages.stream().map(message -> {
+//				return new StreamMessage<>(message.getStream(), message.getId(), message.getBody());
+//			}).collect(Collectors.toList());
+//		}
+//
+//		return new ClaimedMessages<byte[], byte[]>(claimedMessages.getId(), msgs);
+//	}
+//
+//	@Override
+//	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, long minIdleTime,
+//			String... ids) {
+//		Consumer<byte[]> consumer = io.lettuce.core.Consumer.from(group, consumerName);
+//		List<io.lettuce.core.StreamMessage<byte[], byte[]>> messages = syncRedisCommands.xclaim(key, consumer,
+//				minIdleTime, ids);
+//
+//		if (messages != null) {
+//			return messages.stream().map(message -> {
+//				return new StreamMessage<>(message.getStream(), message.getId(), message.getBody());
+//			}).collect(Collectors.toList());
+//		}
+//		return null;
+//	}
+//
+//	@Override
+//	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, XClaimArgs args,
+//			String... ids) {
+//		Consumer<byte[]> consumer = io.lettuce.core.Consumer.from(group, consumerName);
+//
+//		io.lettuce.core.XClaimArgs xClaimArgs = new io.lettuce.core.XClaimArgs();
+//		xClaimArgs.minIdleTime(args.getMinIdleTime());
+//		if (args.getIdle() != null) {
+//			xClaimArgs.idle(args.getIdle());
+//		}
+//		if (args.getTime() != null) {
+//			xClaimArgs.time(args.getTime());
+//		}
+//		if (args.getRetrycount() != null) {
+//			xClaimArgs.retryCount(args.getRetrycount());
+//		}
+//		xClaimArgs.force(args.isForce());
+//		if (args.isJustid()) {
+//			xClaimArgs.justid();
+//		}
+//
+//		List<io.lettuce.core.StreamMessage<byte[], byte[]>> messages = syncRedisCommands.xclaim(key, consumer,
+//				xClaimArgs, ids);
+//
+//		if (messages != null) {
+//			return messages.stream().map(message -> {
+//				return new StreamMessage<>(message.getStream(), message.getId(), message.getBody());
+//			}).collect(Collectors.toList());
+//		}
+//		return null;
+//	}
+//	
+//	@Override
+//	public long xdel(byte[] key, String... ids) {
+//		return syncRedisCommands.xdel(key, ids);
+//	}
+	
 }
