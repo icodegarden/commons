@@ -502,4 +502,22 @@ public class JedisUtils {
 
 		return geoSearchParam;
 	}
+
+	public static String convertStreamString(Object obj) {
+		if (obj instanceof byte[]) {
+			return new String((byte[]) obj, StandardCharsets.UTF_8);
+		} else if (obj instanceof String) {
+			return obj.toString();
+		}
+		return null;
+	}
+
+	public static byte[] convertStreamBytes(Object obj) {
+		if (obj instanceof byte[]) {
+			return (byte[]) obj;
+		} else if (obj instanceof String) {
+			return ((String) obj).getBytes(StandardCharsets.UTF_8);
+		}
+		return null;
+	}
 }

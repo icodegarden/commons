@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,6 +27,7 @@ import io.github.icodegarden.commons.redis.args.BitCountOption;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
+import io.github.icodegarden.commons.redis.args.ClaimedMessages;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
@@ -43,10 +45,13 @@ import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.Limit;
 import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.PendingMessage;
+import io.github.icodegarden.commons.redis.args.PendingMessages;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -54,7 +59,16 @@ import io.github.icodegarden.commons.redis.args.ScoredValue;
 import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortedSetOption;
+import io.github.icodegarden.commons.redis.args.StreamMessage;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.XAddArgs;
+import io.github.icodegarden.commons.redis.args.XAutoClaimArgs;
+import io.github.icodegarden.commons.redis.args.XClaimArgs;
+import io.github.icodegarden.commons.redis.args.XGroupCreateArgs;
+import io.github.icodegarden.commons.redis.args.XPendingArgs;
+import io.github.icodegarden.commons.redis.args.XReadArgs;
+import io.github.icodegarden.commons.redis.args.XReadArgs.StreamOffset;
+import io.github.icodegarden.commons.redis.args.XTrimArgs;
 import io.github.icodegarden.commons.redis.args.ZAddArgs;
 import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
@@ -67,6 +81,9 @@ import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.GeoRadiusStoreParam;
 import redis.clients.jedis.params.GeoSearchParam;
 import redis.clients.jedis.params.GetExParams;
+import redis.clients.jedis.params.XAddParams;
+import redis.clients.jedis.params.XAutoClaimParams;
+import redis.clients.jedis.params.XClaimParams;
 import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZParams;
 import redis.clients.jedis.resps.GeoRadiusResponse;
@@ -1920,5 +1937,361 @@ public class JedisClusterRedisExecutor implements RedisExecutor {
 				jedisPubSub.punsubscribe();
 			}
 		}
+	}
+
+	@Override
+	public long xack(byte[] key, byte[] group, String... ids) {
+		byte[][] bs = new byte[ids.length][];
+		for (int i = 0; i < ids.length; i++) {
+			bs[i] = ids[i].getBytes(StandardCharsets.UTF_8);
+		}
+
+		return jc.xack(key, group, bs);
+	}
+
+	@Override
+	public String xadd(byte[] key, Map<byte[], byte[]> hash) {
+		return xadd(key, new XAddArgs(), hash);
+	}
+
+	@Override
+	public String xadd(byte[] key, XAddArgs args, Map<byte[], byte[]> hash) {
+		XAddParams xAddParams = new redis.clients.jedis.params.XAddParams();
+		if (args.getId() != null) {
+			xAddParams.id(args.getId());
+		}
+		if (args.getMaxlen() != null) {
+			xAddParams.maxLen(args.getMaxlen());
+		}
+
+		if (args.isApproximateTrimming()) {
+			xAddParams.approximateTrimming();
+		}
+		if (args.isExactTrimming()) {
+			xAddParams.exactTrimming();
+		}
+		if (args.isNomkstream()) {
+			xAddParams.noMkStream();
+		}
+
+		if (args.getMinid() != null) {
+			xAddParams.minId(args.getMinid());
+		}
+		if (args.getLimit() != null) {
+			xAddParams.limit(args.getLimit());
+		}
+
+		byte[] id = jc.xadd(key, xAddParams, hash);
+		if (id != null) {
+			return new String(id, StandardCharsets.UTF_8);
+		}
+		return null;
+	}
+
+	@Override
+	public ClaimedMessages<byte[], byte[]> xautoclaim(byte[] key, XAutoClaimArgs<byte[]> args) {
+		XAutoClaimParams xAutoClaimParams = new XAutoClaimParams();
+		if (args.getCount() != null) {
+			xAutoClaimParams.count(args.getCount().intValue());
+		}
+
+		List<Object> list;
+		if (args.isJustid()) {
+			list = jc.xautoclaimJustId(key, args.getGroup(), args.getConsumer(), args.getMinIdleTime(),
+					args.getStartId().getBytes(StandardCharsets.UTF_8), xAutoClaimParams);
+		} else {
+			list = jc.xautoclaim(key, args.getGroup(), args.getConsumer(), args.getMinIdleTime(),
+					args.getStartId().getBytes(StandardCharsets.UTF_8), xAutoClaimParams);
+		}
+
+		String id = null;
+		List<StreamMessage<byte[], byte[]>> msgs = new LinkedList<>();
+		if (!CollectionUtils.isEmpty(list)) {
+			Object obj = list.get(0);
+			id = JedisUtils.convertStreamString(obj);
+
+			for (int i = 1; i < list.size();) {
+				Object msgid = list.get(i);
+				Object k = list.get(i + 1);
+				Object v = list.get(i + 2);
+				Map<byte[], byte[]> map = new HashMap<>();
+
+				map.put(JedisUtils.convertStreamBytes(k), JedisUtils.convertStreamBytes(v));
+				StreamMessage<byte[], byte[]> msg = new StreamMessage<>(key, JedisUtils.convertStreamString(msgid),
+						map);
+
+				msgs.add(msg);
+
+				i += 3;
+			}
+		}
+
+		return new ClaimedMessages<byte[], byte[]>(id, msgs);
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, long minIdleTime,
+			String... ids) {
+		XClaimParams xClaimParams = new XClaimParams();
+
+		byte[][] bs = new byte[ids.length][];
+		for (int i = 0; i < ids.length; i++) {
+			bs[i] = ids[i].getBytes(StandardCharsets.UTF_8);
+		}
+
+		List<byte[]> list = jc.xclaim(key, group, consumerName, minIdleTime, xClaimParams, bs);
+
+		List<StreamMessage<byte[], byte[]>> msgs = new LinkedList<>();
+		if (!CollectionUtils.isEmpty(list)) {
+
+			for (int i = 0; i < list.size();) {
+				Object msgid = list.get(i);
+				Object k = list.get(i + 1);
+				Object v = list.get(i + 2);
+				Map<byte[], byte[]> map = new HashMap<>();
+
+				map.put(JedisUtils.convertStreamBytes(k), JedisUtils.convertStreamBytes(v));
+				StreamMessage<byte[], byte[]> msg = new StreamMessage<>(key, JedisUtils.convertStreamString(msgid),
+						map);
+
+				msgs.add(msg);
+
+				i += 3;
+			}
+		}
+
+		return msgs;
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, XClaimArgs args,
+			String... ids) {
+		XClaimParams xClaimParams = new XClaimParams();
+		if (args.getIdle() != null) {
+			xClaimParams.idle(args.getIdle());
+		}
+		if (args.getTime() != null) {
+			xClaimParams.time(args.getTime());
+		}
+		if (args.getRetrycount() != null) {
+			xClaimParams.retryCount(args.getRetrycount().intValue());
+		}
+		if (args.isForce()) {
+			xClaimParams.force();
+		}
+
+		byte[][] bs = new byte[ids.length][];
+		for (int i = 0; i < ids.length; i++) {
+			bs[i] = ids[i].getBytes(StandardCharsets.UTF_8);
+		}
+
+		List<byte[]> list = jc.xclaim(key, group, consumerName, args.getMinIdleTime(), xClaimParams, bs);
+
+		List<StreamMessage<byte[], byte[]>> msgs = new LinkedList<>();
+		if (!CollectionUtils.isEmpty(list)) {
+
+			for (int i = 0; i < list.size();) {
+				Object msgid = list.get(i);
+				Object k = list.get(i + 1);
+				Object v = list.get(i + 2);
+				Map<byte[], byte[]> map = new HashMap<>();
+
+				map.put(JedisUtils.convertStreamBytes(k), JedisUtils.convertStreamBytes(v));
+				StreamMessage<byte[], byte[]> msg = new StreamMessage<>(key, JedisUtils.convertStreamString(msgid),
+						map);
+
+				msgs.add(msg);
+
+				i += 3;
+			}
+		}
+
+		return msgs;
+	}
+
+	@Override
+	public long xdel(byte[] key, String... ids) {
+		byte[][] bs = new byte[ids.length][];
+		for (int i = 0; i < ids.length; i++) {
+			bs[i] = ids[i].getBytes(StandardCharsets.UTF_8);
+		}
+		return jc.xdel(key, bs);
+	}
+
+	@Override
+	public String xgroupCreate(byte[] key, byte[] groupName, String id) {
+		return jc.xgroupCreate(key, groupName, id.getBytes(StandardCharsets.UTF_8), true);
+	}
+
+	@Override
+	public String xgroupCreate(byte[] key, byte[] groupName, String id, XGroupCreateArgs args) {
+		return jc.xgroupCreate(key, groupName, id.getBytes(StandardCharsets.UTF_8), args.isMkstream());
+	}
+
+	@Override
+	public boolean xgroupCreateConsumer(byte[] key, byte[] groupName, byte[] consumerName) {
+		return jc.xgroupCreateConsumer(key, groupName, consumerName);
+	}
+
+	@Override
+	public long xgroupDelConsumer(byte[] key, byte[] groupName, byte[] consumerName) {
+		return jc.xgroupDelConsumer(key, groupName, consumerName);
+	}
+
+	@Override
+	public long xgroupDestroy(byte[] key, byte[] groupName) {
+		return jc.xgroupDestroy(key, groupName);
+	}
+
+	@Override
+	public String xgroupSetID(byte[] key, byte[] groupName, String id) {
+		return jc.xgroupSetID(key, groupName, id.getBytes(StandardCharsets.UTF_8));
+	}
+
+	@Override
+	public List<Object> xinfoConsumers(byte[] key, byte[] group) {
+		return jc.xinfoConsumers(key, group);
+	}
+
+	@Override
+	public List<Object> xinfoGroups(byte[] key) {
+		return jc.xinfoGroups(key);
+	}
+
+	@Override
+	public List<Object> xinfoStream(byte[] key) {
+		Object object = jc.xinfoStream(key);
+		if (object instanceof Collection) {
+			return new ArrayList<Object>((Collection) object);
+		}
+		return Arrays.asList(object);
+	}
+
+	@Override
+	public long xlen(byte[] key) {
+		return jc.xlen(key);
+	}
+
+	@Override
+	public PendingMessages xpending(byte[] key, byte[] groupName) {
+		Object obj = jc.xpending(key, groupName);
+
+		if (obj instanceof List) {
+			List<Object> list = (List) obj;
+			long count = Long.parseLong(list.get(0).toString());
+
+			Object low = list.get(1);
+			Object up = list.get(2);
+			Range<String> range = Range.create(JedisUtils.convertStreamString(low), JedisUtils.convertStreamString(up));
+
+			Map<String, Long> consumerMessageCount = new HashMap<String, Long>();
+			for (int i = 3; i < list.size(); i++) {
+				String consumer = list.get(i).toString();
+				long c = Long.parseLong(list.get(i + 1).toString());
+				consumerMessageCount.put(consumer, c);
+			}
+
+			return new PendingMessages(count, range, consumerMessageCount);
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, byte[] groupName, Range<String> range, Limit limit) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, byte[] groupName, byte[] consumerName, Range<String> range,
+			Limit limit) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, XPendingArgs<byte[]> args) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrange(byte[] key, byte[] start, byte[] end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrange(byte[] key, byte[] start, byte[] end, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xread(List<XReadArgs.StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+//		Map<byte[], byte[]> map = new HashMap<>();
+//		streams.forEach(stream -> {
+//			map.put(stream.getKey(), stream.getId().getBytes(StandardCharsets.UTF_8));
+//		});
+//
+//		Entry<byte[], byte[]>[] entries = map.entrySet().toArray(new Map.Entry[map.size()]);
+//
+//		List<byte[]> list = jc.xread(new XReadParams(), entries);
+//
+//		if (!CollectionUtils.isEmpty(list)) {
+//			
+//			int g1size = list.size() / streams.size()/* 每组的数量 */;
+//			
+//			for (int g1 = 0; g1 < streams.size(); g1 += g1size) {
+//
+//				List<byte[]> list2 = list.subList(g1, g1size);
+//
+//				byte[] key = list2.get(0);//stream
+//				
+//				int g2size = list2.size() / streams.size()/* 每组的数量 */;
+//
+//				for (int g2 = 0; g2 < ?; g2+=g2size) {
+//					
+//				}
+//
+//				new StreamMessage<>(key, null, null);
+//			}
+//		}
+//
+//		return null;
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xread(XReadArgs args, List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xreadGroup(byte[] groupName, byte[] consumerName,
+			List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xreadGroup(byte[] groupName, byte[] consumerName, XReadArgs args,
+			List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrevrange(byte[] key, byte[] start, byte[] end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrevrange(byte[] key, byte[] start, byte[] end, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xtrim(byte[] key, long maxLen, boolean approximateLength) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xtrim(byte[] key, XTrimArgs args) {
+		throw new UnsupportedOperationException();
 	}
 }

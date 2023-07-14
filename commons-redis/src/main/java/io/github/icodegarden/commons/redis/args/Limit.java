@@ -1,0 +1,96 @@
+package io.github.icodegarden.commons.redis.args;
+
+/**
+ * 
+ * @author Fangfang.Xu
+ *
+ */
+public class Limit {
+
+	private static final Limit UNLIMITED = new Limit(null, null);
+
+	private final Long offset;
+
+	private final Long count;
+
+	protected Limit(Long offset, Long count) {
+		this.offset = offset;
+		this.count = count;
+	}
+
+	/**
+	 *
+	 * @return an unlimited limit.
+	 */
+	public static Limit unlimited() {
+		return UNLIMITED;
+	}
+
+	/**
+	 * Creates a {@link Limit} given {@code offset} and {@code count}.
+	 *
+	 * @param offset the offset.
+	 * @param count  the limit count.
+	 * @return the {@link Limit}
+	 */
+	public static Limit create(long offset, long count) {
+		return new Limit(offset, count);
+	}
+
+	/**
+	 * Creates a {@link Limit} given {@code count}.
+	 *
+	 * @param count the limit count.
+	 * @return the {@link Limit}.
+	 * @since 4.5
+	 */
+	public static Limit from(long count) {
+		return new Limit(0L, count);
+	}
+
+	/**
+	 * @return the offset or {@literal -1} if unlimited.
+	 */
+	public long getOffset() {
+
+		if (offset != null) {
+			return offset;
+		}
+
+		return -1;
+	}
+
+	/**
+	 * @return the count or {@literal -1} if unlimited.
+	 */
+	public long getCount() {
+
+		if (count != null) {
+			return count;
+		}
+
+		return -1;
+	}
+
+	/**
+	 *
+	 * @return {@code true} if the {@link Limit} contains a limitation.
+	 */
+	public boolean isLimited() {
+		return offset != null && count != null;
+	}
+
+	@Override
+	public String toString() {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName());
+		if (isLimited()) {
+			return sb.append(" [offset=").append(getOffset()).append(", count=").append(getCount()).append("]")
+					.toString();
+		}
+
+		return sb.append(" [unlimited]").toString();
+	}
+
+}

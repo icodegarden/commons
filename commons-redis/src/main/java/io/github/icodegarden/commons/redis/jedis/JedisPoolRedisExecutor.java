@@ -24,6 +24,7 @@ import io.github.icodegarden.commons.redis.args.BitCountOption;
 import io.github.icodegarden.commons.redis.args.BitFieldArgs;
 import io.github.icodegarden.commons.redis.args.BitOP;
 import io.github.icodegarden.commons.redis.args.BitPosParams;
+import io.github.icodegarden.commons.redis.args.ClaimedMessages;
 import io.github.icodegarden.commons.redis.args.ExpiryOption;
 import io.github.icodegarden.commons.redis.args.FlushMode;
 import io.github.icodegarden.commons.redis.args.GeoAddArgs;
@@ -41,10 +42,13 @@ import io.github.icodegarden.commons.redis.args.KeyValue;
 import io.github.icodegarden.commons.redis.args.LCSMatchResult;
 import io.github.icodegarden.commons.redis.args.LCSParams;
 import io.github.icodegarden.commons.redis.args.LPosParams;
+import io.github.icodegarden.commons.redis.args.Limit;
 import io.github.icodegarden.commons.redis.args.ListDirection;
 import io.github.icodegarden.commons.redis.args.ListPosition;
 import io.github.icodegarden.commons.redis.args.MapScanCursor;
 import io.github.icodegarden.commons.redis.args.MigrateParams;
+import io.github.icodegarden.commons.redis.args.PendingMessage;
+import io.github.icodegarden.commons.redis.args.PendingMessages;
 import io.github.icodegarden.commons.redis.args.Range;
 import io.github.icodegarden.commons.redis.args.RestoreParams;
 import io.github.icodegarden.commons.redis.args.ScanArgs;
@@ -52,7 +56,16 @@ import io.github.icodegarden.commons.redis.args.ScoredValue;
 import io.github.icodegarden.commons.redis.args.ScoredValueScanCursor;
 import io.github.icodegarden.commons.redis.args.SortArgs;
 import io.github.icodegarden.commons.redis.args.SortedSetOption;
+import io.github.icodegarden.commons.redis.args.StreamMessage;
 import io.github.icodegarden.commons.redis.args.ValueScanCursor;
+import io.github.icodegarden.commons.redis.args.XAddArgs;
+import io.github.icodegarden.commons.redis.args.XAutoClaimArgs;
+import io.github.icodegarden.commons.redis.args.XClaimArgs;
+import io.github.icodegarden.commons.redis.args.XGroupCreateArgs;
+import io.github.icodegarden.commons.redis.args.XPendingArgs;
+import io.github.icodegarden.commons.redis.args.XReadArgs;
+import io.github.icodegarden.commons.redis.args.XReadArgs.StreamOffset;
+import io.github.icodegarden.commons.redis.args.XTrimArgs;
 import io.github.icodegarden.commons.redis.args.ZAddArgs;
 import io.github.icodegarden.commons.redis.args.ZAggregateArgs;
 import io.github.icodegarden.commons.redis.util.EvalUtils;
@@ -2370,5 +2383,195 @@ public class JedisPoolRedisExecutor implements RedisExecutor {
 				jedisPubSub.punsubscribe();
 			}
 		}
+	}
+
+	@Override
+	public long xack(byte[] key, byte[] group, String... ids) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String xadd(byte[] key, Map<byte[], byte[]> hash) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String xadd(byte[] key, XAddArgs args, Map<byte[], byte[]> hash) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ClaimedMessages<byte[], byte[]> xautoclaim(byte[] key, XAutoClaimArgs<byte[]> args) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, long minIdleTime,
+			String... ids) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xclaim(byte[] key, byte[] group, byte[] consumerName, XClaimArgs args,
+			String... ids) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xdel(byte[] key, String... ids) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String xgroupCreate(byte[] key, byte[] groupName, String id) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String xgroupCreate(byte[] key, byte[] groupName, String id, XGroupCreateArgs args) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean xgroupCreateConsumer(byte[] key, byte[] groupName, byte[] consumerName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xgroupDelConsumer(byte[] key, byte[] groupName, byte[] consumerName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xgroupDestroy(byte[] key, byte[] groupName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String xgroupSetID(byte[] key, byte[] groupName, String id) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Object> xinfoConsumers(byte[] key, byte[] group) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Object> xinfoGroups(byte[] key) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Object> xinfoStream(byte[] key) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xlen(byte[] key) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public PendingMessages xpending(byte[] key, byte[] groupName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, byte[] groupName, Range<String> range, Limit limit) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, byte[] groupName, byte[] consumerName, Range<String> range,
+			Limit limit) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<PendingMessage> xpending(byte[] key, XPendingArgs<byte[]> args) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrange(byte[] key, byte[] start, byte[] end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrange(byte[] key, byte[] start, byte[] end, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xread(List<XReadArgs.StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+//		Map<byte[], byte[]> map = new HashMap<>();
+//		streams.forEach(stream -> {
+//			map.put(stream.getKey(), stream.getId().getBytes(StandardCharsets.UTF_8));
+//		});
+//
+//		Entry<byte[], byte[]>[] entries = map.entrySet().toArray(new Map.Entry[map.size()]);
+//
+//		List<byte[]> list = jc.xread(new XReadParams(), entries);
+//
+//		if (!CollectionUtils.isEmpty(list)) {
+//			
+//			int g1size = list.size() / streams.size()/* 每组的数量 */;
+//			
+//			for (int g1 = 0; g1 < streams.size(); g1 += g1size) {
+//
+//				List<byte[]> list2 = list.subList(g1, g1size);
+//
+//				byte[] key = list2.get(0);//stream
+//				
+//				int g2size = list2.size() / streams.size()/* 每组的数量 */;
+//
+//				for (int g2 = 0; g2 < ?; g2+=g2size) {
+//					
+//				}
+//
+//				new StreamMessage<>(key, null, null);
+//			}
+//		}
+//
+//		return null;
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xread(XReadArgs args, List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xreadGroup(byte[] groupName, byte[] consumerName,
+			List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xreadGroup(byte[] groupName, byte[] consumerName, XReadArgs args,
+			List<StreamOffset<byte[]>> streams) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrevrange(byte[] key, byte[] start, byte[] end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<StreamMessage<byte[], byte[]>> xrevrange(byte[] key, byte[] start, byte[] end, int count) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xtrim(byte[] key, long maxLen, boolean approximateLength) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long xtrim(byte[] key, XTrimArgs args) {
+		throw new UnsupportedOperationException();
 	}
 }
