@@ -99,11 +99,14 @@ public class NettyNioServer implements NioServer {
 				.childHandler(new ChannelInitializer<NioSocketChannel>() {
 					@Override
 					protected void initChannel(NioSocketChannel ch) throws Exception {
+						final IdleStateHandler idleStateHandler = new IdleStateHandler(0, 0,
+								clientHeartbeatIntervalMillis * 3, TimeUnit.MILLISECONDS);
 						final ServerHandler nettyServerHandler = new ServerHandler(messageHandler);
 
-						ch.pipeline().addLast(new MessageDecoder()).addLast(new MessageEncoder())
-								.addLast("server-idle-handler", new IdleStateHandler(0, 0,
-										clientHeartbeatIntervalMillis * 3, TimeUnit.MILLISECONDS))
+						ch.pipeline()//
+								.addLast(new MessageDecoder())//
+								.addLast(new MessageEncoder())//
+								.addLast("server-idle-handler", idleStateHandler)//
 								.addLast("handler", nettyServerHandler);
 					}
 				});

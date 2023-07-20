@@ -50,6 +50,7 @@ spring:
 #      keepalive-time: 0 #默认0，必须>=30000ms，keepalive-time必须<=max-lifetime
       connection-timeout: 250 #默认30000,包含了request timeout,不能小于250
 #      idle-timeout: 600000 #默认10分钟 
+#      connection-init-sql: use sm_dev
 #      connection-test-query: SELECT 1    
   redis:
     ssl: false

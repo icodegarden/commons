@@ -90,9 +90,13 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 		bootstrap.handler(new ChannelInitializer() {
 			@Override
 			protected void initChannel(Channel ch) throws Exception {
-				ch.pipeline().addLast(new MessageDecoder()).addLast(new MessageEncoder())
-						.addLast("client-idle-handler",
-								new IdleStateHandler(heartbeatIntervalMillis, 0, 0, TimeUnit.MILLISECONDS))
+				IdleStateHandler idleStateHandler = new IdleStateHandler(heartbeatIntervalMillis, 0, 0,
+						TimeUnit.MILLISECONDS);
+
+				ch.pipeline()//
+						.addLast(new MessageDecoder())//
+						.addLast(new MessageEncoder())//
+						.addLast("client-idle-handler", idleStateHandler)//
 						.addLast("handler", nettyClientHandler);
 			}
 		});
