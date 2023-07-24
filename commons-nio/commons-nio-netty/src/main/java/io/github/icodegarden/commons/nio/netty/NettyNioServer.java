@@ -79,7 +79,8 @@ public class NettyNioServer implements NioServer {
 
 	private void doOpen() {
 		bootstrap = new ServerBootstrap();
-		bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory(name + "-NettyServerBoss", true));
+		bossGroup = new NioEventLoopGroup(1/* 因为boss只用于处理有客户端连接时的register，因此1个线程 */,
+				new DefaultThreadFactory(name + "-NettyServerBoss", true));
 		workerGroup = new NioEventLoopGroup(nettyWorkerThreads,
 				new DefaultThreadFactory(name + "-NettyServerWorker", true));
 
