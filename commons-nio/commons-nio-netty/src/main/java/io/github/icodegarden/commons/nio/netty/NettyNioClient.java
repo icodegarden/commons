@@ -39,9 +39,9 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 
 	private static final Logger log = LoggerFactory.getLogger(NettyNioClient.class);
 
-	private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(
-			Math.min(Runtime.getRuntime().availableProcessors() + 1, 32),
-			new DefaultThreadFactory("NettyClientWorker", true));
+//	private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(
+//			Math.min(Runtime.getRuntime().availableProcessors() + 1, 32),
+//			new DefaultThreadFactory("NettyClientWorker", true)); 
 
 	private volatile boolean closed = true;
 
@@ -70,6 +70,9 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 	private void doOpen() {
 		heartbeat = new NioClientHeartbeat("netty client", this, this);
 		ClientHandler nettyClientHandler = new ClientHandler(heartbeat);
+
+		final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(1,
+				new DefaultThreadFactory("NettyClientWorker", true));// FIXME 每个client独占还是共用1个
 
 		bootstrap = new Bootstrap();
 		bootstrap.group(nioEventLoopGroup)//
