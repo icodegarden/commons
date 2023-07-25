@@ -88,21 +88,20 @@ public class NettyNioClient extends AbstractNioClient implements io.github.icode
 				 */
 //				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout)//
-				.channel(NioSocketChannel.class);
+				.channel(NioSocketChannel.class)//
+				.handler(new ChannelInitializer() {
+					@Override
+					protected void initChannel(Channel ch) throws Exception {
+						IdleStateHandler idleStateHandler = new IdleStateHandler(heartbeatIntervalMillis, 0, 0,
+								TimeUnit.MILLISECONDS);
 
-		bootstrap.handler(new ChannelInitializer() {
-			@Override
-			protected void initChannel(Channel ch) throws Exception {
-				IdleStateHandler idleStateHandler = new IdleStateHandler(heartbeatIntervalMillis, 0, 0,
-						TimeUnit.MILLISECONDS);
-
-				ch.pipeline()//
-						.addLast(new MessageDecoder())//
-						.addLast(new MessageEncoder())//
-						.addLast("client-idle-handler", idleStateHandler)//
-						.addLast("handler", nettyClientHandler);
-			}
-		});
+						ch.pipeline()//
+								.addLast(new MessageDecoder())//
+								.addLast(new MessageEncoder())//
+								.addLast("client-idle-handler", idleStateHandler)//
+								.addLast("handler", nettyClientHandler);
+					}
+				});
 	}
 
 	@Override
