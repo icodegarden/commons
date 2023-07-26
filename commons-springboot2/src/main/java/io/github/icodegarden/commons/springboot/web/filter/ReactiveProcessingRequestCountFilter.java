@@ -5,6 +5,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
+import io.github.icodegarden.commons.springboot.autoconfigure.CommonsWebAutoConfiguration;
 import reactor.core.publisher.Mono;
 
 /**
@@ -18,11 +19,11 @@ import reactor.core.publisher.Mono;
  * @author Fangfang.Xu
  *
  */
-public class ProcessingRequestCountWebFilter extends AbstractProcessingRequestCount implements WebFilter, Ordered {
+public class ReactiveProcessingRequestCountFilter extends AbstractProcessingRequestCount implements WebFilter, Ordered {
 
-	private int order = HIGHEST_PRECEDENCE;
+	private int order = CommonsWebAutoConfiguration.FILTER_ORDER_PROCESSING_REQUEST_COUNT;
 
-	public ProcessingRequestCountWebFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
+	public ReactiveProcessingRequestCountFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
 		super(gracefullyShutdownOrder, instanceRefreshIntervalMs);
 	}
 

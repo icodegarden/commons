@@ -15,7 +15,6 @@ import io.github.icodegarden.commons.gateway.util.CommonsGatewayUtils;
 import io.github.icodegarden.commons.lang.spec.sign.OpenApiRequestBody;
 import io.github.icodegarden.commons.springboot.loadbalancer.FlowTagLoadBalancer;
 import io.github.icodegarden.commons.springboot.security.User;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import reactor.core.publisher.Mono;
 

@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.UrlPathHelper;
 
+import io.github.icodegarden.commons.springboot.security.Authentication;
 import io.github.icodegarden.commons.springboot.security.SecurityUtils;
 import io.github.icodegarden.commons.springboot.security.SimpleAuthentication;
 import io.github.icodegarden.commons.springboot.security.SimpleUser;
@@ -146,20 +147,20 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 		}
 
 		try {
+			Authentication authentication = null;
 			if (appId != null) {
 				String appName = request.getHeader(WebUtils.HEADER_APPNAME);
 
 				SimpleUser user = new SimpleUser(appId, appName, "", Collections.emptyList());
-				SimpleAuthentication simpleAuthentication = new SimpleAuthentication(user, Collections.emptyList());
-
-				SecurityUtils.setAuthentication(simpleAuthentication);
+				authentication = new SimpleAuthentication(user, Collections.emptyList());
 			} else if (userId != null) {
 				String userName = request.getHeader(WebUtils.HEADER_USERNAME);
 
 				SimpleUser user = new SimpleUser(userId, userName, "", Collections.emptyList());
-				SimpleAuthentication simpleAuthentication = new SimpleAuthentication(user, Collections.emptyList());
-
-				SecurityUtils.setAuthentication(simpleAuthentication);
+				authentication = new SimpleAuthentication(user, Collections.emptyList());
+			}
+			if(authentication != null) {
+				SecurityUtils.setAuthentication(authentication);
 			}
 
 			filterChain.doFilter(request, response);

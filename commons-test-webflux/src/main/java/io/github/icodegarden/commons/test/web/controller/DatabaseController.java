@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.icodegarden.commons.lang.dao.OptimizeTableResults;
 import io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase;
+import io.github.icodegarden.commons.springboot.security.SecurityUtils;
+import io.github.icodegarden.commons.springboot.web.util.ReactiveWebUtils;
 
 /**
  * 
@@ -30,6 +32,11 @@ public class DatabaseController {
 		OptimizeTableResults optimizeTable = mysqlMybatisDatabase.optimizeTable(listTables.get(0));
 		boolean errorInMysql = optimizeTable.isErrorInMysql();
 
+		String userId = SecurityUtils.getUserId();
+		System.out.println(userId);
+		
+		System.out.println(ReactiveWebUtils.getExchange().getAttributes());
+		
 		return ResponseEntity.ok("ok");
 	}
 }

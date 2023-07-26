@@ -25,7 +25,8 @@ import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdow
 import io.github.icodegarden.commons.springboot.web.filter.CacheRequestBodyFilter;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
-import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountWebFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ReactiveGatewayPreAuthenticatedAuthenticationFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ReactiveProcessingRequestCountFilter;
 import io.github.icodegarden.commons.springboot.web.handler.ApiResponseExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.ApiResponseReactiveExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.handler.NativeRestApiExceptionHandler;
@@ -46,8 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommonsWebAutoConfiguration {
 
-	private static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
-	private static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
+	public static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
+	public static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
 			+ 100;
 
 	/**
@@ -89,7 +90,7 @@ public class CommonsWebAutoConfiguration {
 	// ----------------------------------------------------------------------------------------
 
 	/**
-	 * 有webmvc <br>
+	 * 有webmvc，所以不会对gateway起作用 <br>
 	 * spring对webmvc比webflux优先
 	 * 
 	 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
@@ -245,29 +246,46 @@ public class CommonsWebAutoConfiguration {
 		 * 暂无Flux的CacheRequestBody
 		 */
 
-		@ConditionalOnProperty(value = "commons.web.webfilter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
+		/**
+		 * gateway不需要这个<br>
+		 */
+		@ConditionalOnMissingClass({ "org.springframework.cloud.gateway.filter.GatewayFilter"/* gateway不需要这个 */ })
+		@ConditionalOnProperty(value = "commons.reactiveWeb.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
-		public WebFilter processingRequestCountFilter() {
-			log.info("commons init bean of ProcessingRequestCountFilter");
+		public WebFilter reactiveProcessingRequestCountFilter() {
+			log.info("commons init bean of ReactiveProcessingRequestCountFilter");
 
 			/**
 			 * 下线优先级最低，30秒实例刷新间隔+10秒冗余
 			 */
-			ProcessingRequestCountWebFilter processingRequestCountWebFilter = new ProcessingRequestCountWebFilter(
-					Integer.MAX_VALUE, 30 * 1000 + 10 * 1000/* 写死固定值，基本不需要配置化 */);
-			processingRequestCountWebFilter.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
+			ReactiveProcessingRequestCountFilter filter = new ReactiveProcessingRequestCountFilter(Integer.MAX_VALUE,
+					30 * 1000 + 10 * 1000/* 写死固定值，基本不需要配置化 */);
+			filter.setOrder(FILTER_ORDER_PROCESSING_REQUEST_COUNT);
 
 			/*
 			 * 由CommonsBeanAutoConfiguration无损下线注册
 			 */
-//			GracefullyShutdown.Registry.singleton().register(processingRequestCountWebFilter);
+//			GracefullyShutdown.Registry.singleton().register(filter);
 
-			return processingRequestCountWebFilter;
+			return filter;
 		}
 
 		/**
-		 * 暂不实现 GatewayPreAuthenticatedAuthenticationWebFilter，因为webflux是异步的，身份信息跨线程不适合
+		 * gateway不需要这个<br>
+		 * 只对没有spring-security依赖的起作用，有依赖的认为自己认证
 		 */
+		@ConditionalOnMissingClass({ "org.springframework.security.core.Authentication",
+				"org.springframework.cloud.gateway.filter.GatewayFilter"/* gateway不需要这个 */ })
+		@ConditionalOnProperty(value = "commons.reactiveWeb.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
+		@Bean
+		public WebFilter reactiveGatewayPreAuthenticatedAuthenticationFilter() {
+			log.info("commons init bean of ReactiveGatewayPreAuthenticatedAuthenticationFilter");
+
+			ReactiveGatewayPreAuthenticatedAuthenticationFilter filter = new ReactiveGatewayPreAuthenticatedAuthenticationFilter();
+			filter.setOrder(FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION);
+
+			return filter;
+		}
 
 		/**
 		 * 
@@ -275,10 +293,10 @@ public class CommonsWebAutoConfiguration {
 		 * 
 		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 		 */
-		@ConditionalOnClass({ DispatcherHandler.class , SphU.class })
+		@ConditionalOnClass({ DispatcherHandler.class, SphU.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer" })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class SentinelAdaptiveApiResponseReactiveExceptionHandlerAutoConfiguration {
 			@Bean
@@ -294,10 +312,10 @@ public class CommonsWebAutoConfiguration {
 		 * 
 		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 		 */
-		@ConditionalOnClass({ DispatcherHandler.class , SphU.class })
+		@ConditionalOnClass({ DispatcherHandler.class, SphU.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer" })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class SentinelAdaptiveNativeRestApiReactiveExceptionHandlerAutoConfiguration {
 			@Bean
@@ -315,8 +333,8 @@ public class CommonsWebAutoConfiguration {
 		 */
 		@ConditionalOnClass({ DispatcherHandler.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
-				"org.glassfish.jersey.servlet.ServletContainer","com.alibaba.csp.sentinel.SphU" })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+				"org.glassfish.jersey.servlet.ServletContainer", "com.alibaba.csp.sentinel.SphU" })
+		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class ApiResponseReactiveExceptionHandlerAutoConfiguration {
 			@Bean
@@ -334,8 +352,8 @@ public class CommonsWebAutoConfiguration {
 		 */
 		@ConditionalOnClass({ DispatcherHandler.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
-				"org.glassfish.jersey.servlet.ServletContainer","com.alibaba.csp.sentinel.SphU" })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+				"org.glassfish.jersey.servlet.ServletContainer", "com.alibaba.csp.sentinel.SphU" })
+		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class NativeRestApiReactiveExceptionHandlerAutoConfiguration {
 			@Bean

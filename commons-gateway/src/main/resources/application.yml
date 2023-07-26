@@ -3,8 +3,6 @@
 #management.endpoint.shutdown.enabled: true
 management.endpoints.web.exposure.include: loggers,health,readiness
 
-commons.web.webfilter.processingRequestCount.enabled: false #网关不需要这个
-
 server: #org.springframework.boot.autoconfigure.web.ServerProperties , gateway使用的是 NettyReactiveWebServerFactory来创建WebServer
   port: 8080
   shutdown: graceful
