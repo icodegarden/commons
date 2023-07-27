@@ -5,8 +5,10 @@ import javax.servlet.Filter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
@@ -22,6 +24,7 @@ import com.alibaba.csp.sentinel.SphU;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdown;
+import io.github.icodegarden.commons.springboot.properties.CommonsWebProperties;
 import io.github.icodegarden.commons.springboot.web.filter.CacheRequestBodyFilter;
 import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
@@ -43,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Fangfang.Xu
  *
  */
+@EnableConfigurationProperties({ CommonsWebProperties.class })
 @Configuration
 @Slf4j
 public class CommonsWebAutoConfiguration {
@@ -165,13 +169,18 @@ public class CommonsWebAutoConfiguration {
 		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 		 */
 		@ConditionalOnClass({ DispatcherServlet.class, SphU.class })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler() {
+			public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
-				return new SentinelAdaptiveApiResponseExceptionHandler();
+				SentinelAdaptiveApiResponseExceptionHandler exceptionHandler = new SentinelAdaptiveApiResponseExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -182,13 +191,18 @@ public class CommonsWebAutoConfiguration {
 		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
 		 */
 		@ConditionalOnClass({ DispatcherServlet.class, SphU.class })
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class SentinelAdaptiveNativeRestApiExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveNativeRestApiExceptionHandler sentinelAdaptiveNativeRestApiExceptionHandler() {
+			public SentinelAdaptiveNativeRestApiExceptionHandler sentinelAdaptiveNativeRestApiExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveNativeRestApiExceptionHandler");
-				return new SentinelAdaptiveNativeRestApiExceptionHandler();
+				SentinelAdaptiveNativeRestApiExceptionHandler exceptionHandler = new SentinelAdaptiveNativeRestApiExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -200,13 +214,17 @@ public class CommonsWebAutoConfiguration {
 		 */
 		@ConditionalOnClass({ DispatcherServlet.class })
 		@ConditionalOnMissingClass("com.alibaba.csp.sentinel.SphU")
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class ApiResponseExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public ApiResponseExceptionHandler apiResponseExceptionHandler() {
+			public ApiResponseExceptionHandler apiResponseExceptionHandler(CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of ApiResponseExceptionHandler");
-				return new ApiResponseExceptionHandler();
+				ApiResponseExceptionHandler exceptionHandler = new ApiResponseExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -218,13 +236,18 @@ public class CommonsWebAutoConfiguration {
 		 */
 		@ConditionalOnClass({ DispatcherServlet.class })
 		@ConditionalOnMissingClass("com.alibaba.csp.sentinel.SphU")
-		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class NativeRestApiExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public NativeRestApiExceptionHandler nativeRestApiExceptionHandler() {
+			public NativeRestApiExceptionHandler nativeRestApiExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of NativeRestApiExceptionHandler");
-				return new NativeRestApiExceptionHandler();
+				NativeRestApiExceptionHandler exceptionHandler = new NativeRestApiExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 	}
@@ -250,7 +273,7 @@ public class CommonsWebAutoConfiguration {
 		 * gateway不需要这个<br>
 		 */
 		@ConditionalOnMissingClass({ "org.springframework.cloud.gateway.filter.GatewayFilter"/* gateway不需要这个 */ })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
 		public WebFilter reactiveProcessingRequestCountFilter() {
 			log.info("commons init bean of ReactiveProcessingRequestCountFilter");
@@ -276,7 +299,7 @@ public class CommonsWebAutoConfiguration {
 		 */
 		@ConditionalOnMissingClass({ "org.springframework.security.core.Authentication",
 				"org.springframework.cloud.gateway.filter.GatewayFilter"/* gateway不需要这个 */ })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
 		public WebFilter reactiveGatewayPreAuthenticatedAuthenticationFilter() {
 			log.info("commons init bean of ReactiveGatewayPreAuthenticatedAuthenticationFilter");
@@ -296,13 +319,18 @@ public class CommonsWebAutoConfiguration {
 		@ConditionalOnClass({ DispatcherHandler.class, SphU.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer" })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class SentinelAdaptiveApiResponseReactiveExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveApiResponseReactiveExceptionHandler sentinelAdaptiveApiResponseReactiveExceptionHandler() {
+			public SentinelAdaptiveApiResponseReactiveExceptionHandler sentinelAdaptiveApiResponseReactiveExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveApiResponseReactiveExceptionHandler");
-				return new SentinelAdaptiveApiResponseReactiveExceptionHandler();
+				SentinelAdaptiveApiResponseReactiveExceptionHandler exceptionHandler = new SentinelAdaptiveApiResponseReactiveExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -315,13 +343,18 @@ public class CommonsWebAutoConfiguration {
 		@ConditionalOnClass({ DispatcherHandler.class, SphU.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer" })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class SentinelAdaptiveNativeRestApiReactiveExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveNativeRestApiReactiveExceptionHandler sentinelAdaptiveNativeRestApiReactiveExceptionHandler() {
+			public SentinelAdaptiveNativeRestApiReactiveExceptionHandler sentinelAdaptiveNativeRestApiReactiveExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveNativeRestReactiveApiExceptionHandler");
-				return new SentinelAdaptiveNativeRestApiReactiveExceptionHandler();
+				SentinelAdaptiveNativeRestApiReactiveExceptionHandler exceptionHandler = new SentinelAdaptiveNativeRestApiReactiveExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -334,13 +367,18 @@ public class CommonsWebAutoConfiguration {
 		@ConditionalOnClass({ DispatcherHandler.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer", "com.alibaba.csp.sentinel.SphU" })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.apiResponse.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.apiResponse.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = true)
 		@Configuration
 		protected static class ApiResponseReactiveExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public ApiResponseReactiveExceptionHandler apiResponseReactiveExceptionHandler() {
+			public ApiResponseReactiveExceptionHandler apiResponseReactiveExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of ApiResponseReactiveExceptionHandler");
-				return new ApiResponseReactiveExceptionHandler();
+				ApiResponseReactiveExceptionHandler exceptionHandler = new ApiResponseReactiveExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 
@@ -353,13 +391,18 @@ public class CommonsWebAutoConfiguration {
 		@ConditionalOnClass({ DispatcherHandler.class })
 		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
 				"org.glassfish.jersey.servlet.ServletContainer", "com.alibaba.csp.sentinel.SphU" })
-		@ConditionalOnProperty(value = "commons.reactiveWeb.exceptionHandler.nativeRestApi.enabled", havingValue = "true", matchIfMissing = false)
+		@ConditionalOnProperty(value = "commons.web.exceptionHandler.nativeRestApi.enabled"/* mvc和flux使用相同的配置名 */, havingValue = "true", matchIfMissing = false)
 		@Configuration
 		protected static class NativeRestApiReactiveExceptionHandlerAutoConfiguration {
+			@ConditionalOnMissingBean
 			@Bean
-			public NativeRestApiReactiveExceptionHandler nativeRestApiReactiveExceptionHandler() {
+			public NativeRestApiReactiveExceptionHandler nativeRestApiReactiveExceptionHandler(
+					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of NativeRestApiReactiveExceptionHandler");
-				return new NativeRestApiReactiveExceptionHandler();
+				NativeRestApiReactiveExceptionHandler exceptionHandler = new NativeRestApiReactiveExceptionHandler();
+				exceptionHandler.setPrintErrorStackOnWarn(
+						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
+				return exceptionHandler;
 			}
 		}
 	}

@@ -49,4 +49,8 @@
 * 修复gateway 连不上sentinel dashbaord，初始化顺序所致
 * Cacher的AutoConfiguration增加支持负载保护（防穿透等）
 
+# 2.1.0
+* 优化NIO
+* 支持Reactive Web 的SecurityUtils, ReactiveWebUtils
+
 
