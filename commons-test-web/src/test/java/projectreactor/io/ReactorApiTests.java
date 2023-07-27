@@ -443,7 +443,12 @@ public class ReactorApiTests {
 						return "tick " + input;
 					throw new RuntimeException("boom");
 				})//
-				.doOnError(e -> errorCount.incrementAndGet())//
+				/**
+				 * doOnError放在这里跟放在retryWhen之后效果不同<br>
+				 * 放在这里每次异常都会触发，重试多少次触发多少次<br>
+				 * 放在retryWhen之后只会在所有重试都失败后触发1次
+				 */
+				.doOnError(e -> System.out.println("doOnError: "+errorCount.incrementAndGet()))//
 				/**
 				 * retryWhen 可以自定义重试条件
 				 */
@@ -456,7 +461,7 @@ public class ReactorApiTests {
 						throw Exceptions.propagate(retrySignal.failure());
 				})))//
 				.elapsed() // elapsed 能关联出上一个元素的时间差ms
-				.subscribe(System.out::println, e -> System.out.println(e));
+				.subscribe(tuple->System.out.println("consume: "+tuple), e -> System.out.println("error: "+e));
 
 		Thread.sleep(5000);
 		System.out.println("errorCount:" + errorCount);
