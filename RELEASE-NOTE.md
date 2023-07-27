@@ -52,5 +52,5 @@
 # 2.1.0
 * 优化NIO
 * 支持Reactive Web 的SecurityUtils, ReactiveWebUtils
-
+* 增加RedisBloomFilter
 

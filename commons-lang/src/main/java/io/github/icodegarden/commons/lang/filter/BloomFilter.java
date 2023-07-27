@@ -1,17 +1,15 @@
 package io.github.icodegarden.commons.lang.filter;
 
 import java.util.BitSet;
-import java.util.Collection;
 
 import io.github.icodegarden.commons.lang.algorithm.HashFunction;
-import io.github.icodegarden.commons.lang.algorithm.JavaStringFunction;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-public class BloomFilter implements TrustFilter<String> {
+public class BloomFilter extends AbstractBloomFilter {
 
 	/**
 	 * 2的24次=16777216，16777216/8bit=2097152byte=2m<br>
@@ -22,8 +20,6 @@ public class BloomFilter implements TrustFilter<String> {
 	private final int bitSize;
 
 	private final BitSet bits;
-
-	private final HashFunction[] hashers;
 
 	/**
 	 * 使用默认bitSize,默认countOfHasher=3
@@ -50,13 +46,9 @@ public class BloomFilter implements TrustFilter<String> {
 	 * @param shouldFilter
 	 */
 	public BloomFilter(int bitSize, int countOfHasher) {
-		this(bitSize, new JavaStringFunction[countOfHasher]);
-
-		int seed = 31 << (countOfHasher / 2);
-		for (int i = 0; i < countOfHasher; i++) {
-			hashers[i] = new JavaStringFunction(seed);
-			seed = seed >> 1;
-		}
+		super(countOfHasher);
+		this.bitSize = bitSize;
+		this.bits = new BitSet(bitSize);
 	}
 
 	/**
@@ -70,43 +62,23 @@ public class BloomFilter implements TrustFilter<String> {
 	}
 
 	public BloomFilter(int bitSize, HashFunction[] hashers) {
+		super(hashers);
 		this.bitSize = bitSize;
-		bits = new BitSet(bitSize);
-		this.hashers = hashers;
-	}
-
-	public void add(String value) {
-		for (HashFunction f : hashers) {
-			/**
-			 * hash值 & (bitSize - 1)
-			 * 的结果将确定位图中的哪个具体位置，把该位置设置为1，如果HashFunction有3个则会把3个bit为设置为1
-			 */
-			bits.set(f.hash(value) & (bitSize - 1));
-		}
-	}
-
-	public void add(Collection<String> values) {
-		values.forEach(v -> {
-			add(v);
-		});
+		this.bits = new BitSet(bitSize);
 	}
 
 	@Override
-	public boolean filter(String str) {
-		return contains(str);
+	protected void setbit(int hash) {
+		/**
+		 * hash值 & (bitSize - 1)
+		 * 的结果将确定位图中的哪个具体位置，把该位置设置为1，如果HashFunction有3个则会把3个bit为设置为1
+		 */
+		bits.set(hash & (bitSize - 1));
 	}
 
-	boolean contains(String str) {
-		if (str == null) {
-			return false;
-		}
-		boolean ret = true;
-		for (HashFunction f : hashers) {
-			if (ret) {
-				ret = ret & bits.get(f.hash(str) & (bitSize - 1));
-			}
-		}
-		return ret;
+	@Override
+	protected boolean getbit(int hash) {
+		return bits.get(hash & (bitSize - 1));
 	}
 
 }

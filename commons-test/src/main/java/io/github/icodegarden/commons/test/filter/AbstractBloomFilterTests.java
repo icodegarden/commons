@@ -1,22 +1,25 @@
-package io.github.icodegarden.commons.lang.filter;
+package io.github.icodegarden.commons.test.filter;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import io.github.icodegarden.commons.lang.filter.AbstractBloomFilter;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-//@RunWith(MockitoJUnitRunner.class)
-public class BloomFilterTests {
+public abstract class AbstractBloomFilterTests {
 
-	protected String key = "key";
-	protected String key2 = "key2";
+	private String key = "key";
+	private String key2 = "key2";
+
+	protected abstract AbstractBloomFilter newBloomFilter(int count);
 
 	@Test
 	public void filter() throws Exception {
-		BloomFilter filter = new BloomFilter(3);
+		AbstractBloomFilter filter = newBloomFilter(3);
 		filter.add(key);
 
 		boolean b = filter.filter(key);
