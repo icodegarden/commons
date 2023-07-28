@@ -655,6 +655,13 @@ public abstract class SystemUtils {
 	public static LocalDateTime now() {
 		return SystemClock.now();
 	}
+	
+	/**
+	 * 精确度要求达到真实的毫秒级别时不建议使用 
+	 */
+	public static long currentTimeMillis() {
+		return SystemClock.currentTimeMillis();
+	}
 
 	/**
 	 * 因为LocalDateTime的now方法耗时较大，高并发时可以优化
@@ -664,13 +671,12 @@ public abstract class SystemUtils {
 	 */
 	private static class SystemClock {
 
-		private final long period;
 		private LocalDateTime now;
+		private long currentTimeMillis;
 
 		private SystemClock(long period) {
-			this.period = period;
 			this.now = LocalDateTime.now();
-			scheduleClockUpdating();
+			scheduleClockUpdating(period);
 		}
 
 		private static SystemClock instance() {
@@ -680,8 +686,12 @@ public abstract class SystemUtils {
 		public static LocalDateTime now() {
 			return instance().now;
 		}
+		
+		public static long currentTimeMillis() {
+			return instance().currentTimeMillis;
+		}
 
-		private void scheduleClockUpdating() {
+		private void scheduleClockUpdating(long period) {
 			ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
 				Thread thread = new Thread(runnable, SystemClock.class.getSimpleName());
 				thread.setDaemon(true);
@@ -689,6 +699,7 @@ public abstract class SystemUtils {
 			});
 			scheduler.scheduleWithFixedDelay(() -> {
 				this.now = LocalDateTime.now();
+				this.currentTimeMillis = System.currentTimeMillis();
 			}, period, period, TimeUnit.MILLISECONDS);
 		}
 

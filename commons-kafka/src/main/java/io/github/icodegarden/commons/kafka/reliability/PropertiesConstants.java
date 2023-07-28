@@ -3,6 +3,9 @@ package io.github.icodegarden.commons.kafka.reliability;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.github.icodegarden.commons.kafka.RecordExecutor;
+import io.github.icodegarden.commons.lang.tuple.NullableTuple2;
+import io.github.icodegarden.commons.lang.tuple.NullableTuples;
 import io.github.icodegarden.commons.lang.tuple.Tuple2;
 import io.github.icodegarden.commons.lang.tuple.Tuples;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
@@ -35,6 +38,12 @@ public class PropertiesConstants {
 
 	public static final Tuple2<String, RejectedExecutionHandler> HANDLERECORDS_THREADPOOL_REJECTEDPOLICY = Tuples
 			.of("io.kafka.record.handle.threadpool.rejectedPolicy", new ThreadPoolExecutor.CallerRunsPolicy());
+
+	/**
+	 * 若指定该参数，则忽略io.kafka.record.handle.threadpool.coreSize等参数
+	 */
+	public static final NullableTuple2<String, RecordExecutor> HANDLERECORDS_EXECUTOR = NullableTuples
+			.of("io.kafka.record.handle.executor", null);
 
 	public static final Tuple2<String, Long> POLL_TIMEOUTMILLIS = Tuples.of("io.kafka.poll.timeoutMillis", 100L);
 

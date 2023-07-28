@@ -5,14 +5,16 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Properties;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 import io.github.icodegarden.commons.kafka.KafkaException;
 import io.github.icodegarden.commons.lang.TimeoutableCloseable;
@@ -40,7 +42,7 @@ public class ReliabilityProducer<K, V> implements TimeoutableCloseable {
 
 	public ReliabilityProducer(Properties properties) {
 //		Object bootstrapServers = properties.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
-		
+
 		name = (String) properties.getOrDefault(PropertiesConstants.CLIENT_NAME.getT1(),
 				PropertiesConstants.CLIENT_NAME.getT2());
 
@@ -72,6 +74,38 @@ public class ReliabilityProducer<K, V> implements TimeoutableCloseable {
 		} catch (Exception e) {
 			throw new KafkaException(e);
 		}
+	}
+
+	public Future<RecordMetadata> sendCallback(ProducerRecord<K, V> record, Callback callback) throws KafkaException {
+		try {
+			return producer.send(record, callback);
+		} catch (Exception e) {
+			throw new KafkaException(e);
+		}
+	}
+
+	public RecordMetadata sendSyncOrdered(ProducerRecord<K, V> record) throws KafkaException {
+		try {
+			validateOrdered(record);
+			return producer.send(record).get();
+		} catch (Exception e) {
+			throw new KafkaException(e);
+		}
+	}
+
+	public Future<RecordMetadata> sendCallbackOrdered(ProducerRecord<K, V> record, Callback callback)
+			throws KafkaException {
+		try {
+			validateOrdered(record);
+			return producer.send(record, callback);
+		} catch (Exception e) {
+			throw new KafkaException(e);
+		}
+	}
+
+	private void validateOrdered(ProducerRecord<K, V> record) {
+		Assert.isTrue(record.key() != null || record.partition() != null,
+				"key or partition must present on send ordered.");
 	}
 
 	@Override

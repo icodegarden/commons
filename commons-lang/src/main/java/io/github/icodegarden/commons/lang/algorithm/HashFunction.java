@@ -7,5 +7,5 @@ package io.github.icodegarden.commons.lang.algorithm;
  */
 public interface HashFunction {
 
-	int hash(String s);
+	int hash(Object obj);
 }

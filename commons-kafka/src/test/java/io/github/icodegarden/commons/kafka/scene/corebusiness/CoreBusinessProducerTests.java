@@ -21,7 +21,7 @@ public class CoreBusinessProducerTests {
 
 	public static void main(String[] args) throws Exception {
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "172.22.122.27:9092");
+		props.put("bootstrap.servers", "192.168.184.129:9092");
 		props.put("key.serializer", "org.apache.kafka.common.serialization.IntegerSerializer");
 		props.put("value.serializer", "io.github.icodegarden.commons.kafka.scene.corebusiness.CoreBusinessProducerTests$ObjectSerializer");
 

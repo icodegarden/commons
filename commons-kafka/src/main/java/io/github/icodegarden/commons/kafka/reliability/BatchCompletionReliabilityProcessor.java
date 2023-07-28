@@ -61,7 +61,7 @@ public class BatchCompletionReliabilityProcessor<K, V> extends AbstractReliabili
 			// 要等待处理中的消息处理完
 			waitProcessingComplete(timeoutMillis);
 			// 关闭线程池
-			handleRecordsThreadPool.shutdown();
+			handleRecordExecutor.shutdown();
 
 			log.info("commitSync before close ,timeout millis:{}", timeoutMillis);
 

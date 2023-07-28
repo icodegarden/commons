@@ -53,4 +53,6 @@
 * 优化NIO
 * 支持Reactive Web 的SecurityUtils, ReactiveWebUtils
 * 增加RedisBloomFilter
+* 支持顺序消费OrderedReliabilityConsumer
+
 

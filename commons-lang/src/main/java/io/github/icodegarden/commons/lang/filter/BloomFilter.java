@@ -13,6 +13,7 @@ public class BloomFilter extends AbstractBloomFilter {
 
 	/**
 	 * 2的24次=16777216，16777216/8bit=2097152byte=2m<br>
+	 * 2的32次=256m<br>
 	 * 位图以long[]形式存在，对应的bit位将通过结合size的计算确定属于long[]中的哪个具体index位置
 	 */
 	private static final int DEFAULT_SIZE = 1 << 24;

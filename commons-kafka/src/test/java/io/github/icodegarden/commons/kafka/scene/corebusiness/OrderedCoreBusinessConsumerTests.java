@@ -10,11 +10,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import io.github.icodegarden.commons.kafka.UnRetryableException;
 import io.github.icodegarden.commons.kafka.reliability.ReliabilityHandler;
+import io.github.icodegarden.commons.kafka.reliability.OrderedReliabilityConsumer;
 import io.github.icodegarden.commons.kafka.reliability.ReliabilityConsumer;
 import io.github.icodegarden.commons.kafka.reliability.ReliabilityProducer;
 import io.github.icodegarden.commons.kafka.scene.corebusiness.CoreBusinessProducerTests.OrderDetail;
 
-public class CoreBusinessConsumerTests {
+public class OrderedCoreBusinessConsumerTests {
 	
 	static ReliabilityProducer<Integer, OrderDetail> producer;
 
@@ -37,8 +38,7 @@ public class CoreBusinessConsumerTests {
 		
 //		props.put(PropertiesConstants.RECORD_RELIABILITY_PROCESSOR.getKey(), CompletionBeforePollRecordReliabilityProcessor.class);
 
-		ReliabilityConsumer<Integer, OrderDetail> consumer = new ReliabilityConsumer<Integer, OrderDetail>(props,
-				recordReliabilityHandler);
+		ReliabilityConsumer<Integer, OrderDetail> consumer = new OrderedReliabilityConsumer<>(props, 200, recordReliabilityHandler);
 
 		consumer.subscribe(Arrays.asList("test-corebusiness"));
 
@@ -59,17 +59,14 @@ public class CoreBusinessConsumerTests {
 	static ReliabilityHandler<Integer, OrderDetail> recordReliabilityHandler = new ReliabilityHandler<Integer, OrderDetail>() {
 		@Override
 		public boolean handle(ConsumerRecord<Integer, OrderDetail> record) throws UnRetryableException {
-			System.out.printf("topic = %s, offset = %d,partition=%s, key = %s, value = %s%n", record.topic(),
-					record.offset(), record.partition(), record.key(), record.value());
+//			System.out.printf("topic = %s, offset = %d,partition=%s, key = %s, value = %s%n", record.topic(),
+//					record.offset(), record.partition(), record.key(), record.value());
+			
+			System.out.println("User:"+record.value().getUserId()+", OrderNum"+record.value().getOrderNum());
+			
 			try {
 				Thread.sleep(100);// 模拟每条处理时间
 			} catch (Exception e) {
-			}
-			if (new Random().nextInt(12) == 0) {
-				throw new RuntimeException("handleRecord failed");
-			}
-			if (new Random().nextInt(12) == 0) {
-				return false;
 			}
 			return true;
 		}
@@ -111,7 +108,7 @@ public class CoreBusinessConsumerTests {
 			}
 			return false;
 		}
-		
+
 	};
 
 }

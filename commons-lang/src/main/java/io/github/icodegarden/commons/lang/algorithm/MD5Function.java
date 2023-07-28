@@ -25,7 +25,9 @@ public class MD5Function implements HashFunction {
 	}
 
 	@Override
-	public int hash(String s) {
+	public int hash(Object obj) {
+		String s = obj.toString();
+		
 		instance.reset();
 		instance.update(s.getBytes());
 		byte[] digest = instance.digest();

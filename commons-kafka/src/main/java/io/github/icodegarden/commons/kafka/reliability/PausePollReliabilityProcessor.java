@@ -28,6 +28,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.icodegarden.commons.kafka.ConsumerRecordTask;
 import io.github.icodegarden.commons.kafka.DelayedRetryableReference;
 import io.github.icodegarden.commons.lang.concurrent.NamedThreadFactory;
 
@@ -85,20 +86,30 @@ public class PausePollReliabilityProcessor<K, V> extends AbstractReliabilityProc
 			CountDownLatch countDownLatch = new CountDownLatch(recordsCount);
 			records.forEach(record -> {
 				try {
-					handleRecordsThreadPool.execute(() -> {
-						try {
+					ConsumerRecordTask<K, V> task = new ConsumerRecordTask<K, V>() {
+						@Override
+						public void run() {
 							try {
-								boolean success = recordReliabilityHandler.handle(record);
-								if (!success) {
+								try {
+									boolean success = recordReliabilityHandler.handle(record);
+									if (!success) {
+										failedRecords.add(record);
+									}
+								} catch (Exception e) {
 									failedRecords.add(record);
 								}
-							} catch (Exception e) {
-								failedRecords.add(record);
+							} finally {
+								countDownLatch.countDown();
 							}
-						} finally {
-							countDownLatch.countDown();
 						}
-					});
+
+						@Override
+						public ConsumerRecord<K, V> getRecord() {
+							return record;
+						}
+					};
+
+					handleRecordExecutor.execute(task);
 				} catch (Exception e) {// for rejected
 					failedRecords.add(record);
 					countDownLatch.countDown();
@@ -269,7 +280,7 @@ public class PausePollReliabilityProcessor<K, V> extends AbstractReliabilityProc
 		try {
 			waitProcessingComplete(timeoutMillis);
 
-			handleRecordsThreadPool.shutdown();
+			handleRecordExecutor.shutdown();
 			handleFailedRecordsThreadPool.shutdown();
 		} finally {
 			log.info("commitSync offsets...");

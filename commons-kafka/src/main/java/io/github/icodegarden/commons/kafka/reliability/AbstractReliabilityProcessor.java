@@ -22,6 +22,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.icodegarden.commons.kafka.ConsumerRecordTask;
+import io.github.icodegarden.commons.kafka.RecordExecutor;
 import io.github.icodegarden.commons.kafka.RetryableExecutor;
 import io.github.icodegarden.commons.lang.concurrent.NamedThreadFactory;
 import io.github.icodegarden.commons.lang.result.Result1;
@@ -51,18 +53,7 @@ public abstract class AbstractReliabilityProcessor<K, V> implements ReliabilityP
 	protected String processorName = this.getClass().getSimpleName();
 	protected KafkaConsumer<K, V> consumer;
 	protected ReliabilityHandler<K, V> recordReliabilityHandler;
-	protected ThreadPoolExecutor handleRecordsThreadPool;
-
-	private class CallerRunsExecutor extends ThreadPoolExecutor {
-		public CallerRunsExecutor() {
-			super(0, 1, 0, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-		}
-
-		@Override
-		public void execute(Runnable command) {
-			command.run();
-		}
-	}
+	protected RecordExecutor handleRecordExecutor;
 
 	/**
 	 * 处理中的record数量
@@ -93,12 +84,22 @@ public abstract class AbstractReliabilityProcessor<K, V> implements ReliabilityP
 				PropertiesConstants.HANDLERECORDS_THREADPOOL_REJECTEDPOLICY.getT1(),
 				PropertiesConstants.HANDLERECORDS_THREADPOOL_REJECTEDPOLICY.getT2());
 
-		if (maxSize <= 1) {
-			handleRecordsThreadPool = new CallerRunsExecutor();
+		RecordExecutor executor = (RecordExecutor) consumerProperties.getOrDefault(
+				PropertiesConstants.HANDLERECORDS_EXECUTOR.getT1(), PropertiesConstants.HANDLERECORDS_EXECUTOR.getT2());
+
+		if (executor != null) {
+			handleRecordExecutor = executor;
 		} else {
-			handleRecordsThreadPool = new ThreadPoolExecutor(coreSize, maxSize, keepAliveMillis, TimeUnit.MILLISECONDS,
-					queueSize == 0 ? new SynchronousQueue<Runnable>() : new LinkedBlockingQueue<Runnable>(queueSize),
-					new NamedThreadFactory(prefix), rejectedPolicy);
+			if (maxSize <= 1) {
+				handleRecordExecutor = new RecordExecutor.CallerRunsExecutor();
+			} else {
+				ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(coreSize, maxSize, keepAliveMillis,
+						TimeUnit.MILLISECONDS,
+						queueSize == 0 ? new SynchronousQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize),
+						new NamedThreadFactory(prefix), rejectedPolicy);
+				handleRecordExecutor = new RecordExecutor.ThreadPoolHandleRecordExecutor(threadPoolExecutor);
+			}
 		}
 	}
 
@@ -126,40 +127,50 @@ public abstract class AbstractReliabilityProcessor<K, V> implements ReliabilityP
 			CountDownLatch countDownLatch = new CountDownLatch(count);
 			records.forEach(record -> {
 				try {
-					handleRecordsThreadPool.execute(() -> {
-						try {
-							Result1<Exception> result = RETRYABLE_EXECUTOR.execute(() -> {
-								return recordReliabilityHandler.handle(record);
-							}, recordReliabilityHandler.handleRetries(),
-									recordReliabilityHandler.handleRetryBackoffMillis(), handled);
+					ConsumerRecordTask<K, V> task = new ConsumerRecordTask<K, V>() {
+						@Override
+						public void run() {
+							try {
+								Result1<Exception> result = RETRYABLE_EXECUTOR.execute(() -> {
+									return recordReliabilityHandler.handle(record);
+								}, recordReliabilityHandler.handleRetries(),
+										recordReliabilityHandler.handleRetryBackoffMillis(), handled);
 
-							if (!result.isSuccess()) {
-								Exception cause = result.getT1();
-								result = RETRYABLE_EXECUTOR.execute(() -> {
-									return recordReliabilityHandler.primaryStore(record, cause);
-								}, recordReliabilityHandler.storeRetries(),
-										recordReliabilityHandler.storeRetryBackoffMillis());
-							}
-
-							if (!result.isSuccess()) {
-								Exception cause = result.getT1();
-								result = RETRYABLE_EXECUTOR.execute(() -> {
-									return recordReliabilityHandler.secondaryStore(record, cause);
-								}, recordReliabilityHandler.storeRetries(),
-										recordReliabilityHandler.storeRetryBackoffMillis());
-							}
-
-							if (!result.isSuccess()) {
-								try {
-									recordReliabilityHandler.onStoreFailed(record, result.getT1());
-								} catch (Exception e) {
-									log.error("ex on storeFailed", e);
+								if (!result.isSuccess()) {
+									Exception cause = result.getT1();
+									result = RETRYABLE_EXECUTOR.execute(() -> {
+										return recordReliabilityHandler.primaryStore(record, cause);
+									}, recordReliabilityHandler.storeRetries(),
+											recordReliabilityHandler.storeRetryBackoffMillis());
 								}
+
+								if (!result.isSuccess()) {
+									Exception cause = result.getT1();
+									result = RETRYABLE_EXECUTOR.execute(() -> {
+										return recordReliabilityHandler.secondaryStore(record, cause);
+									}, recordReliabilityHandler.storeRetries(),
+											recordReliabilityHandler.storeRetryBackoffMillis());
+								}
+
+								if (!result.isSuccess()) {
+									try {
+										recordReliabilityHandler.onStoreFailed(record, result.getT1());
+									} catch (Exception e) {
+										log.error("ex on storeFailed", e);
+									}
+								}
+							} finally {
+								countDownLatch.countDown();
 							}
-						} finally {
-							countDownLatch.countDown();
 						}
-					});
+
+						@Override
+						public ConsumerRecord<K, V> getRecord() {
+							return record;
+						}
+					};
+
+					handleRecordExecutor.execute(task);
 				} catch (Exception e) {// for rejected
 					countDownLatch.countDown();
 					log.error("ex on execution", e);

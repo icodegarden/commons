@@ -24,7 +24,9 @@ public class JavaStringFunction implements HashFunction {
 	}
 
 	@Override
-	public int hash(String value) {
+	public int hash(Object obj) {
+		String value = obj.toString();
+		
 		int hash = 0;
 
 		int h = hash;
