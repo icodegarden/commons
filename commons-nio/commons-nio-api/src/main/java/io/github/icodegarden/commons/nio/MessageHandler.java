@@ -7,6 +7,9 @@ package io.github.icodegarden.commons.nio;
  */
 public interface MessageHandler {
 
+	/**
+	 * for send only without response 
+	 */
 	void receive(Object obj);
 
 	Object reply(Object obj);
