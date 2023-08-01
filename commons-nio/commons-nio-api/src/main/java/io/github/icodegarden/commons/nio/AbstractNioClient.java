@@ -6,10 +6,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.icodegarden.commons.lang.annotation.Nullable;
 import io.github.icodegarden.commons.lang.exception.remote.ExceedExpectedRemoteException;
 import io.github.icodegarden.commons.lang.exception.remote.RemoteException;
 import io.github.icodegarden.commons.lang.exception.remote.TimeoutRemoteException;
@@ -75,9 +77,27 @@ public abstract class AbstractNioClient implements NioClient {
 
 	@Override
 	public <R> java.util.concurrent.Future<R> requestFuture(Object body) throws RemoteException {
+		return doRequestCallback(body, null)
+				;
+	}
+
+	@Override
+	public <R> java.util.concurrent.Future<R> requestCallback(Object body, Consumer<R> successConsumer)
+			throws RemoteException {
+		return doRequestCallback(body, successConsumer)
+		;
+	}
+	
+	private <R> java.util.concurrent.Future<R> doRequestCallback(Object body, @Nullable Consumer<R> successConsumer)
+			throws RemoteException {
 		ExchangeMessage message = new ExchangeMessage(true, true, false, serializerType.getValue(), body);
 		long requestId = message.getRequestId();
 		Future future = new Future(requestId);
+		
+		if(successConsumer != null) {
+			future.setSuccessConsumer(successConsumer);
+		}
+		
 		try {
 			doSend(message);
 		} catch (RemoteException e) {
@@ -142,22 +162,27 @@ public abstract class AbstractNioClient implements NioClient {
 
 	public static class Future {
 		private static final Map<Long/* requestId */, Future> FUTURES = new ConcurrentHashMap<>();
+
 		private ReentrantLock lock = new ReentrantLock();
 		private Condition done = lock.newCondition();
-
 		private Long requestId;
 		private Object val;
-
-		Future(Long requestId) {
-			this.requestId = requestId;
-			FUTURES.put(requestId, this);
-		}
+		private Consumer<Object> successConsumer;
 
 		public static void received(Long requestId, Object obj) {
 			Future future = FUTURES.remove(requestId);
 			if (future != null) {
 				future.doReceived(obj);
 			}
+		}
+
+		Future(Long requestId) {
+			this.requestId = requestId;
+			FUTURES.put(requestId, this);
+		}
+
+		public void setSuccessConsumer(Consumer successConsumer) {
+			this.successConsumer = successConsumer;
 		}
 
 		Object get(int timeout) {
@@ -193,8 +218,17 @@ public abstract class AbstractNioClient implements NioClient {
 			lock.lock();
 			try {
 				this.val = val;
+				
 				if (done != null) {
 					done.signal();
+				}
+				
+				if (successConsumer != null) {
+					try {
+						successConsumer.accept(val);
+					} catch (Exception e) {
+						log.error("ex on successConsumer", e);
+					}
 				}
 			} finally {
 				lock.unlock();

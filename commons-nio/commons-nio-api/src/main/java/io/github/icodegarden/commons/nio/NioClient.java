@@ -2,6 +2,7 @@ package io.github.icodegarden.commons.nio;
 
 import java.io.Closeable;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 import io.github.icodegarden.commons.lang.exception.remote.ConnectFailedRemoteException;
 import io.github.icodegarden.commons.lang.exception.remote.RemoteException;
@@ -38,6 +39,13 @@ public interface NioClient extends Closeable {
 	 * async request
 	 */
 	<R> Future<R> requestFuture(Object body) throws RemoteException;
+
+	/**
+	 * async request
+	 * 
+	 * 既有callback也有Future
+	 */
+	<R> Future<R> requestCallback(Object body, Consumer<R> successConsumer) throws RemoteException;
 
 	boolean isClosed();
 
