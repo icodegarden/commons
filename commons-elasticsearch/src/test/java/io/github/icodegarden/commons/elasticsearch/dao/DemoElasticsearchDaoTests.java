@@ -21,7 +21,7 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
 public class DemoElasticsearchDaoTests {
 
 	ElasticsearchClient client = ElasticsearchClientBuilder
-			.buildElasticsearchClient(new ElasticsearchClientConfig("http://192.168.80.130:9200"));
+			.buildElasticsearchClient(new ElasticsearchClientConfig("http://192.168.184.129:9200"));
 	DemoElasticsearchDao dao = new DemoElasticsearchDao(client);
 
 	DemoPO newDemoPO() {

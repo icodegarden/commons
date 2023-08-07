@@ -18,6 +18,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
 import co.elastic.clients.elasticsearch._types.ErrorResponse;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -225,7 +226,7 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			}
 		}
 		if (query.getSearchAfters() != null) {
-			builder.searchAfter(query.getSearchAfters().stream().map(i -> i.toString()).collect(Collectors.toList()));
+			builder.searchAfter(query.getSearchAfters().stream().map(i -> FieldValue.of(i.toString())).collect(Collectors.toList()));
 		}
 		builder.timeout(getReadTimeoutMillis() + "ms");
 

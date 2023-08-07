@@ -38,13 +38,13 @@
 		<dependency>
 	      	<groupId>co.elastic.clients</groupId>
 	      	<artifactId>elasticsearch-java</artifactId>
-	      	<version>8.4.2</version>
+	      	<version>8.9.0</version>
 	      	<optional>true</optional>
    	 	</dependency>
    	 	<dependency>
 	      	<groupId>org.elasticsearch.client</groupId>
 		  	<artifactId>elasticsearch-rest-client</artifactId>
-		  	<version>8.4.2</version><!-- 防止被spring版本覆盖 -->
+		  	<version>8.9.0</version> <!--防止被spring版本覆盖--> 
 		  	<optional>true</optional>
    	 	</dependency>
 		<dependency>
@@ -53,19 +53,18 @@
 		    <version>2.1.1</version>
 		    <optional>true</optional>
 		</dependency>
-		
 		<!-- v7 -->
 		<dependency>
 		    <groupId>org.elasticsearch</groupId>
 		    <artifactId>elasticsearch</artifactId>
-		    <version>7.7.1</version>
+		    <version>7.17.12</version>
 		    <optional>true</optional>
 		</dependency>
 		<!--
         <dependency>
 		    <groupId>org.elasticsearch.client</groupId>
 		    <artifactId>elasticsearch-rest-client</artifactId>
-		    <version>7.7.1</version>
+		    <version>7.17.12</version>
 		    <optional>true</optional>
 		</dependency>
 		上面同名的v8兼容v7 
@@ -73,13 +72,13 @@
 		<dependency>
 		    <groupId>org.elasticsearch.client</groupId>
 		    <artifactId>elasticsearch-rest-high-level-client</artifactId>
-		    <version>7.7.1</version>
+		    <version>7.17.12</version>
 		    <optional>true</optional>
 		</dependency>
 		<dependency>
 		    <groupId>org.elasticsearch.client</groupId>
 		    <artifactId>elasticsearch-rest-client-sniffer</artifactId>
-		    <version>7.7.1</version>
+		    <version>7.17.12</version>
 		    <optional>true</optional>
 		</dependency>
 		<!-- 7和8 2选1 -->
