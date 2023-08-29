@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.CountRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
 import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -69,6 +70,7 @@ public abstract class GenericElasticsearchDao<PO extends IdObject<String>, U ext
 
 	@Override
 	protected SearchRequest.Builder buildSearchRequestBuilderOnFindAll(Q query) {
+		//TODO 应该根据Q query实现查询条件，还有其他方法也类似
 		return new SearchRequest.Builder().index(getIndex());
 	}
 
@@ -99,6 +101,12 @@ public abstract class GenericElasticsearchDao<PO extends IdObject<String>, U ext
 		}).collect(Collectors.toList());
 
 		return new BulkRequest.Builder().operations(operations);
+	}
+
+	@Override
+	protected DeleteByQueryRequest.Builder buildDeleteByQueryRequestBuilderOnDeleteByQuery(Q query) {
+//		return new DeleteByQueryRequest.Builder().index(getIndex());
+		throw new UnsupportedOperationException("Please Impl buildDeleteByQueryRequestBuilderOnDeleteByQuery.");
 	}
 
 	@Override

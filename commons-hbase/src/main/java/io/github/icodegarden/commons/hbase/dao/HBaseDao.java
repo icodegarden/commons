@@ -396,6 +396,11 @@ public abstract class HBaseDao<PO, U, Q extends HBaseQuery<W>, W, DO> implements
 			throw new IllegalStateException(e);
 		}
 	}
+	
+	@Override
+	public int deleteByQuery(Q query) {
+		throw new UnsupportedOperationException();
+	}
 
 	private void validate(Object obj) {
 		if (obj instanceof Validateable) {

@@ -38,6 +38,8 @@ import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -46,6 +48,8 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest.Builder;
 import io.github.icodegarden.commons.elasticsearch.dao.ElasticsearchDaoSupport;
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
 import io.github.icodegarden.commons.elasticsearch.v7.BulkResponseHasErrorV7Exception;
@@ -523,6 +527,18 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 			throw new IllegalStateException(e);
 		}
 	}
+	
+	@Override
+	public int deleteByQuery(Q query) {
+		DeleteByQueryRequest request = buildDeleteByQueryRequest(query);
+		
+		try {
+			BulkByScrollResponse response = client.deleteByQuery(request, RequestOptions.DEFAULT);
+			return (int)response.getDeleted();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
 	/**
 	 * @param consumer<T> T 真实索引
@@ -580,6 +596,8 @@ public abstract class ElasticsearchV7Dao<PO, U, Q extends ElasticsearchQuery<W>,
 	protected abstract DeleteRequest buildDeleteRequestOnDelete(String id);
 
 	protected abstract BulkRequest buildBulkRequestOnDeleteBatch(Collection<String> ids);
+	
+	protected abstract DeleteByQueryRequest buildDeleteByQueryRequest(Q query);
 
 	protected DO extractResult(SearchHit hit) {
 		String json = hit.getSourceAsString();

@@ -16,6 +16,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 
 import io.github.icodegarden.commons.elasticsearch.query.ElasticsearchQuery;
@@ -124,6 +125,11 @@ public abstract class GenericElasticsearchV7Dao<PO extends IdObject<String>, U e
 		bulkRequest.add(operations);
 
 		return bulkRequest;
+	}
+	
+	@Override
+	protected DeleteByQueryRequest buildDeleteByQueryRequest(Q query) {
+		throw new UnsupportedOperationException("Please Impl buildDeleteByQueryRequest.");
 	}
 
 	private Map<String, Object> toSource(Object obj) {

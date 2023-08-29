@@ -25,6 +25,9 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.CountRequest;
 import co.elastic.clients.elasticsearch.core.CountResponse;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest.Builder;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.core.GetRequest;
@@ -226,7 +229,8 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 			}
 		}
 		if (query.getSearchAfters() != null) {
-			builder.searchAfter(query.getSearchAfters().stream().map(i -> FieldValue.of(i.toString())).collect(Collectors.toList()));
+			builder.searchAfter(query.getSearchAfters().stream().map(i -> FieldValue.of(i.toString()))
+					.collect(Collectors.toList()));
 		}
 		builder.timeout(getReadTimeoutMillis() + "ms");
 
@@ -528,6 +532,18 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 		}
 	}
 
+	@Override
+	public int deleteByQuery(Q query) {
+		Builder builder = buildDeleteByQueryRequestBuilderOnDeleteByQuery(query);
+
+		try {
+			DeleteByQueryResponse response = client.deleteByQuery(builder.build());
+			return response.deleted().intValue();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	/**
 	 * @param consumer<T> T 真实索引
 	 */
@@ -584,4 +600,5 @@ public abstract class ElasticsearchDao<PO, U, Q extends ElasticsearchQuery<W>, W
 
 	protected abstract BulkRequest.Builder buildBulkRequestBuilderOnDeleteBatch(Collection<String> ids);
 
+	protected abstract DeleteByQueryRequest.Builder buildDeleteByQueryRequestBuilderOnDeleteByQuery(Q query);
 }

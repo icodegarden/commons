@@ -167,4 +167,9 @@ public abstract class JsonUtils {
 			throw new IllegalArgumentException("deserialize json error", e);
 		}
 	}
+
+	public static ObjectMapper getObjectMapper() {
+		return om;
+	}
+
 }

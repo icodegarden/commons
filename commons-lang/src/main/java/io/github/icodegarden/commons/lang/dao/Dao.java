@@ -31,4 +31,6 @@ public interface Dao<PO, U, Q extends BaseQuery, W, DO, ID> {
 	int delete(ID id);
 
 	int deleteBatch(Collection<ID> ids);
+	
+	int deleteByQuery(Q query);
 }
