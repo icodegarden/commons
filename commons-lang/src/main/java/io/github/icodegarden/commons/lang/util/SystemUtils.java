@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -61,6 +62,14 @@ public abstract class SystemUtils {
 
 	public static boolean isLinuxPlatform() {
 		return isLinuxPlatform;
+	}
+
+	public static String getHostName() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -655,9 +664,9 @@ public abstract class SystemUtils {
 	public static LocalDateTime now() {
 		return SystemClock.now();
 	}
-	
+
 	/**
-	 * 精确度要求达到真实的毫秒级别时不建议使用 
+	 * 精确度要求达到真实的毫秒级别时不建议使用
 	 */
 	public static long currentTimeMillis() {
 		return SystemClock.currentTimeMillis();
@@ -686,7 +695,7 @@ public abstract class SystemUtils {
 		public static LocalDateTime now() {
 			return instance().now;
 		}
-		
+
 		public static long currentTimeMillis() {
 			return instance().currentTimeMillis;
 		}
