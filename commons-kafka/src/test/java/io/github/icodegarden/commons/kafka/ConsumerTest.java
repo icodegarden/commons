@@ -15,7 +15,7 @@ public class ConsumerTest {
 	public void testConsumeOk() throws Exception {
 		 Properties props = buildConsumerProperties();
 		 
-		 props.put("bootstrap.servers", "192.168.229.134:9092");//Type: listDefault: ""Valid Values: non-null stringImportance: high
+		 props.put("bootstrap.servers", "192.168.184.129:9092");//Type: listDefault: ""Valid Values: non-null stringImportance: high
 		 /**向broker拉取消息的最小bytes，broker上的消息小于该设置则阻塞，直到超时；设置1表示尽快返回*/
 	     props.put("fetch.min.bytes", 1);//Type: intDefault: 1Valid Values: [0,...]Importance: high
 	     props.put("fetch.max.bytes", 52428800);//Type: intDefault: 52428800 Valid Values: [0,...]Importance: medium

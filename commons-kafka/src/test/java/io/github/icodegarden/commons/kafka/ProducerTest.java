@@ -146,7 +146,7 @@ public class ProducerTest {
 	@Test
 	public void testSendOk() throws Exception {
 		Properties props = buildProducerProperties();
-		props.put("bootstrap.servers", "192.168.229.134:9092"); 
+		props.put("bootstrap.servers", "192.168.184.129:9092"); 
 		props.put("acks", "all");
 		props.put("retries", 0);
 		props.put("delivery.timeout.ms", 5000);
