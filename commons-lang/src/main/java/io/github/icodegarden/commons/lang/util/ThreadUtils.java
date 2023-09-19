@@ -37,15 +37,15 @@ public abstract class ThreadUtils {
 	 * 固定数量线程池，不会回收<br>
 	 * 任务处理线程不足才会进队列
 	 */
-	public static ThreadPoolExecutor newFixedThreadPool(int poolSize, int queSize, String threadPrefix) {
+	public static ThreadPoolExecutor newFixedThreadPool(int poolSize, int queueSize, String threadPrefix) {
 		return new ThreadPoolExecutor(//
 				poolSize, //
 				poolSize, //
 				0, //
 				TimeUnit.SECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix)//
 		);
 	}
@@ -54,16 +54,16 @@ public abstract class ThreadUtils {
 	 * 固定数量线程池，不会回收<br>
 	 * 任务处理线程不足才会进队列
 	 */
-	public static ThreadPoolExecutor newFixedThreadPool(int poolSize, int queSize, String threadPrefix,
+	public static ThreadPoolExecutor newFixedThreadPool(int poolSize, int queueSize, String threadPrefix,
 			RejectedExecutionHandler rejectedExecutionHandler) {
 		return new ThreadPoolExecutor(//
 				poolSize, //
 				poolSize, //
 				0, //
 				TimeUnit.SECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix), //
 				rejectedExecutionHandler//
 		);
@@ -74,15 +74,15 @@ public abstract class ThreadUtils {
 	 * 任务core处理线程不足就会进队列，队列满后才会增长弹性线程
 	 */
 	public static ThreadPoolExecutor newCachedThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveMs,
-			int queSize, String threadPrefix) {
+			int queueSize, String threadPrefix) {
 		return new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
 				keepAliveMs, //
 				TimeUnit.MILLISECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix)//
 		);
 	}
@@ -92,15 +92,15 @@ public abstract class ThreadUtils {
 	 * 任务core处理线程不足就会进队列，队列满后才会增长弹性线程
 	 */
 	public static ThreadPoolExecutor newCachedThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveMs,
-			int queSize, String threadPrefix, RejectedExecutionHandler rejectedExecutionHandler) {
+			int queueSize, String threadPrefix, RejectedExecutionHandler rejectedExecutionHandler) {
 		return new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
 				keepAliveMs, //
 				TimeUnit.MILLISECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix), //
 				rejectedExecutionHandler//
 		);
@@ -111,8 +111,8 @@ public abstract class ThreadUtils {
 	 * 任务core处理线程不足就会增长弹性线程，弹性线程不足才会进队列
 	 */
 	public static ThreadPoolExecutor newEagerThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveMs,
-			int queSize, String threadPrefix) {
-		TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queSize <= 0 ? 1 : queSize);
+			int queueSize, String threadPrefix) {
+		TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queueSize <= 0 ? 1 : queueSize);
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
@@ -130,8 +130,8 @@ public abstract class ThreadUtils {
 	 * 任务core处理线程不足就会增长弹性线程，弹性线程不足才会进队列
 	 */
 	public static ThreadPoolExecutor newEagerThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveMs,
-			int queSize, String threadPrefix, RejectedExecutionHandler rejectedExecutionHandler) {
-		TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queSize <= 0 ? 1 : queSize);
+			int queueSize, String threadPrefix, RejectedExecutionHandler rejectedExecutionHandler) {
+		TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queueSize <= 0 ? 1 : queueSize);
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
@@ -149,16 +149,16 @@ public abstract class ThreadUtils {
 	 * 限制数量线程池，不会回收<br>
 	 * 任务core处理线程不足就会进队列，队列满后才会增长弹性线程
 	 */
-	public static ThreadPoolExecutor newLimitedThreadPool(int corePoolSize, int maximumPoolSize, int queSize,
+	public static ThreadPoolExecutor newLimitedThreadPool(int corePoolSize, int maximumPoolSize, int queueSize,
 			String threadPrefix) {
 		return new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
 				Long.MAX_VALUE, //
 				TimeUnit.MILLISECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix)//
 		);
 	}
@@ -167,16 +167,16 @@ public abstract class ThreadUtils {
 	 * 限制数量线程池，不会回收<br>
 	 * 任务core处理线程不足就会进队列，队列满后才会增长弹性线程
 	 */
-	public static ThreadPoolExecutor newLimitedThreadPool(int corePoolSize, int maximumPoolSize, int queSize,
+	public static ThreadPoolExecutor newLimitedThreadPool(int corePoolSize, int maximumPoolSize, int queueSize,
 			String threadPrefix, RejectedExecutionHandler rejectedExecutionHandler) {
 		return new ThreadPoolExecutor(//
 				corePoolSize, //
 				maximumPoolSize, //
 				Long.MAX_VALUE, //
 				TimeUnit.MILLISECONDS, //
-				queSize == 0 ? new SynchronousQueue<Runnable>()
-						: (queSize < 0 ? new LinkedBlockingQueue<Runnable>()
-								: new LinkedBlockingQueue<Runnable>(queSize)), //
+				queueSize == 0 ? new SynchronousQueue<Runnable>()
+						: (queueSize < 0 ? new LinkedBlockingQueue<Runnable>()
+								: new LinkedBlockingQueue<Runnable>(queueSize)), //
 				new NamedThreadFactory(threadPrefix), //
 				rejectedExecutionHandler//
 		);

@@ -166,7 +166,7 @@
 		<dependency>
 		    <groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper-spring-boot-starter</artifactId>
-		    <version>1.4.1</version>
+		    <version>${pagehelper-spring-boot-starter.version}</version>
 		</dependency>	
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

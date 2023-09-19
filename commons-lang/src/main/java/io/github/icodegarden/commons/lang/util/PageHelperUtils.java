@@ -19,6 +19,20 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportPage;
  */
 public abstract class PageHelperUtils {
 
+	public static <E> Page<E> startPage(int pageNum, int pageSize, boolean count) {
+		return startPage(pageNum, pageSize, count, null);
+	}
+
+	public static <E> Page<E> startPage(int pageNum, int pageSize, String orderBy) {
+		return startPage(pageNum, pageSize, true, orderBy);
+	}
+
+	public static <E> Page<E> startPage(int pageNum, int pageSize, boolean count, String orderBy) {
+		Page<E> startPage = PageHelper.startPage(pageNum, pageSize, count);
+		startPage.setOrderBy(orderBy);
+		return startPage;
+	}
+
 	/**
 	 * 是否执行了分页，即是否执行了PageHelper.startPage 且 正在分页中<br>
 	 * 如果分页调用已经结束，则是false，因为LocalPage已被自动remove

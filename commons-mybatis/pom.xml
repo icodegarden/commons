@@ -28,7 +28,7 @@
 		<dependency>
 		    <groupId>org.mybatis</groupId>
 		    <artifactId>mybatis</artifactId>
-		    <version>3.5.7</version>
+		    <version>${mybatis.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.icodegarden</groupId>
@@ -47,7 +47,7 @@
 		<dependency>
 		    <groupId>com.github.pagehelper</groupId>
 		    <artifactId>pagehelper-spring-boot-starter</artifactId>
-		    <version>1.4.1</version>
+		    <version>${pagehelper-spring-boot-starter.version}</version>
 		    <scope>test</scope>
 		</dependency>
 		<dependency>

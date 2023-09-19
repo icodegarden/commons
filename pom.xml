@@ -41,7 +41,9 @@
 		<spring.version>5.3.10</spring.version>
 		<lombok.version>1.18.20</lombok.version>
 		<reactor.version>3.5.6</reactor.version>
-		<pagehelper.version>5.3.0</pagehelper.version>
+		<mybatis.version>3.5.13</mybatis.version>
+		<pagehelper.version>5.3.3</pagehelper.version>
+		<pagehelper-spring-boot-starter.version>1.4.7</pagehelper-spring-boot-starter.version>
 		<wing.version>0.2.0</wing.version>
 		<beecomb.version>1.1.0</beecomb.version>
 		<sentinel.version>1.8.5</sentinel.version>

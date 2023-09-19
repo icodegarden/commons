@@ -14,7 +14,9 @@ public interface Dao<PO, U, Q extends BaseQuery, W, DO, ID> {
 
 	void add(PO po);
 
-	void addBatch(Collection<PO> pos);
+	default void addBatch(Collection<PO> pos) {
+		pos.forEach(this::add);
+	}
 
 	int update(U update);
 	
