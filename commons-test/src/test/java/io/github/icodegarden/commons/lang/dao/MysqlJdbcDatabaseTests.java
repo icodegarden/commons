@@ -1,5 +1,7 @@
 package io.github.icodegarden.commons.lang.dao;
 
+import io.github.icodegarden.commons.lang.repository.Database;
+import io.github.icodegarden.commons.lang.repository.MysqlJdbcDatabase;
 import io.github.icodegarden.commons.test.TestsDataSourceDependent;
 
 /**

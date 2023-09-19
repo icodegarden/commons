@@ -39,10 +39,10 @@ public class ElasticsearchV7TableDataCountCollector extends AbstractTableDataCou
 
 	@Override
 	public long countTable(String tableName) {
-		TableDataCountElasticsearchV7Dao tableDataCountElasticsearchV7Dao = new TableDataCountElasticsearchV7Dao(client,
+		TableDataCountElasticsearchV7Repository repository = new TableDataCountElasticsearchV7Repository(client,
 				TABLENAME);
 		ElasticsearchQuery<Object> query = new ElasticsearchQuery<Object>();
-		return tableDataCountElasticsearchV7Dao.count(query);
+		return repository.count(query);
 	}
 
 }

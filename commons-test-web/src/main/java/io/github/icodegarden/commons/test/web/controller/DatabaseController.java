@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.icodegarden.commons.lang.dao.OptimizeTableResults;
-import io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase;
+import io.github.icodegarden.commons.lang.repository.OptimizeTableResults;
+import io.github.icodegarden.commons.mybatis.repository.MysqlMybatisDatabase;
 
 /**
  * 

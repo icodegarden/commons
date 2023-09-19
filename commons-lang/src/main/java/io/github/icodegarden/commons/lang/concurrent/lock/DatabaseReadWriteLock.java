@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.springframework.util.Assert;
 
-import io.github.icodegarden.commons.lang.concurrent.lock.DatabaseReadWriteLockDao.LockDO;
+import io.github.icodegarden.commons.lang.concurrent.lock.DatabaseReadWriteLockRepository.LockDO;
 import io.github.icodegarden.commons.lang.util.SystemUtils;
 
 /**
@@ -20,19 +20,19 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 
 	private final String identifier;
 
-	private final DatabaseReadWriteLockDao lockDao;
+	private final DatabaseReadWriteLockRepository lockRepository;
 
 	private final String name;
 	private final Long expireSeconds;
 
 	private long acquireIntervalMillis = 500;
 
-	public DatabaseReadWriteLock(DatabaseReadWriteLockDao lockDao, String name, String identifier, Long expireSeconds,
+	public DatabaseReadWriteLock(DatabaseReadWriteLockRepository lockRepository, String name, String identifier, Long expireSeconds,
 			boolean readType) {
 		Assert.hasText(name, "name must not empty");
 		Assert.isTrue(name.length() <= 20, "name length must <= 20");
 
-		this.lockDao = lockDao;
+		this.lockRepository = lockRepository;
 		this.identifier = identifier;
 		this.name = name;
 		this.expireSeconds = expireSeconds;
@@ -48,7 +48,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 	public boolean isAcquired() throws LockException {
 		try {
 			String nowStr = SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now());
-			List<LockDO> list = lockDao.listLockedDataInterProcess(name, identifier, readType, nowStr);
+			List<LockDO> list = lockRepository.listLockedDataInterProcess(name, identifier, readType, nowStr);
 			if (list.isEmpty()) {
 				return false;
 			}
@@ -91,7 +91,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 			try {
 				boolean b = mutex();
 				if (!b) {
-					lockDao.createRow(name, identifier, expireSeconds,
+					lockRepository.createRow(name, identifier, expireSeconds,
 							SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now()), readType);
 					return true;
 				}
@@ -108,7 +108,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 
 	private boolean mutex() {
 		String nowStr = SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now());
-		List<LockDO> dos = lockDao.listLockedDatas(name, nowStr);
+		List<LockDO> dos = lockRepository.listLockedDatas(name, nowStr);
 		if (this.readType) {
 			/**
 			 * 是否有write锁且不是本地持有的
@@ -130,7 +130,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 	@Override
 	public void release() throws LockException {
 		try{
-			lockDao.deleteRow(name, identifier);
+			lockRepository.deleteRow(name, identifier);
 		} catch (Exception e) {
 			throw new LockExceedExpectedException(e);
 		}

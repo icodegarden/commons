@@ -3,7 +3,7 @@ package io.github.icodegarden.commons.mybatis.concurrent.lock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import io.github.icodegarden.commons.lang.concurrent.lock.DatabaseReadWriteLockDao;
+import io.github.icodegarden.commons.lang.concurrent.lock.DatabaseReadWriteLockRepository;
 import io.github.icodegarden.commons.lang.concurrent.lock.DistributedReentrantReadWriteLock;
 import io.github.icodegarden.commons.mybatis.MybatisTestUtils;
 import io.github.icodegarden.commons.test.TestsDataSourceDependent;
@@ -18,7 +18,7 @@ public class MysqlMybatisReentrantReadWriteLockTests extends DistributedReentran
 
 	@BeforeEach
 	void initDS() {
-		TestsDataSourceDependent.clearTable(DatabaseReadWriteLockDao.TABLE_NAME);
+		TestsDataSourceDependent.clearTable(DatabaseReadWriteLockRepository.TABLE_NAME);
 	}
 
 	@AfterEach

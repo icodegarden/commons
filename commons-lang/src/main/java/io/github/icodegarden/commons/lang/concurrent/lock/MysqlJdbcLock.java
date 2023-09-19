@@ -10,6 +10,6 @@ import javax.sql.DataSource;
 public class MysqlJdbcLock extends DatabaseLock implements JdbcLock {
 
 	public MysqlJdbcLock(DataSource dataSource, String name, Long expireSeconds) {
-		super(new MysqlJdbcLockDao(dataSource), name, expireSeconds);
+		super(new MysqlJdbcLockRepository(dataSource), name, expireSeconds);
 	}
 }

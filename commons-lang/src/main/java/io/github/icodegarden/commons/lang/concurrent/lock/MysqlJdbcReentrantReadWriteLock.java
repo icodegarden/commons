@@ -32,7 +32,7 @@ public class MysqlJdbcReentrantReadWriteLock implements MysqlReentrantReadWriteL
 
 		public MysqlJdbcLock(DataSource dataSource, String name, String identifier, Long expireSeconds,
 				boolean readType) {
-			super(new MysqlJdbcReadWriteLockDao(dataSource), name, identifier, expireSeconds, readType);
+			super(new MysqlJdbcReadWriteLockRepository(dataSource), name, identifier, expireSeconds, readType);
 		}
 	}
 

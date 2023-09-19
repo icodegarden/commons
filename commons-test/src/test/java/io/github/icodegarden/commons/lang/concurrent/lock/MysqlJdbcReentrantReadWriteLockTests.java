@@ -15,7 +15,7 @@ public class MysqlJdbcReentrantReadWriteLockTests extends DistributedReentrantRe
 
 	@BeforeEach
 	void initDS() {
-		TestsDataSourceDependent.clearTable(DatabaseReadWriteLockDao.TABLE_NAME);
+		TestsDataSourceDependent.clearTable(DatabaseReadWriteLockRepository.TABLE_NAME);
 	}
 
 	@AfterEach

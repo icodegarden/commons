@@ -16,16 +16,16 @@ public class ElasticsearchTableDataCountStorage implements TableDataCountStorage
 
 	private static final String TABLENAME = "table_data_count";
 
-	private TableDataCountElasticsearchDao tableDataCountElasticsearchDao;
+	private TableDataCountElasticsearchRepository repository;
 
 	public ElasticsearchTableDataCountStorage(ElasticsearchClient client) {
-		tableDataCountElasticsearchDao = new TableDataCountElasticsearchDao(client, TABLENAME);
+		repository = new TableDataCountElasticsearchRepository(client, TABLENAME);
 	}
 
 	@Override
 	public void add(TableDataCountPO po) {
 		po.setId(po.getTableName());// 表名作为id，否则自动生成
-		tableDataCountElasticsearchDao.add(po);
+		repository.add(po);
 	}
 
 	@Override
@@ -34,17 +34,17 @@ public class ElasticsearchTableDataCountStorage implements TableDataCountStorage
 		update.setId(tableName);
 		update.setDataCount(count);
 		update.setUpdatedAt(SystemUtils.now());
-		return tableDataCountElasticsearchDao.update(update);
+		return repository.update(update);
 	}
 
 	@Override
 	public List<TableDataCountPO> findAll() {
 		ElasticsearchQuery<Object> query = new ElasticsearchQuery<Object>();
 		query.setSize(10000);
-		return tableDataCountElasticsearchDao.findAll(query);
+		return repository.findAll(query);
 	}
 
 	int delete(String id) {
-		return tableDataCountElasticsearchDao.delete(id);
+		return repository.delete(id);
 	}
 }

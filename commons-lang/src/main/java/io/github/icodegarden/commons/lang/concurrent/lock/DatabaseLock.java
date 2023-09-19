@@ -18,18 +18,18 @@ public abstract class DatabaseLock implements DistributedLock {
 
 	private final String identifier = UUID.randomUUID().toString();
 
-	private final DatabaseLockDao lockDao;
+	private final DatabaseLockRepository lockRepository;
 
 	private final String name;
 	private final Long expireSeconds;
 
 	private long acquireIntervalMillis = 500;
 
-	public DatabaseLock(DatabaseLockDao lockDao, String name, Long expireSeconds) {
+	public DatabaseLock(DatabaseLockRepository lockRepository, String name, Long expireSeconds) {
 		Assert.hasText(name, "name must not empty");
 		Assert.isTrue(name.length() <= 20, "name length must <= 20");
 
-		this.lockDao = lockDao;
+		this.lockRepository = lockRepository;
 		this.name = name;
 		this.expireSeconds = expireSeconds;
 	}
@@ -43,7 +43,7 @@ public abstract class DatabaseLock implements DistributedLock {
 	public boolean isAcquired() throws LockException {
 		try {
 			String nowStr = SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now());
-			String value = lockDao.getLockedIdentifier(name, nowStr);
+			String value = lockRepository.getLockedIdentifier(name, nowStr);
 			return value != null && value.equals(identifier);
 		} catch (Exception e) {
 			throw new LockExceedExpectedException(e);
@@ -65,15 +65,15 @@ public abstract class DatabaseLock implements DistributedLock {
 		LocalDateTime start = SystemUtils.now();
 		for (;;) {
 			try {
-				if (lockDao.findRow(name) != null) {
-					int rows = lockDao.updateLocked(name, identifier, expireSeconds,
+				if (lockRepository.findRow(name) != null) {
+					int rows = lockRepository.updateLocked(name, identifier, expireSeconds,
 							SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now()));
 					if (rows == 1) {
 						return true;
 					}
 				} else {
 					try {
-						lockDao.createRow(name, identifier, expireSeconds,
+						lockRepository.createRow(name, identifier, expireSeconds,
 								SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now()));
 						return true;
 					} catch (DuplicateKeyException e) {
@@ -104,7 +104,7 @@ public abstract class DatabaseLock implements DistributedLock {
 		 * 必须要检查
 		 */
 		if (isAcquired()) {
-			lockDao.updateRelease(name);
+			lockRepository.updateRelease(name);
 		}
 	}
 

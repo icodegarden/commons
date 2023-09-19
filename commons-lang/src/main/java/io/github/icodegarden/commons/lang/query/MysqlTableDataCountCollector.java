@@ -5,7 +5,7 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import io.github.icodegarden.commons.lang.dao.MysqlJdbcDatabase;
+import io.github.icodegarden.commons.lang.repository.MysqlJdbcDatabase;
 
 /**
  * 

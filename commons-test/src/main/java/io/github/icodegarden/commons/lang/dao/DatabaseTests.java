@@ -6,7 +6,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.dao.OptimizeTableResults.Result;
+import io.github.icodegarden.commons.lang.repository.Database;
+import io.github.icodegarden.commons.lang.repository.OptimizeTableResults;
+import io.github.icodegarden.commons.lang.repository.OptimizeTableResults.Result;
 
 /**
  * 

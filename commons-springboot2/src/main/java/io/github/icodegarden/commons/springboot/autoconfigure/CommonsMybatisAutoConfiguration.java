@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyStartup;
-import io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase;
 import io.github.icodegarden.commons.mybatis.interceptor.SqlInterceptor;
+import io.github.icodegarden.commons.mybatis.repository.MysqlMybatisDatabase;
 import io.github.icodegarden.commons.springboot.MybatisGracefullyStartup;
 import io.github.icodegarden.commons.springboot.properties.CommonsMybatisProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class CommonsMybatisAutoConfiguration {
 	@ConditionalOnClass(MapperScan.class)
 	@ConditionalOnProperty(value = "commons.mybatis.mapperScan.enabled", havingValue = "true", matchIfMissing = true)
 	@MapperScan(basePackages = "${" + CommonsMybatisProperties.SCAN_BASE_PACKAGES + "}", basePackageClasses = {
-			io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase.class, //
+			io.github.icodegarden.commons.mybatis.repository.MysqlMybatisDatabase.class, //
 			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper.class,//
 			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper.class//
 	})

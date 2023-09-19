@@ -1,7 +1,7 @@
 package io.github.icodegarden.commons.springboot;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyStartup;
-import io.github.icodegarden.commons.mybatis.dao.MybatisDatabase;
+import io.github.icodegarden.commons.mybatis.repository.MybatisDatabase;
 import lombok.extern.slf4j.Slf4j;
 
 /**
