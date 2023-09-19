@@ -35,9 +35,6 @@ public class MysqlJdbcLockRepository implements DatabaseLockRepository {
 					 */
 					.append(" and is_locked=1 and DATE_ADD(lock_at,INTERVAL expire_seconds SECOND) >= '").append(nowStr)
 					.append("'").toString();
-			if (log.isInfoEnabled()) {
-				log.info("getLockedIdentifier sql:{}", sql);
-			}
 			try (PreparedStatement ptmt = connection.prepareStatement(sql);) {
 				try (ResultSet rs = ptmt.executeQuery();) {
 					while (rs.next()) {
