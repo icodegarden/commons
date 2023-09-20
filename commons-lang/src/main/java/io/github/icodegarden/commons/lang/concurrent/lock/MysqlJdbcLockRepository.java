@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class MysqlJdbcLockRepository implements DatabaseLockRepository {
+class MysqlJdbcLockRepository implements DatabaseLockRepository {
 
 	private final DataSource dataSource;
 

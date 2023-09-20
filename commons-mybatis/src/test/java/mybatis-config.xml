@@ -15,8 +15,9 @@
     </environment>
   </environments>
   <mappers>
-    <mapper class="io.github.icodegarden.commons.mybatis.dao.MysqlMybatisDatabase"/>
+    <mapper class="io.github.icodegarden.commons.mybatis.repository.MysqlMybatisDatabase"/>
     <mapper class="io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper"/>
     <mapper class="io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper"/>
+    <mapper class="io.github.icodegarden.commons.mybatis.concurrent.registry.MysqlMybatisRegistryMapper"/>
   </mappers>
 </configuration>

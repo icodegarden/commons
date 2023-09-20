@@ -12,11 +12,12 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-class SimpleDO<ID> {
+public class SimpleRegistrationDO<ID> {
 
 	private ID id;
 	private Integer index;
-	public SimpleDO(ID id, Integer index) {
+	
+	public SimpleRegistrationDO(ID id, Integer index) {
 		super();
 		this.id = id;
 		this.index = index;

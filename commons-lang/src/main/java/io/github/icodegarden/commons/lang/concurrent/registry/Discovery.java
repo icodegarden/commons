@@ -10,5 +10,7 @@ import java.util.List;
  */
 public interface Discovery<R extends Registration> {
 
+	boolean isRegistered(R registration);
+
 	List<R> listInstances(String name);
 }

@@ -18,6 +18,10 @@ package io.github.icodegarden.commons.lang.concurrent.registry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.github.icodegarden.commons.lang.util.JsonUtils;
+import lombok.Getter;
+import lombok.ToString;
+
 /**
  * 
  * @author Fangfang.Xu
@@ -34,11 +38,11 @@ public interface Registration {
 	 * @return 唯一标识id 例如instanceId、ip:port
 	 */
 	String getIdentifier();
-	
+
 	/**
 	 * @return 租期过期时间
 	 */
-	default Long getExpireSeconds() {
+	default long getExpireSeconds() {
 		return 30L;
 	}
 
@@ -46,4 +50,22 @@ public interface Registration {
 
 	JsonNode getInfo();
 
+	@Getter
+	@ToString
+	class Default implements Registration {
+		private String name;
+		private String identifier;
+		private long expireSeconds;
+		private JsonNode metadata;
+		private JsonNode info;
+
+		public Default(String name, String identifier, long expireSeconds, String metadata, String info) {
+			super();
+			this.name = name;
+			this.identifier = identifier;
+			this.expireSeconds = 30;
+			this.metadata = metadata != null ? JsonUtils.deserialize(metadata, JsonNode.class) : null;
+			this.info = info != null ? JsonUtils.deserialize(info, JsonNode.class) : null;
+		}
+	}
 }

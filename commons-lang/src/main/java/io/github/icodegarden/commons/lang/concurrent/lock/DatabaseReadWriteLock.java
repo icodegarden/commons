@@ -30,7 +30,7 @@ public abstract class DatabaseReadWriteLock implements DistributedLock {
 	public DatabaseReadWriteLock(DatabaseReadWriteLockRepository lockRepository, String name, String identifier, Long expireSeconds,
 			boolean readType) {
 		Assert.hasText(name, "name must not empty");
-		Assert.isTrue(name.length() <= 20, "name length must <= 20");
+		Assert.isTrue(name.length() <= 50, "name length must <= 50");
 
 		this.lockRepository = lockRepository;
 		this.identifier = identifier;

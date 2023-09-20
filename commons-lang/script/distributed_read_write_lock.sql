@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS `distributed_read_write_lock`;
 CREATE TABLE `distributed_read_write_lock` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(20) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `identifier` varchar(64),
   `is_read_type` bit(1) NOT NULL,
   `is_locked` bit(1) NOT NULL DEFAULT 0,

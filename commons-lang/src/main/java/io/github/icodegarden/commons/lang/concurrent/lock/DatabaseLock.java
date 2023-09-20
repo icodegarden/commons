@@ -27,7 +27,7 @@ public abstract class DatabaseLock implements DistributedLock {
 
 	public DatabaseLock(DatabaseLockRepository lockRepository, String name, Long expireSeconds) {
 		Assert.hasText(name, "name must not empty");
-		Assert.isTrue(name.length() <= 20, "name length must <= 20");
+		Assert.isTrue(name.length() <= 50, "name length must <= 50");
 
 		this.lockRepository = lockRepository;
 		this.name = name;

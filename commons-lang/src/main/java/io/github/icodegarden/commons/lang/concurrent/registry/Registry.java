@@ -6,7 +6,7 @@ package io.github.icodegarden.commons.lang.concurrent.registry;
  *
  * @param <R>
  */
-public interface Registry<R extends Registration> {
+public interface Registry<R extends Registration> extends Discovery<Registration> {
 
 	void register(R registration) throws RegistryException;
 
