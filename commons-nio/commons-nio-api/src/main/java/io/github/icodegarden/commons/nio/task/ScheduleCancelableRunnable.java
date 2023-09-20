@@ -25,11 +25,15 @@ public abstract class ScheduleCancelableRunnable implements Runnable {
 	}
 
 	public void scheduleWithFixedDelay(long initialDelay, long delay, TimeUnit timeUnit) {
-		scheduledFuture = scheduledThreadPoolExecutor.scheduleWithFixedDelay(this, initialDelay, delay, timeUnit);
+		if(!scheduledThreadPoolExecutor.isShutdown()) {
+			scheduledFuture = scheduledThreadPoolExecutor.scheduleWithFixedDelay(this, initialDelay, delay, timeUnit);
+		}
 	}
 	
 	public void scheduleAtFixedRate(long initialDelay, long delay, TimeUnit timeUnit) {
-		scheduledFuture = scheduledThreadPoolExecutor.scheduleAtFixedRate(this, initialDelay, delay, timeUnit);
+		if(!scheduledThreadPoolExecutor.isShutdown()) {
+			scheduledFuture = scheduledThreadPoolExecutor.scheduleAtFixedRate(this, initialDelay, delay, timeUnit);
+		}
 	}
 
 	public void cancel() {

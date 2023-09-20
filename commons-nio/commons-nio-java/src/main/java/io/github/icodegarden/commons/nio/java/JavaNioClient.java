@@ -30,6 +30,8 @@ import io.github.icodegarden.commons.nio.task.ScheduleCancelableRunnable;
 public class JavaNioClient extends AbstractNioClient implements ClientNioEventListener {
 	private static final Logger log = LoggerFactory.getLogger(JavaNioClient.class);
 
+	private static volatile ClientNioSelector commonClientNioSelector;
+	
 	private SocketChannelSpace socketChannelSpace;
 
 	private final ClientNioSelector clientNioSelector;
@@ -47,6 +49,10 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 	private ScheduleCancelableRunnable heartbeatTask;
 	private ScheduleCancelableRunnable reconnectTask;
 	
+	public JavaNioClient(InetSocketAddress address) {
+		this(address, getCommonClientNioSelector(), HeartbeatTimerTask.DEFAULT, ReconnectTimerTask.DEFAULT);
+	}
+	
 	public JavaNioClient(InetSocketAddress address, ClientNioSelector clientNioSelector) {
 		this(address, clientNioSelector, HeartbeatTimerTask.DEFAULT, ReconnectTimerTask.DEFAULT);
 	}
@@ -62,6 +68,13 @@ public class JavaNioClient extends AbstractNioClient implements ClientNioEventLi
 		this.clientNioSelector = clientNioSelector;
 		this.heartbeatTimerTask = heartbeatTimerTask;
 		this.reconnectTimerTask = reconnectTimerTask;
+	}
+	
+	private static synchronized ClientNioSelector getCommonClientNioSelector() {
+		if(commonClientNioSelector == null) {
+			commonClientNioSelector = ClientNioSelector.openNew("CommonClientNioSelector");
+		}
+		return commonClientNioSelector;
 	}
 
 	@Override

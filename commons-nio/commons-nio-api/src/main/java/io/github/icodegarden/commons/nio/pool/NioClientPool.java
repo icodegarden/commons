@@ -134,7 +134,7 @@ public class NioClientPool implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		scheduledThreadPool.shutdown();
 		
 		nioClients.values().forEach(client->{

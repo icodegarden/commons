@@ -81,10 +81,12 @@ class ServerNioSelector implements Closeable {
 										serverSide.onWrite(key);
 									}
 								} catch (Throwable e) {
-									log.error("ex in SelectionKey handle, {}, that means client was closed", name, e);
+									log.warn("SelectionKey handle failed, {}, that means client was closed", name, e);
 									//客户端已主动关闭
 									ServerSideClient serverSide = (ServerSideClient) key.attachment();
-									serverSide.close();
+									if(serverSide != null) {
+										serverSide.close();
+									}
 								} finally {
 									iterator.remove();
 								}
