@@ -63,7 +63,7 @@ public interface Registration {
 			super();
 			this.name = name;
 			this.identifier = identifier;
-			this.expireSeconds = 30;
+			this.expireSeconds = expireSeconds;
 			this.metadata = metadata != null ? JsonUtils.deserialize(metadata, JsonNode.class) : null;
 			this.info = info != null ? JsonUtils.deserialize(info, JsonNode.class) : null;
 		}

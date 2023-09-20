@@ -22,23 +22,23 @@ import io.github.icodegarden.commons.lang.concurrent.registry.RegistryMaxIndexEx
  */
 public abstract class RegistryTests {
 
-	private String name = "myservice";
-	private String identifier = "127.0.0.1:8080";
-	private String metadata = "{\"ts\":1000}";
-	private String info = "{\"ts2\":2000}";
+	protected String name = "myservice";
+	protected String identifier = "127.0.0.1:8080";
+	protected String metadata = "{\"ts\":1000}";
+	protected String info = "{\"ts2\":2000}";
 
 	protected abstract Registry<Registration> newRegistry(RegistryListener registryListener);
 
-	private TestRegistryListener registryListener;
+	protected TestRegistryListener registryListener;
 
 	@BeforeEach
 	void init() {
 		registryListener = new TestRegistryListener();
 	}
 
-	class TestRegistryListener implements RegistryListener {
-		private Integer index;
-		private Boolean leaseExpired;
+	public class TestRegistryListener implements RegistryListener {
+		public Integer index;
+		public Boolean leaseExpired;
 
 		@Override
 		public void onRegistered(Registration registration, Integer index) {
@@ -95,7 +95,7 @@ public abstract class RegistryTests {
 	 * 注册然后close
 	 */
 	@Test
-	void register_thenClose_willTigerDeregister() throws Exception {
+	void register_thenClose_willTriggerDeregister() throws Exception {
 		Registry<Registration> registry = newRegistry(registryListener);
 
 		String name = "leaseScheduleUpdate";

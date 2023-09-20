@@ -23,6 +23,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 import com.alibaba.csp.sentinel.SphU;
 
 import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
+import io.github.icodegarden.commons.springboot.RegistryGracefullyShutdown;
 import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdown;
 import io.github.icodegarden.commons.springboot.properties.CommonsWebProperties;
 import io.github.icodegarden.commons.springboot.web.filter.CacheRequestBodyFilter;
@@ -54,6 +55,22 @@ public class CommonsWebAutoConfiguration {
 	public static final int FILTER_ORDER_PROCESSING_REQUEST_COUNT = Ordered.HIGHEST_PRECEDENCE;// 最高优先级
 	public static final int FILTER_ORDER_GATEWAY_PRE_AUTHENTICATED_AUTHENTICATION = FILTER_ORDER_PROCESSING_REQUEST_COUNT
 			+ 100;
+
+	/**
+	 * 如果用户有作为bean
+	 */
+	@Autowired(required = false)
+	private io.github.icodegarden.commons.lang.concurrent.registry.Registry registry;
+
+	@PostConstruct
+	private void init() {
+		/**
+		 * 与springcloud的ServiceRegistry互不影响
+		 */
+		if (registry != null) {
+			GracefullyShutdown.Registry.singleton().register(new RegistryGracefullyShutdown(registry));// 默认下线优先级最高
+		}
+	}
 
 	/**
 	 * 公共的 可能不是springcloud项目

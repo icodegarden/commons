@@ -20,5 +20,4 @@ public class MysqlMybatisRegistryTests extends RegistryTests {
 		MysqlMybatisRegistryMapper mapper = MybatisTestUtils.getMapper(MysqlMybatisRegistryMapper.class);
 		return new MysqlMybatisRegistry(lockMapper, mapper, registryListener);
 	}
-
 }
