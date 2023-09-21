@@ -3,34 +3,34 @@ package io.github.icodegarden.commons.exchange.nio;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import io.github.icodegarden.commons.exchange.ParallelExchangeResult;
 import io.github.icodegarden.commons.exchange.ParallelExchanger;
 import io.github.icodegarden.commons.exchange.ParallelLoadBalanceExchanger;
+import io.github.icodegarden.commons.exchange.ReasonExchangeResult;
 import io.github.icodegarden.commons.exchange.broadcast.Broadcast;
 import io.github.icodegarden.commons.exchange.broadcast.BroadcastMessage;
-import io.github.icodegarden.commons.exchange.exception.ExchangeFailedReason;
 import io.github.icodegarden.commons.exchange.loadbalance.AllInstanceLoadBalance;
 import io.github.icodegarden.commons.exchange.loadbalance.EmptyInstanceLoadBalance;
 import io.github.icodegarden.commons.exchange.loadbalance.InstanceLoadBalance;
 import io.github.icodegarden.commons.lang.Matcher;
 import io.github.icodegarden.commons.lang.concurrent.registry.Instance;
-import io.github.icodegarden.commons.lang.result.Result2;
 import io.github.icodegarden.commons.nio.MessageHandler;
+import io.github.icodegarden.commons.nio.MessageHandlerProvider;
 import io.github.icodegarden.commons.nio.java.JavaNioServer;
 import io.github.icodegarden.commons.nio.pool.NioClientPool;
 import io.github.icodegarden.commons.nio.pool.NioClientSuppliers;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
  * @author Fangfang.Xu
  *
  */
-@Slf4j
 public class NioBroadcast implements Broadcast {
 
+	private AtomicBoolean serverStarted = new AtomicBoolean();
 	/**
 	 * 是否也对本地
 	 */
@@ -40,7 +40,7 @@ public class NioBroadcast implements Broadcast {
 
 	private final String host;/* 对外网络ip */
 	private final int serverPort;
-	private final MessageHandler<BroadcastMessage, Result2<Object, ExchangeFailedReason>> serverMessageHandler;
+	private final EntryMessageHandler entryMessageHandler;
 
 	private final ParallelLoadBalanceExchanger parallelLoadBalanceExchanger;
 
@@ -48,9 +48,8 @@ public class NioBroadcast implements Broadcast {
 	private JavaNioServer javaNioServer;
 
 	public NioBroadcast(String host, int serverPort, Supplier<List<Instance>> instancesSupplier,
-			MessageHandler<BroadcastMessage, Result2<Object, ExchangeFailedReason>> serverMessageHandler) {
+			MessageHandler<BroadcastMessage, ReasonExchangeResult> serverMessageHandler) {
 		this.instancesSupplier = instancesSupplier;
-		this.serverMessageHandler = serverMessageHandler;
 
 		// ----------------------------------------------------------------------
 		nioClientPool = NioClientPool.newPool("NioBroadcast", NioClientSuppliers.DEFAULT);
@@ -63,18 +62,25 @@ public class NioBroadcast implements Broadcast {
 		// ----------------------------------------------------------------------
 		this.host = host;
 		this.serverPort = serverPort;
+		this.entryMessageHandler = new EntryMessageHandler((MessageHandler) serverMessageHandler);
+	}
+
+	public void addMessageHandlerProvider(MessageHandlerProvider<BroadcastMessage, ReasonExchangeResult> provider) {
+		entryMessageHandler.addMessageHandlerProvider((MessageHandlerProvider) provider);
 	}
 
 	public void startServer() {
-		InetSocketAddress bind = new InetSocketAddress(host, this.serverPort);
+		if (serverStarted.compareAndSet(false, true)) {
+			InetSocketAddress bind = new InetSocketAddress(host, this.serverPort);
 
-		this.javaNioServer = new JavaNioServer("NioBroadcast-Server", bind,
-				new EntryMessageHandler((MessageHandler) serverMessageHandler));
+			this.javaNioServer = new JavaNioServer("NioBroadcast-Server", bind, entryMessageHandler);
 
-		try {
-			javaNioServer.start();
-		} catch (IOException e) {
-			throw new IllegalStateException("error on start Nio Server.", e);
+			try {
+				javaNioServer.start();
+			} catch (IOException e) {
+				serverStarted.set(false);
+				throw new IllegalStateException("error on start Nio Server.", e);
+			}
 		}
 	}
 
@@ -85,7 +91,7 @@ public class NioBroadcast implements Broadcast {
 	private boolean isLocal(String address, int port) {
 		return host.equals(address) && port == serverPort;
 	}
-	
+
 	@Override
 	public ParallelExchangeResult request(BroadcastMessage message) {
 		Matcher<Instance> matcher = new io.github.icodegarden.commons.lang.Matcher<Instance>() {
@@ -97,8 +103,8 @@ public class NioBroadcast implements Broadcast {
 					 */
 					return false;
 				}
-				
-				if(message.instanceMatcher() == null) {
+
+				if (message.instanceMatcher() == null) {
 					return true;
 				}
 

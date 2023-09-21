@@ -1,18 +1,22 @@
 package io.github.icodegarden.commons.exchange.nio;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import io.github.icodegarden.commons.exchange.InstanceExchangeResult;
 import io.github.icodegarden.commons.exchange.ParallelShardObject;
+import io.github.icodegarden.commons.exchange.ReasonExchangeResult;
 import io.github.icodegarden.commons.exchange.exception.ExchangeFailedReason;
 import io.github.icodegarden.commons.lang.BodyObject;
 import io.github.icodegarden.commons.lang.ShardObject;
-import io.github.icodegarden.commons.lang.result.Result2;
-import io.github.icodegarden.commons.lang.result.Results;
 import io.github.icodegarden.commons.nio.MessageHandler;
+import io.github.icodegarden.commons.nio.MessageHandlerProvider;
 
 /**
  * 入口MessageHandler
@@ -26,10 +30,21 @@ public class EntryMessageHandler implements MessageHandler<Object, InstanceExcha
 	private volatile boolean closed;
 	private AtomicLong processingCount = new AtomicLong(0);
 
-	private final MessageHandler<BodyObject, Result2<Object, ExchangeFailedReason>> messageHandler;
+	private final MessageHandler<BodyObject, ReasonExchangeResult> messageHandler;
+	private final List<MessageHandlerProvider<BodyObject, ReasonExchangeResult>> providers;
 
-	public EntryMessageHandler(MessageHandler<BodyObject, Result2<Object, ExchangeFailedReason>> messageHandler) {
+	public EntryMessageHandler(MessageHandler<BodyObject, ReasonExchangeResult> messageHandler) {
 		this.messageHandler = messageHandler;
+		this.providers = new LinkedList<>();
+	}
+
+	public EntryMessageHandler(List<MessageHandlerProvider<BodyObject, ReasonExchangeResult>> providers) {
+		this.messageHandler = null;
+		this.providers = new LinkedList<>(providers);
+	}
+
+	public void addMessageHandlerProvider(MessageHandlerProvider<BodyObject, ReasonExchangeResult> provider) {
+		providers.add(provider);
 	}
 
 	@Override
@@ -61,18 +76,33 @@ public class EntryMessageHandler implements MessageHandler<Object, InstanceExcha
 				bodyObject = (BodyObject) obj;
 			}
 
-			Result2<Object, ExchangeFailedReason> result2 = null;
+			ReasonExchangeResult result2 = null;
 			if (bodyObject != null) {
-				result2 = messageHandler.reply(bodyObject);
+				if (!CollectionUtils.isEmpty(providers)) {
+					/*
+					 * 优先用providers
+					 */
+					final Object msg = bodyObject;
+					Optional<MessageHandlerProvider<BodyObject, ReasonExchangeResult>> optional = providers.stream()
+							.filter(provider -> provider.supports(msg)).findFirst();
+					if (optional.isPresent()) {
+						result2 = optional.get().getMessageHandler().reply(bodyObject);
+					} else {
+						result2 = messageHandler.reply(bodyObject);
+					}
+				} else {
+					result2 = messageHandler.reply(bodyObject);
+				}
 			} else {
-				result2 = Results.of(true, null, null);
+				result2 = new ReasonExchangeResult(true, null, null);
 			}
 
 			if (!result2.isSuccess()) {
-				log.warn("receive then handle obj failed, reason:{}", result2.getT2());
+				log.warn("receive then handle obj failed, reason:{}", result2.getExchangeFailedReason());
 			}
 
-			return InstanceExchangeResult.server(result2.isSuccess(), result2.getT1(), result2.getT2());
+			return InstanceExchangeResult.server(result2.isSuccess(), result2.response(),
+					result2.getExchangeFailedReason());
 		} catch (Exception e) {
 			log.error("ex on receive obj:{}", obj, e);
 			return InstanceExchangeResult.server(false, null, ExchangeFailedReason.serverException(e.getMessage(), e));
