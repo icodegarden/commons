@@ -9,11 +9,11 @@ import io.github.icodegarden.commons.lang.util.ClassUtils;
  * @author Fangfang.Xu
  *
  */
-public interface IdObject<T> {
+public interface IdObject<ID> {
 
-	T getId();
+	ID getId();
 
-	void setId(T id);
+	void setId(ID id);
 
 	@SuppressWarnings("all")
 	public static void setIdIfNecessary(Object id, Object target) {

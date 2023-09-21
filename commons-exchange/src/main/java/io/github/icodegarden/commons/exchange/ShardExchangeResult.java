@@ -3,11 +3,14 @@ package io.github.icodegarden.commons.exchange;
 import java.util.LinkedList;
 import java.util.List;
 
+import lombok.ToString;
+
 /**
  * 
  * @author Fangfang.Xu
  *
  */
+@ToString
 public class ShardExchangeResult implements ExchangeResult {
 	private static final long serialVersionUID = 4984166637403823242L;
 	

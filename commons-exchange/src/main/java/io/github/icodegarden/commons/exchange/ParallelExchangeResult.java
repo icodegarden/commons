@@ -2,11 +2,14 @@ package io.github.icodegarden.commons.exchange;
 
 import java.util.List;
 
+import lombok.ToString;
+
 /**
  * 
  * @author Fangfang.Xu
  *
  */
+@ToString
 public class ParallelExchangeResult implements ExchangeResult {
 	private static final long serialVersionUID = 8255692236629153404L;
 

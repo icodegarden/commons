@@ -5,12 +5,12 @@ package io.github.icodegarden.commons.nio;
  * @author Fangfang.Xu
  *
  */
-public interface MessageHandler {
+public interface MessageHandler<T, R> {
 
 	/**
-	 * for send only without response 
+	 * for send only without response
 	 */
-	void receive(Object obj);
+	void receive(T obj);
 
-	Object reply(Object obj);
+	R reply(T obj);
 }
