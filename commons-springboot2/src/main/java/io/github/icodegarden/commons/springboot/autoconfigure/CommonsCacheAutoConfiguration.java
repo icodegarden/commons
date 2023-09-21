@@ -48,12 +48,12 @@ import lombok.extern.slf4j.Slf4j;
 public class CommonsCacheAutoConfiguration {
 
 	@ConditionalOnClass({ Cacher.class })
+	@ConditionalOnBean(RedisExecutor.class) // 依赖项
 	@ConditionalOnProperty(value = "commons.cacher.redis.enabled", havingValue = "true", matchIfMissing = true)
 	@Configuration
 	protected static class RedisCacherAutoConfiguration {
 
 		@ConditionalOnMissingBean(Cacher.class)
-		@ConditionalOnBean(RedisExecutor.class) // 依赖项
 		@Bean
 		public Cacher springApplicationCacher(List<Filter> filters, List<Protector> protectors,
 				RedisExecutor redisExecutor, ApplicationEventPublisher applicationEventPublisher) {
