@@ -70,6 +70,26 @@ public abstract class RegistryTests {
 
 		registry.close();
 	}
+	
+	/**
+	 * 验证listInstances
+	 */
+	@Test
+	void listInstances() throws Exception {
+		Registry<Registration> registry = newRegistry(registryListener);
+
+		Registration registration = new Registration.Default(name, identifier, 30L, metadata, info);
+		registry.register(registration);
+		
+		List<Registration> list = registry.listInstances(name);
+
+		/**
+		 * 验证
+		 */
+		Assertions.assertThat(list).isNotEmpty();
+
+		registry.close();
+	}
 
 	/**
 	 * 注册然后注销

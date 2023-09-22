@@ -45,6 +45,6 @@ public interface DatabaseRegistryRepository<ID> {
 	/**
 	 * 查询可能的已注册票据，不包含过期的
 	 */
-	List<Registration> findAllRegistered(String name, boolean withMetadata, boolean withInfo,String nowStr);
+	List<? extends Registration> findAllRegistered(String name, boolean withMetadata, boolean withInfo,String nowStr);
 
 }

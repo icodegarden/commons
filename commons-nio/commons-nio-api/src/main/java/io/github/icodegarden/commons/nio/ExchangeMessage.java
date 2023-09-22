@@ -22,7 +22,7 @@ public class ExchangeMessage {
 
 	public static ExchangeMessage heartbeat(boolean request, boolean twoWay) {
 		/**
-		 * heartbeat的body仅仅是个boolean，不会涉及变更兼容性，可以试用Kryo
+		 * heartbeat的body仅仅是个boolean，不会涉及变更兼容性，可以使用Kryo，但需要--add-opens java.base/java.util=ALL-UNNAMED
 		 */
 		return new ExchangeMessage(request, twoWay, true, SerializerType.Kryo.getValue(), true);
 	}

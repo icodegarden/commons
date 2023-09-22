@@ -1,16 +1,17 @@
 package io.github.icodegarden.commons.exchange;
 
 import io.github.icodegarden.commons.exchange.exception.ExchangeFailedReason;
+import lombok.Getter;
 import lombok.ToString;
 
 /**
- * 
+ * 该对象可以用于表示 成功或失败
  * @author Fangfang.Xu
  *
  */
+@Getter
 @ToString
-public class ReasonExchangeResult implements ExchangeResult {
-	private static final long serialVersionUID = 1L;
+public class ReasonExchangeResult {
 
 	private final boolean success;
 
@@ -22,18 +23,5 @@ public class ReasonExchangeResult implements ExchangeResult {
 		this.success = success;
 		this.result = result;
 		this.exchangeFailedReason = exchangeFailedReason;
-	}
-
-	@Override
-	public Object response() {
-		return result;
-	}
-
-	public ExchangeFailedReason getExchangeFailedReason() {
-		return exchangeFailedReason;
-	}
-
-	public boolean isSuccess() {
-		return success;
 	}
 }

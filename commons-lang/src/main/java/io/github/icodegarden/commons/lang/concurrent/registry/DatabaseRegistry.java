@@ -184,7 +184,7 @@ public abstract class DatabaseRegistry<ID> implements Registry<Registration> {
 		/**
 		 * 只列出有效的注册
 		 */
-		return registryRepository.findAllRegistered(name, false, false,
+		return (List)registryRepository.findAllRegistered(name, false, false,
 				SystemUtils.STANDARD_DATETIME_FORMATTER.format(SystemUtils.now()));
 	}
 

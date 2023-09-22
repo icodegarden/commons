@@ -84,14 +84,15 @@ public interface MysqlMybatisRegistryMapper extends DatabaseRegistryRepository<L
 	@ResultType(value = Registration.Default.class)
 	@SelectProvider(type = SqlProvider.class, method = "findAllRegistered")
 	@Override
-	List<Registration> findAllRegistered(@Param("name") String name, @Param("withMetadata") boolean withMetadata,
+	List<Registration.Default> findAllRegistered(@Param("name") String name, @Param("withMetadata") boolean withMetadata,
 			@Param("withInfo") boolean withInfo, @Param("nowStr") String nowStr);
 
 	class SqlProvider {
 		public String findAllRegistered(@Param("name") String name, @Param("withMetadata") boolean withMetadata,
 				@Param("withInfo") boolean withInfo, @Param("nowStr") String nowStr) {
 			StringBuilder sb = new StringBuilder(200)//
-					.append("select id,identifier,`index`,expire_seconds");
+//					.append("select id,identifier,`index`,expire_seconds");
+					.append("select name,identifier,expire_seconds");
 			if (withMetadata) {
 				sb.append(",metadata");
 			}

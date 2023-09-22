@@ -102,5 +102,17 @@ public class SpringApplicationCacher implements Cacher {
 
 		return null;
 	}
+	
+	@Override
+	public <V> Tuple3<String, V, Integer> remove(String key, long delayMillis) {
+		// TODO Auto-generated method stub
+		return ?;
+	}
+	
+	@Override
+	public <V> List<Tuple3<String, V, Integer>> remove(Collection<String> keys, long delayMillis) {
+		// TODO Auto-generated method stub
+		return ?;
+	}
 
 }

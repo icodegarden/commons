@@ -101,7 +101,7 @@ public class EntryMessageHandler implements MessageHandler<Object, InstanceExcha
 				log.warn("receive then handle obj failed, reason:{}", result2.getExchangeFailedReason());
 			}
 
-			return InstanceExchangeResult.server(result2.isSuccess(), result2.response(),
+			return InstanceExchangeResult.server(result2.isSuccess(), result2.getResult(),
 					result2.getExchangeFailedReason());
 		} catch (Exception e) {
 			log.error("ex on receive obj:{}", obj, e);

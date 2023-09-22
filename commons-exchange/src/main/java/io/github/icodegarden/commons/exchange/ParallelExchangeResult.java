@@ -13,8 +13,8 @@ public class ParallelExchangeResult implements ExchangeResult {
 	private final List<ShardExchangeResult> shardExchangeResults;
 
 	public ParallelExchangeResult(List<ShardExchangeResult> shardExchangeResults) {
-		if (shardExchangeResults == null || shardExchangeResults.isEmpty()) {
-			throw new IllegalArgumentException("shardExchangeResults must not empty");
+		if (shardExchangeResults == null) {
+			throw new IllegalArgumentException("shardExchangeResults must not null");
 		}
 
 		this.shardExchangeResults = shardExchangeResults;

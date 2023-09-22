@@ -5,7 +5,7 @@ import java.io.Serializable;
 import io.github.icodegarden.commons.lang.annotation.Nullable;
 
 /**
- * 该对象表示成功的结果
+ * 该对象只用于表示成功的结果
  * 
  * @author Fangfang.Xu
  *

@@ -232,16 +232,16 @@ public class MysqlJdbcRegistryRepository implements DatabaseRegistryRepository<L
 				try (ResultSet rs = ptmt.executeQuery();) {
 					while (rs.next()) {
 //						long id = rs.getLong(1);
-						String identifier = rs.getString(2);
+						String identifier = rs.getString("identifier");
 //						int index= rs.getInt(3);
-						long expireSeconds = rs.getLong(4);
+						long expireSeconds = rs.getLong("expire_seconds");
 						String metadata = null;
 						String info = null;
 						if (withMetadata) {
-							metadata = rs.getString(4);
+							metadata = rs.getString("metadata");
 						}
 						if (withInfo) {
-							info = rs.getString(5);
+							info = rs.getString("info");
 						}
 
 						Registration registration = new Registration.Default(name, identifier, expireSeconds, metadata,

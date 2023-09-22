@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.github.icodegarden.commons.lang.util.JsonUtils;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -51,6 +52,7 @@ public interface Registration {
 	JsonNode getInfo();
 
 	@Getter
+	@Setter
 	@ToString
 	class Default implements Registration {
 		private String name;
@@ -58,6 +60,13 @@ public interface Registration {
 		private long expireSeconds;
 		private JsonNode metadata;
 		private JsonNode info;
+		
+		/**
+		 * mybatis result用
+		 */
+		public Default() {
+			
+		}
 
 		public Default(String name, String identifier, long expireSeconds, String metadata, String info) {
 			super();

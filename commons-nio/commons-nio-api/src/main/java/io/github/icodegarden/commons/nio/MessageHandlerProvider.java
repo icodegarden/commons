@@ -7,7 +7,7 @@ package io.github.icodegarden.commons.nio;
  */
 public interface MessageHandlerProvider<T, R> {
 
-	 MessageHandler<T, R> getMessageHandler();
+	MessageHandler<T, R> getMessageHandler();
 
 	boolean supports(Object msg);
 
