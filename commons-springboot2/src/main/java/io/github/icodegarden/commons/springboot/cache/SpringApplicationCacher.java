@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import org.springframework.context.ApplicationEventPublisher;
 
+import io.github.icodegarden.commons.lang.Delegateable;
 import io.github.icodegarden.commons.lang.tuple.Tuple3;
 import io.github.icodegarden.commons.lang.tuple.Tuple4;
 import io.github.icodegarden.commons.springboot.event.RemoveCacheEvent;
@@ -32,6 +33,11 @@ public class SpringApplicationCacher implements Cacher {
 	public SpringApplicationCacher(Cacher cacher, ApplicationEventPublisher applicationEventPublisher) {
 		this.cacher = cacher;
 		this.applicationEventPublisher = applicationEventPublisher;
+	}
+	
+	@Override
+	public Delegateable getDelegator() {
+		return cacher;
 	}
 
 	@Override

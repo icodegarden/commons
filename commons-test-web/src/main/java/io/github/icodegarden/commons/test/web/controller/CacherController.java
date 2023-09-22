@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.icodegarden.commons.lang.filter.BloomFilter;
+import io.github.icodegarden.commons.lang.filter.TrustFilter;
 import io.github.icodegarden.commons.lang.limiter.TokenBucketRateLimiter;
 import io.github.icodegarden.commons.test.web.service.CacherService;
 import io.github.icodegarden.wing.Cacher;
-import io.github.icodegarden.wing.protect.BloomFilter;
-import io.github.icodegarden.wing.protect.Filter;
 import io.github.icodegarden.wing.protect.Protector;
 import io.github.icodegarden.wing.protect.RateLimitProtector;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class CacherController {
 	@Configuration
 	public static class ProtectionConfig{
 		@Bean
-		public Filter bloomFilter() {
+		public TrustFilter<String> bloomFilter() {
 			BloomFilter bloomFilter = new BloomFilter();
 			bloomFilter.add("abc");// 只允许key=abc
 			return bloomFilter;

@@ -15,19 +15,22 @@ import org.junit.jupiter.api.Test;
  */
 class DelegatableTests {
 
-	private class D1 extends ArrayList implements Delegatable {
-
+	private class D1 extends ArrayList implements Delegateable {
+		@Override
+		public Delegateable getDelegator() {
+			return null;
+		}
 	}
 
-	private class D2 implements Delegatable {
-		Delegatable d;
+	private class D2 implements Delegateable {
+		Delegateable d;
 
-		D2(Delegatable d) {
+		D2(Delegateable d) {
 			this.d = d;
 		}
 
 		@Override
-		public Delegatable getDelegatable() {
+		public Delegateable getDelegator() {
 			return d;
 		}
 	}

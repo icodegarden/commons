@@ -5,14 +5,12 @@ package io.github.icodegarden.commons.lang;
  * @author Fangfang.Xu
  *
  */
-public interface Delegatable {
+public interface Delegateable {
 	/**
 	 * 
 	 * @return Nullable
 	 */
-	default Delegatable getDelegatable() {
-		return null;
-	}
+	Delegateable getDelegator();
 
 	/**
 	 * 自身或delegate(并且递归)是否instanceof super
@@ -28,7 +26,7 @@ public interface Delegatable {
 		if (cla.isAssignableFrom(this.getClass())) {
 			return (T) this;
 		}
-		Delegatable delegatable = getDelegatable();
+		Delegateable delegatable = getDelegator();
 		if (delegatable != null) {
 			return delegatable.ofType(cla);
 		}

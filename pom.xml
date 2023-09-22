@@ -44,7 +44,7 @@
 		<mybatis.version>3.5.13</mybatis.version>
 		<pagehelper.version>5.3.3</pagehelper.version>
 		<pagehelper-spring-boot-starter.version>1.4.7</pagehelper-spring-boot-starter.version>
-		<wing.version>0.2.0</wing.version>
+		<wing.version>0.3.0</wing.version>
 		<beecomb.version>1.1.0</beecomb.version>
 		<sentinel.version>1.8.5</sentinel.version>
 		<seata.version>1.6.1</seata.version>

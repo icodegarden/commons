@@ -23,6 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.CollectionUtils;
 
+import io.github.icodegarden.commons.lang.filter.TrustFilter;
 import io.github.icodegarden.commons.lang.serialization.Deserializer;
 import io.github.icodegarden.commons.lang.serialization.Hessian2Deserializer;
 import io.github.icodegarden.commons.lang.serialization.Hessian2Serializer;
@@ -31,7 +32,6 @@ import io.github.icodegarden.commons.redis.RedisExecutor;
 import io.github.icodegarden.commons.springboot.cache.SpringApplicationCacher;
 import io.github.icodegarden.commons.springboot.event.RemoveCacheEvent;
 import io.github.icodegarden.wing.Cacher;
-import io.github.icodegarden.wing.protect.Filter;
 import io.github.icodegarden.wing.protect.OverloadProtectionCacher;
 import io.github.icodegarden.wing.protect.Protector;
 import io.github.icodegarden.wing.redis.RedisCacher;
@@ -55,7 +55,7 @@ public class CommonsCacheAutoConfiguration {
 
 		@ConditionalOnMissingBean(Cacher.class)
 		@Bean
-		public Cacher springApplicationCacher(List<Filter> filters, List<Protector> protectors,
+		public Cacher springApplicationCacher(List<TrustFilter<String>> filters, List<Protector> protectors,
 				RedisExecutor redisExecutor, ApplicationEventPublisher applicationEventPublisher) {
 			log.info("commons init bean of SpringApplicationCacher");
 

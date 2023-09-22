@@ -16,7 +16,7 @@ public class SpringContextUtils {
 	private static final Method getApplicationContextMethod;
 
 	static {
-		if (ClassUtils.isPresent("io.github.icodegarden.commons.springboot.SpringContext", null)) {
+		if (!ClassUtils.isPresent("io.github.icodegarden.commons.springboot.SpringContext", null)) {
 			throw new IllegalStateException("io.github.icodegarden.commons.springboot.SpringContext must present.");
 		}
 		try {

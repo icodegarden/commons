@@ -187,7 +187,7 @@ public abstract class ThreadUtils {
 	}
 
 	public static ScheduledThreadPoolExecutor newLightResourceScheduledThreadPool(String threadPrefix) {
-		return newScheduledThreadPool(Math.max(Runtime.getRuntime().availableProcessors() / 2 + 1, 4), threadPrefix);
+		return newScheduledThreadPool(Math.max(Runtime.getRuntime().availableProcessors() + 1, 4), threadPrefix);
 	}
 
 	public static ScheduledThreadPoolExecutor newScheduledThreadPool(int corePoolSize, String threadPrefix) {
