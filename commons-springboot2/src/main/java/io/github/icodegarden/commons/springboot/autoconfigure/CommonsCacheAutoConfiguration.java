@@ -213,7 +213,11 @@ public class CommonsCacheAutoConfiguration {
 			if (!CollectionUtils.isEmpty(cachers)) {
 				for (Cacher cacher : cachers) {
 					try {
-						cacher.remove(event.getCacheKeys());
+						if (event.getDelayMillis() == null) {
+							cacher.remove(event.getCacheKeys());
+						} else {
+							cacher.remove(event.getCacheKeys(), event.getDelayMillis());
+						}
 					} catch (Exception e) {
 						log.error("ex on remove cache, cacher:{}, keys:{}", cacher, event.getCacheKeys(), e);
 					}

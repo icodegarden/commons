@@ -34,7 +34,7 @@ public class SpringApplicationCacher implements Cacher {
 		this.cacher = cacher;
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
-	
+
 	@Override
 	public Delegateable getDelegator() {
 		return cacher;
@@ -102,17 +102,21 @@ public class SpringApplicationCacher implements Cacher {
 
 		return null;
 	}
-	
+
 	@Override
 	public <V> Tuple3<String, V, Integer> remove(String key, long delayMillis) {
-		// TODO Auto-generated method stub
-		return ?;
+		RemoveCacheEvent event = new RemoveCacheEvent(key, delayMillis);
+		applicationEventPublisher.publishEvent(event);
+
+		return null;
 	}
-	
+
 	@Override
 	public <V> List<Tuple3<String, V, Integer>> remove(Collection<String> keys, long delayMillis) {
-		// TODO Auto-generated method stub
-		return ?;
+		RemoveCacheEvent event = new RemoveCacheEvent(keys, delayMillis);
+		applicationEventPublisher.publishEvent(event);
+
+		return null;
 	}
 
 }

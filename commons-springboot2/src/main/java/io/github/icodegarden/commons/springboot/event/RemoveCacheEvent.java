@@ -19,14 +19,26 @@ public class RemoveCacheEvent extends ApplicationEvent {
 	private static final long serialVersionUID = 1L;
 
 	private final Collection<String> cacheKeys;
+	private final Long delayMillis;
 
 	public RemoveCacheEvent(String cacheKey) {
-		super(cacheKey);
-		this.cacheKeys = Arrays.asList(cacheKey);
+		this(cacheKey, null);
 	}
 
 	public RemoveCacheEvent(Collection<String> cacheKeys) {
+		this(cacheKeys, null);
+	}
+
+	public RemoveCacheEvent(String cacheKey, Long delayMillis) {
+		super(cacheKey);
+		this.cacheKeys = Arrays.asList(cacheKey);
+		this.delayMillis = delayMillis;
+	}
+
+	public RemoveCacheEvent(Collection<String> cacheKeys, Long delayMillis) {
 		super(cacheKeys);
 		this.cacheKeys = cacheKeys;
+		this.delayMillis = delayMillis;
 	}
+
 }
