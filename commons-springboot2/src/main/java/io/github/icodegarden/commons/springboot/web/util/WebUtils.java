@@ -39,7 +39,7 @@ public class WebUtils extends BaseWebUtils {
 				&& !ClassUtils.isPresent("org.glassfish.jersey.servlet.ServletContainer", null)) {
 			utilClazz = ReactiveWebUtils.class;
 		} else {
-			utilClazz = WebUtils.class;
+			utilClazz = ServletWebUtils.class;
 		}
 		try {
 			GET_HEADERNAMES_METHOD = utilClazz.getDeclaredMethod("getHeaderNames");
