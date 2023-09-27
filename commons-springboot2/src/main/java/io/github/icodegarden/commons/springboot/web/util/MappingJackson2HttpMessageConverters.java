@@ -48,7 +48,7 @@ public abstract class MappingJackson2HttpMessageConverters {
 			@Override
 			public void serialize(Long l, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 					throws IOException {
-				if (WebUtils.isInternalRpc()) {
+				if (WebUtils.isInternalRpc() || WebUtils.isOpenapiRpc()) {
 					jsonGenerator.writeNumber(l);
 				} else {
 					jsonGenerator.writeString(l.toString());
