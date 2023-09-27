@@ -17,9 +17,9 @@ import javax.servlet.ServletResponse;
  * @author Fangfang.Xu
  *
  */
-public class ProcessingRequestCountFilter extends AbstractProcessingRequestCount implements Filter {
+public class ServletProcessingRequestCountFilter extends AbstractProcessingRequestCount implements Filter {
 
-	public ProcessingRequestCountFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
+	public ServletProcessingRequestCountFilter(int gracefullyShutdownOrder, long instanceRefreshIntervalMs) {
 		super(gracefullyShutdownOrder, instanceRefreshIntervalMs);
 	}
 

@@ -18,9 +18,9 @@ import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
  * @author Fangfang.Xu
  *
  */
-public class ApiResponseReactiveExceptionHandler extends AbstractReactiveExceptionHandler<ApiResponse> {
+public class ReactiveApiResponseExceptionHandler extends AbstractReactiveExceptionHandler<ApiResponse> {
 
-	private static final Logger log = LoggerFactory.getLogger(ApiResponseReactiveExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ReactiveApiResponseExceptionHandler.class);
 
 	@Override
 	public ResponseEntity<ApiResponse> onServerWebInputException(ServerWebExchange exchange,

@@ -2,12 +2,13 @@ package io.github.icodegarden.commons.springboot.web.handler;
 
 import java.lang.reflect.UndeclaredThrowableException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.server.ServerWebExchange;
 
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.authority.AuthorityException;
@@ -31,10 +32,9 @@ import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRe
  * @author Fangfang.Xu
  *
  */
-public class SentinelAdaptiveApiResponseReactiveExceptionHandler extends ApiResponseReactiveExceptionHandler {
+public class ServletSentinelAdaptiveApiResponseExceptionHandler extends ServletApiResponseExceptionHandler {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(SentinelAdaptiveApiResponseReactiveExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ServletSentinelAdaptiveApiResponseExceptionHandler.class);
 
 	private static final String CLIENT_LIMITED_LOG_MODULE = "Client-Limited Sentinel";
 
@@ -42,9 +42,9 @@ public class SentinelAdaptiveApiResponseReactiveExceptionHandler extends ApiResp
 	 * 为BlockException单独设立一个
 	 */
 	@ExceptionHandler(BlockException.class)
-	public ResponseEntity<ApiResponse> onBlockException(ServerWebExchange exchange, BlockException e) throws Exception {
+	public ResponseEntity<ApiResponse> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
 		SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
-
+		
 		ErrorCodeException ece = null;
 		/**
 		 * 以下一律是触发了但没有降级
@@ -74,7 +74,7 @@ public class SentinelAdaptiveApiResponseReactiveExceptionHandler extends ApiResp
 //		}
 //
 //		return ResponseEntity.ok(InternalApiResponse.fail(ece));
-
+		
 		/**
 		 * 一律使用OpenApiResponse来构造即可<br>
 		 * biz_code会被gateway补充，那里有BodyCache<br>
@@ -86,14 +86,14 @@ public class SentinelAdaptiveApiResponseReactiveExceptionHandler extends ApiResp
 	 * 为UndeclaredThrowableException单独设立一个
 	 */
 	@ExceptionHandler(UndeclaredThrowableException.class)
-	public ResponseEntity<ApiResponse> onUndeclaredThrowableException(ServerWebExchange exchange,
+	public ResponseEntity<ApiResponse> onUndeclaredThrowableException(HttpServletRequest request,
 			UndeclaredThrowableException ex) throws Exception {
 		BlockException blockException = causeBlockException(ex);
 		if (blockException != null) {
-			return onBlockException(exchange, blockException);
+			return onBlockException(request, blockException);
 		}
 
-		return onException(exchange, ex);
+		return onException(request, ex);
 	}
 
 	private @Nullable BlockException causeBlockException(Throwable t) {

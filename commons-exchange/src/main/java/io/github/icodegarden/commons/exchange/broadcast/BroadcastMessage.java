@@ -14,6 +14,9 @@ import lombok.Getter;
  */
 public interface BroadcastMessage extends BodyObject<Object> {
 
+	/**
+	 * @return Nullable 
+	 */
 	Matcher<Instance> instanceMatcher();
 
 	long timeoutMillis();

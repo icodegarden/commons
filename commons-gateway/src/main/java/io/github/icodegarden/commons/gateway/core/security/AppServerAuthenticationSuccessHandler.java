@@ -25,8 +25,6 @@ import reactor.core.publisher.Mono;
  */
 public class AppServerAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
-	public static final String HTTPHEADER_APPKEY = "X-Auth-AppKey";
-
 	private final AppProvider appProvider;
 	private final boolean passHeaderAppKey;
 
@@ -46,6 +44,7 @@ public class AppServerAuthenticationSuccessHandler implements ServerAuthenticati
 
 			ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
 				OpenApiRequestBody requestBody = CommonsGatewayUtils.getOpenApiRequestBody(exchange);
+				httpHeaders.add(WebUtils.HEADER_OPENAPI_REQUEST, "true");
 				httpHeaders.add(WebUtils.HEADER_REQUEST_ID, requestBody.getRequest_id());
 				
 				httpHeaders.add(WebUtils.HEADER_APPID, principal.getUserId());
@@ -59,7 +58,7 @@ public class AppServerAuthenticationSuccessHandler implements ServerAuthenticati
 
 				if (passHeaderAppKey) {
 					App app = appProvider.getApp(requestBody.getApp_id());
-					httpHeaders.add(HTTPHEADER_APPKEY, app.getAppKey());
+					httpHeaders.add(WebUtils.HEADER_APPKEY, app.getAppKey());
 				}
 			}).build();
 

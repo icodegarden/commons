@@ -26,19 +26,19 @@ import io.github.icodegarden.commons.lang.endpoint.GracefullyShutdown;
 import io.github.icodegarden.commons.springboot.RegistryGracefullyShutdown;
 import io.github.icodegarden.commons.springboot.ServiceRegistryGracefullyShutdown;
 import io.github.icodegarden.commons.springboot.properties.CommonsWebProperties;
-import io.github.icodegarden.commons.springboot.web.filter.CacheRequestBodyFilter;
-import io.github.icodegarden.commons.springboot.web.filter.GatewayPreAuthenticatedAuthenticationFilter;
-import io.github.icodegarden.commons.springboot.web.filter.ProcessingRequestCountFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ServletCacheRequestBodyFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ServletGatewayPreAuthenticatedAuthenticationFilter;
+import io.github.icodegarden.commons.springboot.web.filter.ServletProcessingRequestCountFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ReactiveGatewayPreAuthenticatedAuthenticationFilter;
 import io.github.icodegarden.commons.springboot.web.filter.ReactiveProcessingRequestCountFilter;
-import io.github.icodegarden.commons.springboot.web.handler.ApiResponseExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.ApiResponseReactiveExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.NativeRestApiExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.NativeRestApiReactiveExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveApiResponseReactiveExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveNativeRestApiExceptionHandler;
-import io.github.icodegarden.commons.springboot.web.handler.SentinelAdaptiveNativeRestApiReactiveExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ServletApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ReactiveApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ServletNativeRestApiExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ReactiveNativeRestApiExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ServletSentinelAdaptiveApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ReactiveSentinelAdaptiveApiResponseExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ServletSentinelAdaptiveNativeRestApiExceptionHandler;
+import io.github.icodegarden.commons.springboot.web.handler.ReactiveSentinelAdaptiveNativeRestApiExceptionHandler;
 import io.github.icodegarden.commons.springboot.web.util.MappingJackson2HttpMessageConverters;
 import lombok.extern.slf4j.Slf4j;
 
@@ -122,10 +122,10 @@ public class CommonsWebAutoConfiguration {
 
 		@ConditionalOnProperty(value = "commons.web.filter.cacheRequestBody.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
-		public FilterRegistrationBean<Filter> cacheRequestBodyFilter() {
+		public FilterRegistrationBean<Filter> servletCacheRequestBodyFilter() {
 			log.info("commons init bean of CacheRequestBodyFilter");
 
-			CacheRequestBodyFilter filter = new CacheRequestBodyFilter();
+			ServletCacheRequestBodyFilter filter = new ServletCacheRequestBodyFilter();
 
 			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
 			bean.setFilter(filter);
@@ -138,13 +138,13 @@ public class CommonsWebAutoConfiguration {
 
 		@ConditionalOnProperty(value = "commons.web.filter.processingRequestCount.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
-		public FilterRegistrationBean<Filter> processingRequestCountFilter() {
+		public FilterRegistrationBean<Filter> servletProcessingRequestCountFilter() {
 			log.info("commons init bean of ProcessingRequestCountFilter");
 
 			/**
 			 * 下线优先级最低，30秒实例刷新间隔+10秒冗余
 			 */
-			ProcessingRequestCountFilter processingRequestCountFilter = new ProcessingRequestCountFilter(
+			ServletProcessingRequestCountFilter processingRequestCountFilter = new ServletProcessingRequestCountFilter(
 					Integer.MAX_VALUE, 30 * 1000 + 10 * 1000/* 写死固定值，基本不需要配置化 */);
 
 			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
@@ -165,10 +165,10 @@ public class CommonsWebAutoConfiguration {
 		@ConditionalOnMissingClass({ "org.springframework.security.core.Authentication" })
 		@ConditionalOnProperty(value = "commons.web.filter.gatewayPreAuthenticatedAuthentication.enabled", havingValue = "true", matchIfMissing = true)
 		@Bean
-		public FilterRegistrationBean<Filter> gatewayPreAuthenticatedAuthenticationFilter() {
+		public FilterRegistrationBean<Filter> servletGatewayPreAuthenticatedAuthenticationFilter() {
 			log.info("commons init bean of GatewayPreAuthenticatedAuthenticationFilter");
 
-			GatewayPreAuthenticatedAuthenticationFilter filter = new GatewayPreAuthenticatedAuthenticationFilter();
+			ServletGatewayPreAuthenticatedAuthenticationFilter filter = new ServletGatewayPreAuthenticatedAuthenticationFilter();
 
 			FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>();
 			bean.setFilter(filter);
@@ -191,10 +191,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class SentinelAdaptiveApiResponseExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveApiResponseExceptionHandler sentinelAdaptiveApiResponseExceptionHandler(
+			public ServletSentinelAdaptiveApiResponseExceptionHandler servletSentinelAdaptiveApiResponseExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveApiResponseExceptionHandler");
-				SentinelAdaptiveApiResponseExceptionHandler exceptionHandler = new SentinelAdaptiveApiResponseExceptionHandler();
+				ServletSentinelAdaptiveApiResponseExceptionHandler exceptionHandler = new ServletSentinelAdaptiveApiResponseExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -213,10 +213,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class SentinelAdaptiveNativeRestApiExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveNativeRestApiExceptionHandler sentinelAdaptiveNativeRestApiExceptionHandler(
+			public ServletSentinelAdaptiveNativeRestApiExceptionHandler servletSentinelAdaptiveNativeRestApiExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveNativeRestApiExceptionHandler");
-				SentinelAdaptiveNativeRestApiExceptionHandler exceptionHandler = new SentinelAdaptiveNativeRestApiExceptionHandler();
+				ServletSentinelAdaptiveNativeRestApiExceptionHandler exceptionHandler = new ServletSentinelAdaptiveNativeRestApiExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -236,9 +236,9 @@ public class CommonsWebAutoConfiguration {
 		protected static class ApiResponseExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public ApiResponseExceptionHandler apiResponseExceptionHandler(CommonsWebProperties commonsWebProperties) {
+			public ServletApiResponseExceptionHandler servletApiResponseExceptionHandler(CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of ApiResponseExceptionHandler");
-				ApiResponseExceptionHandler exceptionHandler = new ApiResponseExceptionHandler();
+				ServletApiResponseExceptionHandler exceptionHandler = new ServletApiResponseExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -258,10 +258,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class NativeRestApiExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public NativeRestApiExceptionHandler nativeRestApiExceptionHandler(
+			public ServletNativeRestApiExceptionHandler servletNativeRestApiExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of NativeRestApiExceptionHandler");
-				NativeRestApiExceptionHandler exceptionHandler = new NativeRestApiExceptionHandler();
+				ServletNativeRestApiExceptionHandler exceptionHandler = new ServletNativeRestApiExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -341,10 +341,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class SentinelAdaptiveApiResponseReactiveExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveApiResponseReactiveExceptionHandler sentinelAdaptiveApiResponseReactiveExceptionHandler(
+			public ReactiveSentinelAdaptiveApiResponseExceptionHandler reactiveSentinelAdaptiveApiResponseExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveApiResponseReactiveExceptionHandler");
-				SentinelAdaptiveApiResponseReactiveExceptionHandler exceptionHandler = new SentinelAdaptiveApiResponseReactiveExceptionHandler();
+				ReactiveSentinelAdaptiveApiResponseExceptionHandler exceptionHandler = new ReactiveSentinelAdaptiveApiResponseExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -365,10 +365,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class SentinelAdaptiveNativeRestApiReactiveExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public SentinelAdaptiveNativeRestApiReactiveExceptionHandler sentinelAdaptiveNativeRestApiReactiveExceptionHandler(
+			public ReactiveSentinelAdaptiveNativeRestApiExceptionHandler reactiveSentinelAdaptiveNativeRestApiExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of SentinelAdaptiveNativeRestReactiveApiExceptionHandler");
-				SentinelAdaptiveNativeRestApiReactiveExceptionHandler exceptionHandler = new SentinelAdaptiveNativeRestApiReactiveExceptionHandler();
+				ReactiveSentinelAdaptiveNativeRestApiExceptionHandler exceptionHandler = new ReactiveSentinelAdaptiveNativeRestApiExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -389,10 +389,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class ApiResponseReactiveExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public ApiResponseReactiveExceptionHandler apiResponseReactiveExceptionHandler(
+			public ReactiveApiResponseExceptionHandler reactiveApiResponseExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of ApiResponseReactiveExceptionHandler");
-				ApiResponseReactiveExceptionHandler exceptionHandler = new ApiResponseReactiveExceptionHandler();
+				ReactiveApiResponseExceptionHandler exceptionHandler = new ReactiveApiResponseExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;
@@ -413,10 +413,10 @@ public class CommonsWebAutoConfiguration {
 		protected static class NativeRestApiReactiveExceptionHandlerAutoConfiguration {
 			@ConditionalOnMissingBean
 			@Bean
-			public NativeRestApiReactiveExceptionHandler nativeRestApiReactiveExceptionHandler(
+			public ReactiveNativeRestApiExceptionHandler reactiveNativeRestApiExceptionHandler(
 					CommonsWebProperties commonsWebProperties) {
 				log.info("commons init bean of NativeRestApiReactiveExceptionHandler");
-				NativeRestApiReactiveExceptionHandler exceptionHandler = new NativeRestApiReactiveExceptionHandler();
+				ReactiveNativeRestApiExceptionHandler exceptionHandler = new ReactiveNativeRestApiExceptionHandler();
 				exceptionHandler.setPrintErrorStackOnWarn(
 						commonsWebProperties.getExceptionHandler().getPrintErrorStackOnWarn());
 				return exceptionHandler;

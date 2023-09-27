@@ -2,13 +2,12 @@ package io.github.icodegarden.commons.springboot.web.handler;
 
 import java.lang.reflect.UndeclaredThrowableException;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ServerWebExchange;
 
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.authority.AuthorityException;
@@ -26,9 +25,10 @@ import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRe
  * @author Fangfang.Xu
  *
  */
-public class SentinelAdaptiveNativeRestApiExceptionHandler extends NativeRestApiExceptionHandler {
+public class ReactiveSentinelAdaptiveNativeRestApiExceptionHandler extends ReactiveNativeRestApiExceptionHandler {
 
-	private static final Logger log = LoggerFactory.getLogger(SentinelAdaptiveNativeRestApiExceptionHandler.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(ReactiveSentinelAdaptiveNativeRestApiExceptionHandler.class);
 
 	private static final String CLIENT_LIMITED_LOG_MODULE = "Client-Limited Sentinel";
 
@@ -36,9 +36,9 @@ public class SentinelAdaptiveNativeRestApiExceptionHandler extends NativeRestApi
 	 * 为BlockException单独设立一个
 	 */
 	@ExceptionHandler(BlockException.class)
-	public ResponseEntity<String> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
+	public ResponseEntity<String> onBlockException(ServerWebExchange exchange, BlockException e) throws Exception {
 		SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
-		
+
 		String message = null;
 		/**
 		 * 以下一律是触发了但没有降级
@@ -67,14 +67,14 @@ public class SentinelAdaptiveNativeRestApiExceptionHandler extends NativeRestApi
 	 * 为UndeclaredThrowableException单独设立一个
 	 */
 	@ExceptionHandler(UndeclaredThrowableException.class)
-	public ResponseEntity<String> onUndeclaredThrowableException(HttpServletRequest request,
+	public ResponseEntity<String> onUndeclaredThrowableException(ServerWebExchange exchange,
 			UndeclaredThrowableException ex) throws Exception {
 		BlockException blockException = causeBlockException(ex);
 		if (blockException != null) {
-			return onBlockException(request, blockException);
+			return onBlockException(exchange, blockException);
 		}
 
-		return onException(request, ex);
+		return onException(exchange, ex);
 	}
 
 	private @Nullable BlockException causeBlockException(Throwable t) {

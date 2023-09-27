@@ -13,16 +13,17 @@ import io.github.icodegarden.commons.lang.query.NextQuerySupportList;
  * @author Fangfang.Xu
  *
  */
-abstract class BaseWebUtils {
+public abstract class BaseWebUtils {
+	
+	public static final String HEADER_ACCEPT_LANGUAGE = "Accept-Language";
 
 	public final static String HEADER_AUTHORIZATION = "Authorization";
 	
 	public static final String HEADER_APPID = "X-Auth-AppId";
-	
+	public static final String HEADER_APPKEY = "X-Auth-AppKey";
 	public static final String HEADER_APPNAME = "X-Auth-Appname";
 	
 	public static final String HEADER_USERID = "X-Auth-UserId";
-	
 	public static final String HEADER_USERNAME = "X-Auth-Username";
 	/**
 	 * 请求id，多用于openapi
@@ -46,9 +47,17 @@ abstract class BaseWebUtils {
 	 */
 	public static final String HEADER_MESSAGE = "X-Message";
 	/**
-	 * 是否内部服务间调用的标记
+	 * 是否内部服务间调用的标记（网关->服务不属于）
 	 */
 	public static final String HEADER_INTERNAL_RPC = "X-Internal-Rpc";
+	/**
+	 * 是否openapi调用的标记（openapi网关->服务）
+	 */
+	public static final String HEADER_OPENAPI_REQUEST = "X-Openapi-Request";
+	/**
+	 * 是否api调用的标记（api网关->服务）
+	 */
+	public static final String HEADER_API_REQUEST = "X-Api-Request";
 
 	public static HttpHeaders pageHeaders(int totalPages, long totalCount) {
 		HttpHeaders httpHeaders = new HttpHeaders();

@@ -26,9 +26,9 @@ import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
  * @author Fangfang.Xu
  *
  */
-public class NativeRestApiExceptionHandler extends AbstractExceptionHandler<String> {
+public class ServletNativeRestApiExceptionHandler extends AbstractServletExceptionHandler<String> {
 
-	private static final Logger log = LoggerFactory.getLogger(NativeRestApiExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ServletNativeRestApiExceptionHandler.class);
 
 	@Override
 	public ResponseEntity<String> onPathVariableMissing(HttpServletRequest request, MissingPathVariableException cause)

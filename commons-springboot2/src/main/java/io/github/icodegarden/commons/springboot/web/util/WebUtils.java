@@ -1,17 +1,9 @@
 package io.github.icodegarden.commons.springboot.web.util;
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.util.Assert;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import io.github.icodegarden.commons.lang.annotation.Nullable;
-import io.github.icodegarden.commons.lang.tuple.Tuple2;
+import org.springframework.util.ClassUtils;
 
 /**
  * 
@@ -19,109 +11,133 @@ import io.github.icodegarden.commons.lang.tuple.Tuple2;
  *
  */
 public class WebUtils extends BaseWebUtils {
+
+	private static final Method GET_HEADERNAMES_METHOD;
+	private static final Method GET_HEADER_METHOD;
+	private static final Method GET_JWT_METHOD;
+	private static final Method SET_JWT_METHOD;
+	private static final Method GET_BASIC_AUTHORIZATIONTOKEN_METHOD;
+	private static final Method GET_AUTHORIZATIONTOKEN_METHOD;
+	private static final Method IS_APIRPC_METHOD;
+	private static final Method IS_OPENAPIRPC_METHOD;
+	private static final Method IS_INTERNALRPC_METHOD;
+	private static final Method GET_REQUESTID_METHOD;
+
+	static {
+//		/**
+//		 * 有webflux，且没有webmvc <br>
+//		 * 
+//		 * @see org.springframework.boot.WebApplicationType.deduceFromClasspath()
+//		 */
+//		@ConditionalOnClass({ DispatcherHandler.class })
+//		@ConditionalOnMissingClass({ "org.springframework.web.servlet.DispatcherServlet",
+//				"org.glassfish.jersey.servlet.ServletContainer" })
+
+		Class<?> utilClazz;
+		if (ClassUtils.isPresent("org.springframework.web.reactive.DispatcherHandler", null)
+				&& !ClassUtils.isPresent("org.springframework.web.servlet.DispatcherServlet", null)
+				&& !ClassUtils.isPresent("org.glassfish.jersey.servlet.ServletContainer", null)) {
+			utilClazz = ReactiveWebUtils.class;
+		} else {
+			utilClazz = WebUtils.class;
+		}
+		try {
+			GET_HEADERNAMES_METHOD = utilClazz.getDeclaredMethod("getHeaderNames");
+			GET_HEADER_METHOD = utilClazz.getDeclaredMethod("getHeader", String.class);
+			GET_JWT_METHOD = utilClazz.getDeclaredMethod("getJWT");
+			SET_JWT_METHOD = utilClazz.getDeclaredMethod("setJWT", String.class);
+			GET_BASIC_AUTHORIZATIONTOKEN_METHOD = utilClazz.getDeclaredMethod("getBasicAuthorizationToken");
+			GET_AUTHORIZATIONTOKEN_METHOD = utilClazz.getDeclaredMethod("getAuthorizationToken");
+			IS_APIRPC_METHOD = utilClazz.getDeclaredMethod("isApiRpc");
+			IS_OPENAPIRPC_METHOD = utilClazz.getDeclaredMethod("isOpenapiRpc");
+			IS_INTERNALRPC_METHOD = utilClazz.getDeclaredMethod("isInternalRpc");
+			GET_REQUESTID_METHOD = utilClazz.getDeclaredMethod("getRequestId");
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	private WebUtils() {
 	}
 
-	public static HttpServletRequest getRequest() {
-		return RequestContextHolder.getRequestAttributes() == null ? null
-				: ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+	public static List<String> getHeaderNames() {
+		try {
+			return (List) GET_HEADERNAMES_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
-//	@Deprecated//getted null
-//	public static HttpServletResponse getResponse() {
-//		return RequestContextHolder.getRequestAttributes() == null ? null
-//				: ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-//	}
+	public static String getHeader(String name) {
+		try {
+			return (String) GET_HEADER_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
 	public static String getJWT() {
-		String bearerToken = getAuthorizationToken();
-		if (bearerToken != null) {
-			return resolveBearerToken(bearerToken, " ");
+		try {
+			return (String) GET_JWT_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
-		return null;
 	}
 
 	public static void setJWT(String jwt) {
-		HttpServletRequest request = getRequest();
-		if (request != null) {
-			String bearerToken = createBearerToken(jwt, " ");
-			request.setAttribute(HEADER_AUTHORIZATION, bearerToken);// use for rpc
+		try {
+			SET_JWT_METHOD.invoke(null, jwt);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
 	}
 
 	public static String getBasicAuthorizationToken() {
-		String basicToken = getAuthorizationToken();
-		if (basicToken != null) {
-			return resolveBasicToken(basicToken, " ");
+		try {
+			return (String) GET_BASIC_AUTHORIZATIONTOKEN_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
-		return null;
 	}
 
 	public static String getAuthorizationToken() {
-		HttpServletRequest request = getRequest();
-		if (request == null) {
-			return null;
+		try {
+			return (String) GET_AUTHORIZATIONTOKEN_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
-		String authorizationToken = (String) request.getAttribute(HEADER_AUTHORIZATION);
-		return authorizationToken != null ? authorizationToken : request.getHeader(HEADER_AUTHORIZATION);
+	}
+
+	public static boolean isApiRpc() {
+		try {
+			return (boolean) IS_APIRPC_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	public static boolean isOpenapiRpc() {
+		try {
+			return (boolean) IS_OPENAPIRPC_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	public static boolean isInternalRpc() {
-		HttpServletRequest request = getRequest();
-		if (request == null) {
-			return false;
+		try {
+			return (boolean) IS_INTERNALRPC_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
-
-		String header = request.getHeader(HEADER_INTERNAL_RPC);
-		return header != null && Boolean.valueOf(header);
 	}
 
 	public static String getRequestId() {
-		HttpServletRequest request = getRequest();
-		if (request == null) {
-			return null;
+		try {
+			return (String) GET_REQUESTID_METHOD.invoke(null);
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
-
-		return request.getHeader(HEADER_REQUEST_ID);
 	}
 
-	public static void responseJWT(String jwt, HttpServletResponse response) {
-		String bearerToken = createBearerToken(jwt, " ");
-		response.setHeader(HEADER_AUTHORIZATION, bearerToken);
-	}
-
-//	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
-//		response.setStatus(status);
-//		response.setContentType("application/json;charset=utf-8");
-//		response.getWriter().println(body);
-//	}
-
-	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
-		Assert.hasText(body, "body must not empty");
-		responseWrite(status, null, body, response);
-	}
-
-	public static void responseWrite(int status, List<Tuple2<String, List<String>>> headers,
-			HttpServletResponse response) throws IOException {
-		Assert.notEmpty(headers, "headers must not empty");
-		responseWrite(status, headers, null, response);
-	}
-
-	public static void responseWrite(int status, @Nullable List<Tuple2<String, List<String>>> headers,
-			@Nullable String body, HttpServletResponse response) throws IOException {
-		response.setStatus(status);
-		if (headers != null && !headers.isEmpty()) {
-			for (Tuple2<String, List<String>> header : headers) {
-				for (String value : header.getT2()) {
-					response.addHeader(header.getT1(), value);
-				}
-			}
-		}
-
-		if (body == null) {
-			body = "";
-		}
-		response.setContentType("application/json;charset=utf-8");
-		response.getWriter().println(body);
-	}
 }

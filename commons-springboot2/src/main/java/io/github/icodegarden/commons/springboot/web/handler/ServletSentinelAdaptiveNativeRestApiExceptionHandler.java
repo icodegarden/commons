@@ -17,12 +17,6 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 
-import io.github.icodegarden.commons.lang.spec.response.ApiResponse;
-import io.github.icodegarden.commons.lang.spec.response.ClientLimitedErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
-import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
-import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
 import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRegistry;
 
 /**
@@ -32,9 +26,9 @@ import io.github.icodegarden.commons.springboot.sentinel.SentinelEventObserverRe
  * @author Fangfang.Xu
  *
  */
-public class SentinelAdaptiveApiResponseExceptionHandler extends ApiResponseExceptionHandler {
+public class ServletSentinelAdaptiveNativeRestApiExceptionHandler extends ServletNativeRestApiExceptionHandler {
 
-	private static final Logger log = LoggerFactory.getLogger(SentinelAdaptiveApiResponseExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ServletSentinelAdaptiveNativeRestApiExceptionHandler.class);
 
 	private static final String CLIENT_LIMITED_LOG_MODULE = "Client-Limited Sentinel";
 
@@ -42,51 +36,38 @@ public class SentinelAdaptiveApiResponseExceptionHandler extends ApiResponseExce
 	 * 为BlockException单独设立一个
 	 */
 	@ExceptionHandler(BlockException.class)
-	public ResponseEntity<ApiResponse> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
+	public ResponseEntity<String> onBlockException(HttpServletRequest request, BlockException e) throws Exception {
 		SentinelEventObserverRegistry.getInstance().notifyBlockException(e);
 		
-		ErrorCodeException ece = null;
+		String message = null;
 		/**
 		 * 以下一律是触发了但没有降级
 		 */
 		if (e instanceof SystemBlockException) {
-			ece = new ServerErrorCodeException("sentinel-system-limited", e.getRule().getResource(), e);
+			message = "sentinel-system-limited:" + e.getRule().getResource();
 		} else if (e instanceof AuthorityException) {
-			ece = new ClientPermissionErrorCodeException("client.sentinel-authority-limited",
-					e.getRule().getResource());
+			message = "client.sentinel-authority-limited:" + e.getRule().getResource();
 		} else if (e instanceof FlowException) {
-			ece = new ClientLimitedErrorCodeException("client.sentinel-flow-limited", e.getRule().getResource());
+			message = "client.sentinel-flow-limited:" + e.getRule().getResource();
 		} else if (e instanceof ParamFlowException) {
-			ece = new ClientLimitedErrorCodeException("client.sentinel-paramflow-limited", e.getRule().getResource());
+			message = "client.sentinel-paramflow-limited:" + e.getRule().getResource();
 		} else if (e instanceof DegradeException) {
-			ece = new ServerErrorCodeException("sentinel-degrade-limited", e.getRule().getResource(), e);
+			message = "sentinel-degrade-limited:" + e.getRule().getResource();
 		} else {
-			ece = new ClientLimitedErrorCodeException("client.sentinel-" + e.getClass().getSimpleName() + "-limited",
-					e.getRule().getResource());
+			message = "client.sentinel-" + e.getClass().getSimpleName() + "-limited:" + e.getRule().getResource();
 		}
 
 		if (log.isWarnEnabled()) {
-			log.warn("{} {}", CLIENT_LIMITED_LOG_MODULE, ece.getMessage(), e);
+			log.warn("{} {}", CLIENT_LIMITED_LOG_MODULE, message, e);
 		}
-//		OpenApiRequestBody body = extractOpenApiRequestBody(request);
-//		if (body != null) {
-//			return ResponseEntity.ok(OpenApiResponse.fail(body.getMethod(), ece));
-//		}
-//
-//		return ResponseEntity.ok(InternalApiResponse.fail(ece));
-		
-		/**
-		 * 一律使用OpenApiResponse来构造即可<br>
-		 * biz_code会被gateway补充，那里有BodyCache<br>
-		 */
-		return ResponseEntity.ok(OpenApiResponse.fail(null, ece));
+		return ResponseEntity.status(403).body(message);
 	}
 
 	/**
 	 * 为UndeclaredThrowableException单独设立一个
 	 */
 	@ExceptionHandler(UndeclaredThrowableException.class)
-	public ResponseEntity<ApiResponse> onUndeclaredThrowableException(HttpServletRequest request,
+	public ResponseEntity<String> onUndeclaredThrowableException(HttpServletRequest request,
 			UndeclaredThrowableException ex) throws Exception {
 		BlockException blockException = causeBlockException(ex);
 		if (blockException != null) {

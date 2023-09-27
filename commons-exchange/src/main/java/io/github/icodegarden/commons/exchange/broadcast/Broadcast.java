@@ -21,5 +21,10 @@ public interface Broadcast {
 	 */
 	ParallelExchangeResult request(BroadcastMessage message);
 
+	/**
+	 * 用BroadcastMessage.instanceMatcher
+	 */
+//	ParallelExchangeResult request(BroadcastMessage message, List<Instance> instances);
+
 	void close() throws IOException;
 }

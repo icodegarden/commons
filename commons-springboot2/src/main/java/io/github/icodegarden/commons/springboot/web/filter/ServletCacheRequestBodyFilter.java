@@ -16,7 +16,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
  * @author Fangfang.Xu
  *
  */
-public class CacheRequestBodyFilter extends OncePerRequestFilter {
+public class ServletCacheRequestBodyFilter extends OncePerRequestFilter {
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

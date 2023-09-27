@@ -14,9 +14,9 @@ import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
  * @author Fangfang.Xu
  *
  */
-public class NativeRestApiReactiveExceptionHandler extends AbstractReactiveExceptionHandler<String> {
+public class ReactiveNativeRestApiExceptionHandler extends AbstractReactiveExceptionHandler<String> {
 
-	private static final Logger log = LoggerFactory.getLogger(NativeRestApiReactiveExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ReactiveNativeRestApiExceptionHandler.class);
 
 	@Override
 	public ResponseEntity<String> onServerWebInputException(ServerWebExchange exchange, ServerWebInputException cause)

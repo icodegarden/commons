@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public abstract class AbstractProcessingRequestCount implements GracefullyShutdown {
+abstract class AbstractProcessingRequestCount implements GracefullyShutdown {
 
 	protected AtomicLong count = new AtomicLong(0);
 	protected volatile boolean closed;

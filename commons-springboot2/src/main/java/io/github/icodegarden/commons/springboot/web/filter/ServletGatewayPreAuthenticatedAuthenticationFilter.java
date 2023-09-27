@@ -28,6 +28,7 @@ import io.github.icodegarden.commons.springboot.security.Authentication;
 import io.github.icodegarden.commons.springboot.security.SecurityUtils;
 import io.github.icodegarden.commons.springboot.security.SimpleAuthentication;
 import io.github.icodegarden.commons.springboot.security.SimpleUser;
+import io.github.icodegarden.commons.springboot.web.util.ServletWebUtils;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 
 /**
@@ -37,7 +38,7 @@ import io.github.icodegarden.commons.springboot.web.util.WebUtils;
  * 
  * @author Fangfang.Xu
  */
-public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBean {
+public class ServletGatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBean {
 
 //	private ResponseType responseType = ResponseType.ApiResponse;
 
@@ -47,7 +48,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 	/**
 	 * 默认认为POST /openapi/**、/api/** 应该已经pre认证了
 	 */
-	public GatewayPreAuthenticatedAuthenticationFilter() {
+	public ServletGatewayPreAuthenticatedAuthenticationFilter() {
 		setShouldAuthOpenapi(Arrays.asList(new AntPath("/openapi/**", "POST")));
 		setShouldAuthInternalApi(Arrays.asList(new AntPath("/api/**", null), new AntPath("/internalapi/**", null),
 				new AntPath("/innerapi/**", null)));
@@ -130,7 +131,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 			/**
 			 * 不需要以ApiResponse返回，因为这是gateway犯的错
 			 */
-			WebUtils.responseWrite(401, "Access Denied, Unauthorized, App No Principal", response);
+			ServletWebUtils.responseWrite(401, "Access Denied, Unauthorized, App No Principal", response);
 			return;
 		}
 
@@ -141,7 +142,7 @@ public class GatewayPreAuthenticatedAuthenticationFilter extends GenericFilterBe
 				/**
 				 * 不需要以ApiResponse返回，因为这是gateway犯的错
 				 */
-				WebUtils.responseWrite(401, "Access Denied, Unauthorized, User No Principal", response);
+				ServletWebUtils.responseWrite(401, "Access Denied, Unauthorized, User No Principal", response);
 				return;
 			}
 		}

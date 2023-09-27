@@ -1,20 +1,19 @@
 package io.github.icodegarden.commons.springboot.autoconfigure;
 
-import java.util.Enumeration;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 
 import feign.Feign;
 import feign.RequestInterceptor;
 import io.github.icodegarden.commons.springboot.properties.CommonsFeignProperties;
-import io.github.icodegarden.commons.springboot.properties.CommonsFeignProperties.Header;
 import io.github.icodegarden.commons.springboot.security.SecurityUtils;
+import io.github.icodegarden.commons.springboot.web.util.BaseWebUtils;
 import io.github.icodegarden.commons.springboot.web.util.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,41 +28,47 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class CommonsFeignAutoConfiguration implements RequestInterceptor {
-	public static final String ACCEPT_LANGUAGE = "Accept-Language";
 
 	{
 		log.info("commons init bean of CommonsFeignAutoConfiguration");
 	}
-	
+
 	@Autowired
 	private CommonsFeignProperties commonsFeignProperties;
 
 	@Override
 	public void apply(feign.RequestTemplate template) {
-		Header header = commonsFeignProperties.getHeader();
+		CommonsFeignProperties.Header headerConfig = commonsFeignProperties.getHeader();
 
-		HttpServletRequest request = WebUtils.getRequest();
-
-		if (request != null) {
-			if (header.isTransferAll()) {
-				Enumeration<String> headerNames = request.getHeaderNames();
-				while (headerNames.hasMoreElements()) {
-					String headerName = headerNames.nextElement();
-					String headerValue = request.getHeader(headerName);
+		if (headerConfig.isTransferAll()) {
+			List<String> headerNames = WebUtils.getHeaderNames();
+			if (!CollectionUtils.isEmpty(headerNames)) {
+				for (String headerName : headerNames) {
+					String headerValue = WebUtils.getHeader(headerName);
 					template.header(headerName, headerValue);// 只需单值
 				}
 			}
+		}
 
-			String language = request.getHeader(ACCEPT_LANGUAGE);
-			template.header(ACCEPT_LANGUAGE, language);
+		String language = WebUtils.getHeader(BaseWebUtils.HEADER_ACCEPT_LANGUAGE);
+		if (language != null) {
+			template.header(BaseWebUtils.HEADER_ACCEPT_LANGUAGE, language);
+		}
+		String isApiRequest = WebUtils.getHeader(BaseWebUtils.HEADER_API_REQUEST);
+		if (language != null) {
+			template.header(BaseWebUtils.HEADER_API_REQUEST, isApiRequest);
+		}
+		String isOpenapiRequest = WebUtils.getHeader(BaseWebUtils.HEADER_OPENAPI_REQUEST);
+		if (language != null) {
+			template.header(BaseWebUtils.HEADER_OPENAPI_REQUEST, isOpenapiRequest);
 		}
 
 		template.header(WebUtils.HEADER_INTERNAL_RPC, "true");
 
 		String userId = SecurityUtils.getUserId();
-		userId = userId != null ? userId : header.getUserIdIfNotPresent();
+		userId = userId != null ? userId : headerConfig.getUserIdIfNotPresent();
 		String username = SecurityUtils.getUsername();
-		username = username != null ? username : header.getUsernameIfNotPresent();
+		username = username != null ? username : headerConfig.getUsernameIfNotPresent();
 
 		template.header(WebUtils.HEADER_USERID, userId);
 		template.header(WebUtils.HEADER_USERNAME, username);

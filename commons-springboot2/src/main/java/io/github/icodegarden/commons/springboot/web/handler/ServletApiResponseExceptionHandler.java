@@ -29,9 +29,9 @@ import io.github.icodegarden.commons.lang.spec.response.OpenApiResponse;
  * @author Fangfang.Xu
  *
  */
-public class ApiResponseExceptionHandler extends AbstractExceptionHandler<ApiResponse> {
+public class ServletApiResponseExceptionHandler extends AbstractServletExceptionHandler<ApiResponse> {
 
-	private static final Logger log = LoggerFactory.getLogger(ApiResponseExceptionHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ServletApiResponseExceptionHandler.class);
 
 	@Override
 	public ResponseEntity<ApiResponse> onPathVariableMissing(HttpServletRequest request,

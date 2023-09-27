@@ -31,6 +31,8 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
 			Map<String, Object> details = (Map) authentication.getDetails();
 
 			ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
+				httpHeaders.add(WebUtils.HEADER_API_REQUEST, "true");
+				
 				httpHeaders.add(WebUtils.HEADER_USERID, principal.getUserId());
 				httpHeaders.add(WebUtils.HEADER_USERNAME, principal.getUsername());
 				if (details != null) {

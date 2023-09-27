@@ -21,7 +21,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
  *
  */
 @ControllerAdvice
-public abstract class AbstractExceptionHandler<T> extends BaseExceptionHandler {
+public abstract class AbstractServletExceptionHandler<T> extends BaseExceptionHandler {
 
 	@ExceptionHandler(MissingPathVariableException.class)
 	public abstract ResponseEntity<T> onPathVariableMissing(HttpServletRequest request,

@@ -48,30 +48,36 @@ public class NioBroadcast implements Broadcast {
 
 	private final Supplier<List<Instance>> instancesSupplier;
 
-	private final String host;/* 对外网络ip */
-	private final int serverPort;
+	private final String bindHost;/* 对外网络ip */
+	private final int bindPort;
 	private final EntryMessageHandler entryMessageHandler;
-
 	private final ParallelLoadBalanceExchanger parallelLoadBalanceExchanger;
+	private final NioClientPool nioClientPool;
 
-	private NioClientPool nioClientPool;
 	private NioServer nioServer;
 
-	public NioBroadcast(String host, int serverPort, Supplier<List<Instance>> instancesSupplier,
+	public NioBroadcast(String bindHost, int bindPort, Supplier<List<Instance>> instancesSupplier,
+			MessageHandler<BroadcastMessage, ReasonExchangeResult> serverMessageHandler) {
+		this(NioClientPool.newPool("NioBroadcast", NioClientSuppliers.DEFAULT), bindHost, bindPort, instancesSupplier,
+				serverMessageHandler);
+	}
+
+	public NioBroadcast(NioClientPool nioClientPool, String bindHost, int bindPort,
+			Supplier<List<Instance>> instancesSupplier,
 			MessageHandler<BroadcastMessage, ReasonExchangeResult> serverMessageHandler) {
 		this.instancesSupplier = instancesSupplier;
+		this.nioClientPool = nioClientPool;
 
 		// ----------------------------------------------------------------------
-		nioClientPool = NioClientPool.newPool("NioBroadcast", NioClientSuppliers.DEFAULT);
-		NioProtocol protocol = new NioProtocol(nioClientPool);
+		NioProtocol protocol = new NioProtocol(this.nioClientPool);
 
 		ParallelExchanger.Config config = new ParallelExchanger.Config(1, Integer.MAX_VALUE, Integer.MAX_VALUE);
 		parallelLoadBalanceExchanger = new ParallelLoadBalanceExchanger(protocol, new EmptyInstanceLoadBalance(),
 				null/* 无感 */, config);
 
 		// ----------------------------------------------------------------------
-		this.host = host;
-		this.serverPort = serverPort;
+		this.bindHost = bindHost;
+		this.bindPort = bindPort;
 		this.entryMessageHandler = new EntryMessageHandler((MessageHandler) serverMessageHandler);
 	}
 
@@ -81,7 +87,7 @@ public class NioBroadcast implements Broadcast {
 
 	public void startServer() {
 		if (serverStarted.compareAndSet(false, true)) {
-			InetSocketAddress bind = new InetSocketAddress(host, this.serverPort);
+			InetSocketAddress bind = new InetSocketAddress(bindHost, bindPort);
 
 			if (ClassUtils.isPresent("io.github.icodegarden.commons.nio.netty.NettyNioServer", null)) {
 				try {
@@ -110,13 +116,23 @@ public class NioBroadcast implements Broadcast {
 		this.broadcastLocal = broadcastLocal;
 	}
 
-	private boolean isLocal(String address, int port) {
-		return host.equals(address) && port == serverPort;
+	private boolean isLocal(String host, int port) {
+		return bindHost.equals(host) && port == bindPort;
 	}
 
 	@Override
 	public ParallelExchangeResult request(BroadcastMessage message) throws ExchangeException {
-		Matcher<Instance> matcher = new io.github.icodegarden.commons.lang.Matcher<Instance>() {
+		return this.doRequest(this.instancesSupplier, message);
+	}
+
+//	@Override
+//	public ParallelExchangeResult request(BroadcastMessage message, List<Instance> instances) throws ExchangeException {
+//		return this.doRequest(() -> instances, message);
+//	}
+
+	private ParallelExchangeResult doRequest(Supplier<List<Instance>> supplier, BroadcastMessage message)
+			throws ExchangeException {
+		Matcher<Instance> instanceMatcher = new io.github.icodegarden.commons.lang.Matcher<Instance>() {
 			@Override
 			public boolean matches(Instance instance) {
 				if (!broadcastLocal && isLocal(instance.getHost(), instance.getPort())) {
@@ -135,7 +151,7 @@ public class NioBroadcast implements Broadcast {
 		};
 
 		InstanceLoadBalance instanceLoadBalance = new AllInstanceLoadBalance(
-				new BroadCastInstanceDiscovery(instancesSupplier, matcher));
+				new BroadCastInstanceDiscovery(supplier, instanceMatcher));
 		try {
 			return parallelLoadBalanceExchanger.exchange(message, (int) message.timeoutMillis(), instanceLoadBalance);
 		} catch (NoQualifiedInstanceExchangeException e) {

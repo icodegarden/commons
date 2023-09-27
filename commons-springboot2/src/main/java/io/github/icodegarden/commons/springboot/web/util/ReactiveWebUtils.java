@@ -2,10 +2,14 @@ package io.github.icodegarden.commons.springboot.web.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.springframework.core.io.buffer.DefaultDataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -30,6 +34,25 @@ public class ReactiveWebUtils extends BaseWebUtils {
 
 	public static void setExchange(ServerWebExchange exchange) {
 		SERVERWEBEXCHANGE_HOLDER.set(exchange);
+	}
+
+	public static List<String> getHeaderNames() {
+		ServerWebExchange request = getExchange();
+		if (request == null) {
+			return Collections.emptyList();
+		}
+
+		HttpHeaders headers = request.getRequest().getHeaders();
+		return new ArrayList<String>(headers.keySet());
+	}
+
+	public static String getHeader(String name) {
+		ServerWebExchange request = getExchange();
+		if (request == null) {
+			return null;
+		}
+
+		return request.getRequest().getHeaders().getFirst(name);
 	}
 
 	public static String getJWT() {
@@ -64,6 +87,26 @@ public class ReactiveWebUtils extends BaseWebUtils {
 		String authorizationToken = (String) request.getAttribute(HEADER_AUTHORIZATION);
 		return authorizationToken != null ? authorizationToken
 				: request.getRequest().getHeaders().getFirst(HEADER_AUTHORIZATION);
+	}
+
+	public static boolean isApiRpc() {
+		ServerWebExchange request = getExchange();
+		if (request == null) {
+			return false;
+		}
+
+		String header = request.getRequest().getHeaders().getFirst(HEADER_API_REQUEST);
+		return header != null && Boolean.valueOf(header);
+	}
+
+	public static boolean isOpenapiRpc() {
+		ServerWebExchange request = getExchange();
+		if (request == null) {
+			return false;
+		}
+
+		String header = request.getRequest().getHeaders().getFirst(HEADER_OPENAPI_REQUEST);
+		return header != null && Boolean.valueOf(header);
 	}
 
 	public static boolean isInternalRpc() {
