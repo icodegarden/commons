@@ -9,6 +9,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -137,12 +138,6 @@ public class ServletWebUtils extends BaseWebUtils {
 		response.setHeader(HEADER_AUTHORIZATION, bearerToken);
 	}
 
-//	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
-//		response.setStatus(status);
-//		response.setContentType("application/json;charset=utf-8");
-//		response.getWriter().println(body);
-//	}
-
 	public static void responseWrite(int status, String body, HttpServletResponse response) throws IOException {
 		Assert.hasText(body, "body must not empty");
 		responseWrite(status, null, body, response);
@@ -168,7 +163,9 @@ public class ServletWebUtils extends BaseWebUtils {
 		if (body == null) {
 			body = "";
 		}
-		response.setContentType("application/json;charset=utf-8");
+//		response.setContentType("application/json;charset=utf-8");
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.setCharacterEncoding("utf-8");
 		response.getWriter().println(body);
 	}
 }

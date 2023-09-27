@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -37,13 +38,13 @@ public class NativeRestApiAccessDeniedHandler implements AccessDeniedHandler {
 				RequestDispatcher dispatcher = request.getRequestDispatcher(errorPage);
 				dispatcher.forward(request, response);
 			} else {
-				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-				response.setContentType("application/json;charset=utf-8");
-
 				String message = "Access Denied, Not Authorized.";
 				if (log.isInfoEnabled()) {
 					log.info("request {}", message);
 				}
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+				response.setCharacterEncoding("utf-8");
 				response.getWriter().println(message);
 			}
 		}
