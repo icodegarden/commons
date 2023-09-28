@@ -732,7 +732,7 @@ public abstract class SystemUtils {
 					ClassUtils.getDefaultClassLoader())) {
 				new Thread() {
 					public void run() {
-						ThreadUtils.sleep(30000);
+						ThreadUtils.sleep(10000);
 
 						long start = System.currentTimeMillis();
 						while (DEFAULT_SERVER_NAME.equals(Server.serverName)
@@ -757,7 +757,7 @@ public abstract class SystemUtils {
 								log.warn("failed on init configServerName");
 							}
 
-							ThreadUtils.sleep(30000);
+							ThreadUtils.sleep(10000);
 						}
 					};
 				}.start();

@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterInvalidErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ClientParameterMissingErrorCodeException;
+import io.github.icodegarden.commons.lang.spec.response.ClientPermissionErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ErrorCodeException;
 import io.github.icodegarden.commons.lang.spec.response.ServerErrorCodeException;
 
@@ -51,6 +52,17 @@ abstract class BaseExceptionHandler {
 								ClientParameterMissingErrorCodeException.SubPair.MISSING_PARAMETER.getSub_code(),
 								e.getMessage());
 					}
+				}
+			} else if (e.getClass().getName().equals("org.springframework.security.access.AccessDeniedException")) {
+				String eMessage = e.getMessage();
+
+				if (StringUtils.hasText(eMessage)) {
+					ece = new ClientPermissionErrorCodeException(
+							ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS.getSub_code(),
+							eMessage);
+				} else {
+					ece = new ClientPermissionErrorCodeException(
+							ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS);
 				}
 			}
 
