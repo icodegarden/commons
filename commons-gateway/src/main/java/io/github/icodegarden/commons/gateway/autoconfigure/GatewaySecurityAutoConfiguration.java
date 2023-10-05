@@ -26,6 +26,7 @@ import io.github.icodegarden.commons.gateway.core.security.NoOpReactiveAuthentic
 import io.github.icodegarden.commons.gateway.core.security.UserServerAuthenticationSuccessHandler;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.core.security.jwt.JWTServerAuthenticationConverter;
+import io.github.icodegarden.commons.gateway.core.security.signature.SignatureAuthenticationConfig;
 import io.github.icodegarden.commons.gateway.core.security.signature.SignatureAuthenticationWebFilter;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties;
 import io.github.icodegarden.commons.gateway.properties.CommonsGatewaySecurityProperties.Jwt;
@@ -83,13 +84,21 @@ public class GatewaySecurityAutoConfiguration {
 	 * 配置方式要换成 WebFlux的方式
 	 */
 	@Bean
-	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity) {
 		ApiResponseServerAuthenticationEntryPoint serverAuthenticationEntryPoint = new ApiResponseServerAuthenticationEntryPoint();
 
-		AuthorizeExchangeSpec authorizeExchangeSpec = http.exceptionHandling()
-				.authenticationEntryPoint(serverAuthenticationEntryPoint)
-				.accessDeniedHandler(new ApiResponseServerAccessDeniedHandler()).and().csrf().disable().headers()
-				.frameOptions().disable().and().authorizeExchange();
+		AuthorizeExchangeSpec authorizeExchangeSpec = httpSecurity//
+				.exceptionHandling()//
+				.authenticationEntryPoint(serverAuthenticationEntryPoint)//
+				.accessDeniedHandler(new ApiResponseServerAccessDeniedHandler())//
+				.and()//
+				.csrf()//
+				.disable()//
+				.headers()//
+				.frameOptions()//
+				.disable()//
+				.and()//
+				.authorizeExchange();
 
 		if (authorizeExchangeSpecConfigurer != null) {
 			log.info("gateway security AuthorizeExchangeSpecConfigurer is exist, do config custom");
@@ -121,7 +130,7 @@ public class GatewaySecurityAutoConfiguration {
 		} else if (securityProperties.getSignature() != null) {
 			CommonsGatewaySecurityProperties.Signature signature = securityProperties.getSignature();
 			log.info("gateway security config Authentication WebFilter by signature:{}", signature);
-			SignatureAuthenticationWebFilter.Config config = new SignatureAuthenticationWebFilter.Config(
+			SignatureAuthenticationConfig config = new SignatureAuthenticationConfig(
 					codecConfigurer, appProvider, openApiRequestValidator,
 					authenticationManager != null ? authenticationManager : new NoOpReactiveAuthenticationManager(),
 					serverAuthenticationSuccessHandler != null ? serverAuthenticationSuccessHandler
@@ -134,9 +143,11 @@ public class GatewaySecurityAutoConfiguration {
 			webFilter = new NoOpWebFilter();
 		}
 
-		authorizeExchangeSpec.and().addFilterBefore(webFilter, SecurityWebFiltersOrder.AUTHORIZATION);
+		authorizeExchangeSpec//
+		.and()//
+		.addFilterBefore(webFilter, SecurityWebFiltersOrder.AUTHORIZATION);
 
-		return http.build();
+		return httpSecurity.build();
 	}
 
 	private class NoOpWebFilter implements AuthWebFilter {

@@ -18,13 +18,10 @@ import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
-import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
-import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -43,8 +40,6 @@ import io.github.icodegarden.commons.lang.util.JsonUtils;
 import io.github.icodegarden.commons.lang.util.LogUtils;
 import io.github.icodegarden.commons.springboot.exception.ErrorCodeAuthenticationException;
 import io.github.icodegarden.commons.springboot.security.SpringUser;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -66,7 +61,7 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //	private final ServerWebExchangeMatcher acceptMatcher;
 	private final AuthMatcher authMatcher;
 
-	public SignatureAuthenticationWebFilter(AuthMatcher authMatcher, Config config) {
+	public SignatureAuthenticationWebFilter(AuthMatcher authMatcher, SignatureAuthenticationConfig config) {
 		ServerCodecConfigurer codecConfigurer = config.getCodecConfigurer();
 		this.messageReaders = codecConfigurer.getReaders();
 //		List<ServerWebExchangeMatcher> matchers = config.getAcceptPathPatterns().stream().map(path -> {
@@ -227,30 +222,6 @@ public class SignatureAuthenticationWebFilter implements AuthWebFilter {
 //		});
 //		return match.get();
 //	}
-
-	@Getter
-	@ToString
-	public static class Config {
-		private ServerCodecConfigurer codecConfigurer;
-//		private Set<String> acceptPathPatterns;
-		private AppProvider appProvider;
-		private OpenApiRequestValidator openApiRequestValidator;
-		private ReactiveAuthenticationManager authenticationManager;
-		private ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler;
-		private ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
-
-		public Config(ServerCodecConfigurer codecConfigurer, AppProvider appProvider,
-				OpenApiRequestValidator openApiRequestValidator, ReactiveAuthenticationManager authenticationManager,
-				ServerAuthenticationSuccessHandler serverAuthenticationSuccessHandler,
-				ServerAuthenticationFailureHandler serverAuthenticationFailureHandler) {
-			this.codecConfigurer = codecConfigurer;
-			this.appProvider = appProvider;
-			this.openApiRequestValidator = openApiRequestValidator;
-			this.authenticationManager = authenticationManager;
-			this.serverAuthenticationSuccessHandler = serverAuthenticationSuccessHandler;
-			this.serverAuthenticationFailureHandler = serverAuthenticationFailureHandler;
-		}
-	}
 
 	private class AppServerAuthenticationConverter implements ServerAuthenticationConverter {
 
