@@ -29,7 +29,7 @@ import io.github.icodegarden.commons.nio.MessageHandlerProvider;
 import io.github.icodegarden.commons.nio.NioServer;
 import io.github.icodegarden.commons.nio.java.JavaNioServer;
 import io.github.icodegarden.commons.nio.pool.NioClientPool;
-import io.github.icodegarden.commons.nio.pool.NioClientSuppliers;
+import io.github.icodegarden.commons.nio.pool.NioClientSupplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,7 +58,7 @@ public class NioBroadcast implements Broadcast {
 
 	public NioBroadcast(String bindHost, int bindPort, Supplier<List<Instance>> instancesSupplier,
 			MessageHandler<BroadcastMessage, ReasonExchangeResult> serverMessageHandler) {
-		this(NioClientPool.newPool("NioBroadcast", NioClientSuppliers.DEFAULT), bindHost, bindPort, instancesSupplier,
+		this(NioClientPool.newPool("NioBroadcast", NioClientSupplier.DEFAULT), bindHost, bindPort, instancesSupplier,
 				serverMessageHandler);
 	}
 

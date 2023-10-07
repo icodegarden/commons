@@ -27,7 +27,7 @@ import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
 import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
 import io.github.icodegarden.commons.nio.NioClient;
 import io.github.icodegarden.commons.nio.pool.NioClientPool;
-import io.github.icodegarden.commons.nio.pool.NioClientSuppliers;
+import io.github.icodegarden.commons.nio.pool.NioClientSupplier;
 
 /**
  * 
@@ -36,7 +36,7 @@ import io.github.icodegarden.commons.nio.pool.NioClientSuppliers;
  */
 class ParallelLoadBalanceExchangerTests {
 	NioProtocol protocol = new NioProtocol(
-			NioClientPool.newPool(CandidatesSwitchableExchanger.class.getSimpleName(), NioClientSuppliers.DEFAULT));
+			NioClientPool.newPool(CandidatesSwitchableExchanger.class.getSimpleName(), NioClientSupplier.DEFAULT));
 
 	InstanceLoadBalance instanceLoadBalance = mock(InstanceLoadBalance.class);
 
