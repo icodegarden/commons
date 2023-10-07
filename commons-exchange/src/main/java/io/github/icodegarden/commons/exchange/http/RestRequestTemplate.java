@@ -298,6 +298,8 @@ public class RestRequestTemplate {
 				byte[] bs = new byte[available];
 				response.getBody().read(bs);
 				return (T) new String(bs, "utf-8");
+			} else if(responseType == Void.class) {
+				return null;
 			}
 
 			return JsonUtils.deserialize(response.getBody(), responseType);

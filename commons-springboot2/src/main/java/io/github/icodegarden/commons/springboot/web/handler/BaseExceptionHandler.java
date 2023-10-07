@@ -53,7 +53,8 @@ abstract class BaseExceptionHandler {
 								e.getMessage());
 					}
 				}
-			} else if (e.getClass().getName().equals("org.springframework.security.access.AccessDeniedException")) {
+			} else if (e.getClass().getName()
+					.equals("org.springframework.security.access.AccessDeniedException"/* security是可选依赖 */)) {
 				String eMessage = e.getMessage();
 
 				if (StringUtils.hasText(eMessage)) {
@@ -63,6 +64,17 @@ abstract class BaseExceptionHandler {
 				} else {
 					ece = new ClientPermissionErrorCodeException(
 							ClientPermissionErrorCodeException.SubPair.INSUFFICIENT_PERMISSIONS);
+				}
+			} else if (e.getClass().getName()
+					.equals("javax.validation.ConstraintViolationException"/* spring-boot-starter-validation是可选依赖 */)) {
+				String eMessage = e.getMessage();
+
+				if (StringUtils.hasText(eMessage)) {
+					ece = new ClientParameterInvalidErrorCodeException(
+							ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER.getSub_code(), eMessage);
+				} else {
+					ece = new ClientParameterInvalidErrorCodeException(
+							ClientParameterInvalidErrorCodeException.SubPair.INVALID_PARAMETER);
 				}
 			}
 
