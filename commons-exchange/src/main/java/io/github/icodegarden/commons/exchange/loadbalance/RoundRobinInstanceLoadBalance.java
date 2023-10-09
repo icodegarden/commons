@@ -8,8 +8,8 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceDiscovery;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
 import io.github.icodegarden.commons.lang.util.CollectionUtils;
 
 /**

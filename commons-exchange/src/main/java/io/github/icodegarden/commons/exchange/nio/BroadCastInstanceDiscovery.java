@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.lang.Matcher;
 import io.github.icodegarden.commons.lang.concurrent.registry.Instance;
-import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
-import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.DefaultRegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceDiscovery;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
 
 /**
  * 

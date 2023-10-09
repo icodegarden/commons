@@ -19,7 +19,7 @@ import io.github.icodegarden.commons.lang.exception.remote.ClientInvalidRemoteEx
 import io.github.icodegarden.commons.lang.exception.remote.ConnectFailedRemoteException;
 import io.github.icodegarden.commons.lang.exception.remote.ServerErrorRemoteException;
 import io.github.icodegarden.commons.lang.exception.remote.TimeoutRemoteException;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
 
 /**
  * 实例失败时自动切换，努力达到成功<br>

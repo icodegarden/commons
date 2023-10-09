@@ -21,10 +21,10 @@ import io.github.icodegarden.commons.exchange.loadbalance.DefaultMetricsInstance
 import io.github.icodegarden.commons.exchange.loadbalance.InstanceLoadBalance;
 import io.github.icodegarden.commons.exchange.loadbalance.MetricsInstance;
 import io.github.icodegarden.commons.exchange.nio.NioProtocol;
-import io.github.icodegarden.commons.lang.metrics.Metrics;
-import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
-import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
-import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.DefaultRegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics.Dimension;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics.DimensionName;
 import io.github.icodegarden.commons.nio.NioClient;
 import io.github.icodegarden.commons.nio.pool.NioClientPool;
 import io.github.icodegarden.commons.nio.pool.NioClientSupplier;

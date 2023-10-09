@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.DefaultRegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
 
 /**
  * 

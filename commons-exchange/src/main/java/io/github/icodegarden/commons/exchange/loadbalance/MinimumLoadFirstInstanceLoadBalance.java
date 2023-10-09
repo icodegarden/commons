@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
 
-import io.github.icodegarden.commons.lang.metrics.InstanceMetrics;
-import io.github.icodegarden.commons.lang.metrics.Metrics;
-import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceDiscovery;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceMetrics;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
 
 /**
  * 负载低的实例优先<br>

@@ -3,8 +3,8 @@ package io.github.icodegarden.commons.exchange.loadbalance;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import io.github.icodegarden.commons.lang.metrics.Metrics;
-import io.github.icodegarden.commons.lang.metrics.Metrics.DimensionName;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics.DimensionName;
 
 /**
  * 

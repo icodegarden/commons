@@ -11,12 +11,12 @@ import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.metrics.InstanceMetrics;
-import io.github.icodegarden.commons.lang.metrics.Metrics;
-import io.github.icodegarden.commons.lang.metrics.Metrics.Dimension;
-import io.github.icodegarden.commons.lang.registry.DefaultRegisteredInstance;
-import io.github.icodegarden.commons.lang.registry.InstanceDiscovery;
-import io.github.icodegarden.commons.lang.registry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.DefaultRegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceDiscovery;
+import io.github.icodegarden.commons.lang.metricsregistry.InstanceMetrics;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics;
+import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.metricsregistry.Metrics.Dimension;
 
 /**
  * 
