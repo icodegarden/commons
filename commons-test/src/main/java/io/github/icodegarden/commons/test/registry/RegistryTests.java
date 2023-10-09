@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.test.concurrent.registry;
+package io.github.icodegarden.commons.test.registry;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,11 +9,11 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.icodegarden.commons.lang.concurrent.registry.DatabaseRegistry;
-import io.github.icodegarden.commons.lang.concurrent.registry.Registration;
-import io.github.icodegarden.commons.lang.concurrent.registry.Registry;
-import io.github.icodegarden.commons.lang.concurrent.registry.RegistryListener;
-import io.github.icodegarden.commons.lang.concurrent.registry.RegistryMaxIndexException;
+import io.github.icodegarden.commons.lang.registry.DatabaseRegistry;
+import io.github.icodegarden.commons.lang.registry.Registration;
+import io.github.icodegarden.commons.lang.registry.Registry;
+import io.github.icodegarden.commons.lang.registry.RegistryListener;
+import io.github.icodegarden.commons.lang.registry.RegistryMaxIndexException;
 
 /**
  * 

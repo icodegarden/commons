@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.lang.concurrent.registry;
+package io.github.icodegarden.commons.lang.registry;
 
 import lombok.Getter;
 import lombok.Setter;

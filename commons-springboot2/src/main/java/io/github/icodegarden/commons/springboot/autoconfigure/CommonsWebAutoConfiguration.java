@@ -60,7 +60,7 @@ public class CommonsWebAutoConfiguration {
 	 * 如果用户有作为bean
 	 */
 	@Autowired(required = false)
-	private io.github.icodegarden.commons.lang.concurrent.registry.Registry registry;
+	private io.github.icodegarden.commons.lang.registry.Registry registry;
 
 	@PostConstruct
 	private void init() {

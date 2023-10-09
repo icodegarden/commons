@@ -22,7 +22,7 @@ import io.github.icodegarden.commons.exchange.loadbalance.AllInstanceLoadBalance
 import io.github.icodegarden.commons.exchange.loadbalance.EmptyInstanceLoadBalance;
 import io.github.icodegarden.commons.exchange.loadbalance.InstanceLoadBalance;
 import io.github.icodegarden.commons.lang.Matcher;
-import io.github.icodegarden.commons.lang.concurrent.registry.Instance;
+import io.github.icodegarden.commons.lang.registry.Instance;
 import io.github.icodegarden.commons.lang.util.LogUtils;
 import io.github.icodegarden.commons.nio.MessageHandler;
 import io.github.icodegarden.commons.nio.MessageHandlerProvider;

@@ -1,11 +1,13 @@
-package io.github.icodegarden.commons.mybatis.concurrent.registry;
+package io.github.icodegarden.commons.mybatis.registry;
 
-import io.github.icodegarden.commons.lang.concurrent.registry.Registration;
-import io.github.icodegarden.commons.lang.concurrent.registry.Registry;
-import io.github.icodegarden.commons.lang.concurrent.registry.RegistryListener;
+import io.github.icodegarden.commons.lang.registry.Registration;
+import io.github.icodegarden.commons.lang.registry.Registry;
+import io.github.icodegarden.commons.lang.registry.RegistryListener;
 import io.github.icodegarden.commons.mybatis.MybatisTestUtils;
 import io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper;
-import io.github.icodegarden.commons.test.concurrent.registry.RegistryTests;
+import io.github.icodegarden.commons.mybatis.registry.MysqlMybatisRegistry;
+import io.github.icodegarden.commons.mybatis.registry.MysqlMybatisRegistryMapper;
+import io.github.icodegarden.commons.test.registry.RegistryTests;
 
 /**
  * 

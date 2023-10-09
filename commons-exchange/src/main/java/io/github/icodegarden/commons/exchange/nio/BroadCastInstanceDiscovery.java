@@ -7,10 +7,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.github.icodegarden.commons.lang.Matcher;
-import io.github.icodegarden.commons.lang.concurrent.registry.Instance;
 import io.github.icodegarden.commons.lang.metricsregistry.DefaultRegisteredInstance;
 import io.github.icodegarden.commons.lang.metricsregistry.InstanceDiscovery;
 import io.github.icodegarden.commons.lang.metricsregistry.RegisteredInstance;
+import io.github.icodegarden.commons.lang.registry.Instance;
 
 /**
  * 

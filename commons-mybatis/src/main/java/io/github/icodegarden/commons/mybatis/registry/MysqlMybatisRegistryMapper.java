@@ -1,4 +1,4 @@
-package io.github.icodegarden.commons.mybatis.concurrent.registry;
+package io.github.icodegarden.commons.mybatis.registry;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
 
-import io.github.icodegarden.commons.lang.concurrent.registry.DatabaseRegistryRepository;
-import io.github.icodegarden.commons.lang.concurrent.registry.Registration;
-import io.github.icodegarden.commons.lang.concurrent.registry.SimpleRegistrationDO;
+import io.github.icodegarden.commons.lang.registry.DatabaseRegistryRepository;
+import io.github.icodegarden.commons.lang.registry.Registration;
+import io.github.icodegarden.commons.lang.registry.SimpleRegistrationDO;
 
 /**
  * 

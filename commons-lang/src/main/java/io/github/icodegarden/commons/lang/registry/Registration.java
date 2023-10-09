@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.icodegarden.commons.lang.concurrent.registry;
+package io.github.icodegarden.commons.lang.registry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

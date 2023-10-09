@@ -16,9 +16,9 @@ public class RegistryGracefullyShutdown implements GracefullyShutdown {
 
 	private int gracefullyShutdownOrder = Integer.MIN_VALUE;// 优先级最高
 
-	private final io.github.icodegarden.commons.lang.concurrent.registry.Registry registry;
+	private final io.github.icodegarden.commons.lang.registry.Registry registry;
 
-	public RegistryGracefullyShutdown(io.github.icodegarden.commons.lang.concurrent.registry.Registry registry) {
+	public RegistryGracefullyShutdown(io.github.icodegarden.commons.lang.registry.Registry registry) {
 		this.registry = registry;
 	}
 

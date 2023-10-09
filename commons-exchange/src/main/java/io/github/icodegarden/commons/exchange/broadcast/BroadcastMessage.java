@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import io.github.icodegarden.commons.lang.BodyObject;
 import io.github.icodegarden.commons.lang.Matcher;
-import io.github.icodegarden.commons.lang.concurrent.registry.Instance;
+import io.github.icodegarden.commons.lang.registry.Instance;
 import lombok.Getter;
 
 /**

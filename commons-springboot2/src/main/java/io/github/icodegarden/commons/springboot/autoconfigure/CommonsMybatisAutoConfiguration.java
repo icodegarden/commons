@@ -57,7 +57,7 @@ public class CommonsMybatisAutoConfiguration {
 			io.github.icodegarden.commons.mybatis.repository.MysqlMybatisDatabase.class, //
 			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisLockMapper.class,//
 			io.github.icodegarden.commons.mybatis.concurrent.lock.MysqlMybatisReadWriteLockMapper.class,//
-			io.github.icodegarden.commons.mybatis.concurrent.registry.MysqlMybatisRegistryMapper.class//
+			io.github.icodegarden.commons.mybatis.registry.MysqlMybatisRegistryMapper.class//
 	})
 	@Configuration
 	protected static class MapperScanAutoConfiguration {
